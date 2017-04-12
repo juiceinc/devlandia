@@ -1,0 +1,1 @@
+-e git+https://github.com/juiceinc/jbcli.git@dc80358e1c624c1cf023c005903bdaa3c3fa38af#egg=jbcli
