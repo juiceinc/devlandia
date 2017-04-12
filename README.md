@@ -14,3 +14,6 @@ Next, make sure you're in the devlandia directory and run ``jb start``
 as normal.  Docker will pull 3 images: Postgres, Redis, and the pre-built
 Juicebox image.  After the images are downloaded it will go through its
 initialization and will come up at ``http://127.0.0.1:8000/``.
+
+Docker will be expecting to find your AWS credentials at ~/.boto, if you
+have your credentials in another location please at least copy them here.
