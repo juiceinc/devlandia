@@ -1,0 +1,33 @@
+version: '3'
+services:
+  juicebox:
+    container_name: juicebox
+    image: "976661725066.dkr.ecr.us-east-1.amazonaws.com/juicebox:dev"
+    command: bash -c "python docker/entrypoint.py"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - "redis"
+    volumes:
+      - ./apps:/code/apps
+      - ~/.boto:/root/.boto:ro
+    links:
+      - postgres
+      - redis
+    environment:
+      - ENVIRONMENT=docker
+      - DJANGO_SETTINGS_MODULE=fruition.settings.docker
+      - REGION=us-east-1
+      - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
+  postgres:
+    environment:
+      - POSTGRES_USER=juicebox
+      - POSTGRES_PASSWORD=juicebox
+      - POSTGRES_DB=juicebox
+    image: "postgres:9.5-alpine"
+    ports:
+      - "5432:5432"
+  redis:
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
