@@ -9,6 +9,7 @@ services:
     depends_on:
       - "redis"
     volumes:
+      - ~/.aws:/root/.aws
       - ./apps:/code/apps
       - ~/.boto:/root/.boto:ro
     links:
@@ -26,4 +27,4 @@ services:
       - POSTGRES_DB=juicebox
     image: "postgres:9.5-alpine"
   redis:
-    image: "redis:alpine"
+    image: "redis:2.8.6"
