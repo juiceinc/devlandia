@@ -25,9 +25,5 @@ services:
       - POSTGRES_PASSWORD=juicebox
       - POSTGRES_DB=juicebox
     image: "postgres:9.5-alpine"
-    ports:
-      - "5432:5432"
   redis:
     image: "redis:alpine"
-    ports:
-      - "6379:6379"
