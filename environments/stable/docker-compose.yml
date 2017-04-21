@@ -2,7 +2,7 @@ version: '3'
 services:
   juicebox:
     container_name: juicebox
-    image: "976661725066.dkr.ecr.us-east-1.amazonaws.com/juicebox:latest"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-dev"
     command: bash -c "python docker/entrypoint.py"
     ports:
       - "8000:8000"
