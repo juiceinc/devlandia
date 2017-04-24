@@ -2,14 +2,14 @@ version: '3'
 services:
   juicebox:
     container_name: juicebox
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-dev"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-dev:dev"
     command: bash -c "python docker/entrypoint.py"
     ports:
       - "8000:8000"
     depends_on:
       - "redis"
+      - "postgres"
     volumes:
-      - ~/.aws:/root/.aws
       - ./apps:/code/apps
       - ~/.boto:/root/.boto:ro
     links:

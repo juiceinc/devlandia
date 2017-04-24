@@ -8,8 +8,8 @@ services:
       - "8000:8000"
     depends_on:
       - "redis"
+      - "postgres"
     volumes:
-      - ~/.aws:/root/.aws
       - ./apps:/code/apps
       - ~/.boto:/root/.boto:ro
     links:
