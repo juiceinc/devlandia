@@ -6,7 +6,7 @@
   "engines": {
     "npm": ">= 1.1.x"
   },
-  "dependencies": {
+  "devDependencies": {
     "grunt": "0.4.5",
     "grunt-contrib-watch": "0.6.1",
     "grunt-shell": "1.1.2",
