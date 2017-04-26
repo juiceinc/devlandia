@@ -11,7 +11,7 @@ Create a new virtualenv for devlandia and run
 of jbcli in your environment.
 
 Next, make sure you're in the devlandia directory and run ``npm install``.  This is necessary
-for the watcher to work.  Next run ``make ecr-login``, then ``jb start`` as normal.  
+for the watcher to work.  Next run ``make ecr_login``, then ``jb start`` as normal.  
 
 Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the
 images are downloaded it will go through its initialization and will
