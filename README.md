@@ -11,7 +11,10 @@ Create a new virtualenv for devlandia and run
 of jbcli in your environment.
 
 Next, make sure you're in the devlandia directory and run ``npm install``.  This is necessary
-for the watcher to work.  Next run ``make ecr_login``, then ``jb start`` as normal.  
+for the watcher to work.  Next run ``make ecr_login``, then ``jb start`` as normal.  To automate
+this login step, copy the ``postactivate`` file in the scripts folder to the bin directory for your
+devlandia virtual environment.  Be sure to edit the file to point to the root of your devlandia
+directory.  This will automatically log you in every time you activate the virtual environment.
 
 Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the
 images are downloaded it will go through its initialization and will
