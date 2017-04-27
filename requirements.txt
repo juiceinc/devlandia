@@ -1,1 +1,1 @@
--e git+ssh://git@github.com/juiceinc/jbcli.git@0f3cad9cf7b64e8b6b83429d84b75a89375feb50#egg=jbcli
+-e git+ssh://git@github.com/juiceinc/jbcli.git@f22ffb6cfb2d5993e6b404527cbcd1e93e12abca#egg=jbcli
