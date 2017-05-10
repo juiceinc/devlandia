@@ -37,7 +37,7 @@ You will need to have Juicebox running initially to setup the remote interpreter
 Once Juicebox is running, go to the PyCharm menu and click preferences.  Select ``Project: devlandia`` and select 
 ``Project interpreter``.  Click the gear icon and ``Add Remote``.  Set your settings as listed in the image below.
 
-![SSH Options](https://github.com/juiceinc/devlandia/tree/master/readme/sshoptions.png)
+![SSH Options](https://github.com/juiceinc/devlandia/blob/JB-1174/document-debugging/readme/sshoptions.png)
 
 PyCharm will complain if we don't enable ``Django Support``.  To do this go to ``PyCharm -> Preferences -> Languages & Frameworks -> Django``
 Click ``Enable Django Support``.  For ``Django Project root`` just add the root of the Devlandia project and you're done. 
