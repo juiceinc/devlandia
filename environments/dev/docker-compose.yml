@@ -6,6 +6,8 @@ services:
     command: bash -c "python docker/entrypoint.py"
     ports:
       - "8000:8000"
+      - "8888:8888"
+      - "22:22"
     depends_on:
       - "redis"
       - "postgres"

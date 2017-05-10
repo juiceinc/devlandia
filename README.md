@@ -26,3 +26,26 @@ come up at ``http://localhost:8000/``.
 
 Docker will be expecting to find your AWS credentials at ~/.boto.  If you
 have your credentials in another location please at least copy them here.
+
+# Debugging
+The juicebox image is built with SSH enabled so that we can setup a remote interpreter through the connection.  For 
+local development purposes, a default insecure_key is installed to make it easier to setup and distribute.  The private
+key is located in the root of this repository.  To avoid getting an error about your key permissions being too 
+permissive, in the devlandia root run ``chmod 400 insecure_key``.  Move this file to your SSH directory at ``~/.ssh/``.
+You will need to have Juicebox running initially to setup the remote interpreter.
+
+Once Juicebox is running, go to the PyCharm menu and click preferences.  Select ``Project: devlandia`` and select 
+``Project interpreter``.  Click the gear icon and ``Add Remote``.  Set your settings as listed in the image below.
+
+![SSH Options](https://github.com/juiceinc/devlandia/tree/master/readme/sshoptions.png)
+
+PyCharm will complain if we don't enable ``Django Support``.  To do this go to ``PyCharm -> Preferences -> Languages & Frameworks -> Django``
+Click ``Enable Django Support``.  For ``Django Project root`` just add the root of the Devlandia project and you're done. 
+
+If you work only in one environment in Devlandia, you should be good to go.  Devlandia includes a `Juicebox - Debug` 
+run configuration that should work with the settings we've setup to this point.  You should be able to set break points
+in your app.  Click ``Run -> Debug - 'Juicebox - Debug'``.  It will create a new debug server running on port 8888.  Go to
+``http://localhost:8888`` to interact with this debugging instance.  It should now break on your break points.  
+
+If you switch between environments you you'll need to setup a remote interpreter for each environment/branch and change 
+your run configuration to reflect your new interpreter, but the rest of the settings should be the same.
