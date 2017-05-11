@@ -42,9 +42,10 @@ Once Juicebox is running, go to the PyCharm menu and click preferences.  Select 
 PyCharm will complain if we don't enable ``Django Support``.  To do this go to ``PyCharm -> Preferences -> Languages & Frameworks -> Django``
 Click ``Enable Django Support``.  For ``Django Project root`` just add the root of the Devlandia project and you're done. 
 
-If you work only in one environment in Devlandia, you should be good to go.  Devlandia includes a `Juicebox - Debug` 
+If you work only in one environment in Devlandia, you should be good to go.  Devlandia includes a `Juicebox` 
 run configuration that should work with the settings we've setup to this point.  You should be able to set break points
-in your app.  Click ``Run -> Debug - 'Juicebox - Debug'``.  It will create a new debug server running on port 8888.  Go to
-``http://localhost:8888`` to interact with this debugging instance.  It should now break on your break points.  
+in your app.  Click ``Run -> Debug - 'Juicebox'``.  It will create a new debug server running on port 8888.  Go to
+``http://localhost:8888`` to interact with this debugging instance.  It should now break on your break points.
 
-If you switch between environments you'll most likely need to setup a remote interpreter for each environment/branch and change your run configuration to reflect your new interpreter, but the rest of the settings should be the same.
+HealthStream environments have a separate Run configuration ``HSTM-Juicebox``.  To debug, click 
+``Run -> Debug - 'HSTM-Juicebox'``
