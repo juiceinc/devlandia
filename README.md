@@ -37,7 +37,7 @@ You will need to have Juicebox running initially to setup the remote interpreter
 Once Juicebox is running, go to the PyCharm menu and click preferences.  Select ``Project: devlandia`` and select 
 ``Project interpreter``.  Click the gear icon and ``Add Remote``.  Set your settings as listed in the image below.
 
-![SSH Options](https://github.com/juiceinc/devlandia/tree/master/readme/sshoptions.png)
+![SSH Options](https://github.com/juiceinc/devlandia/blob/JB-1174/document-debugging/readme/sshoptions.png)
 
 PyCharm will complain if we don't enable ``Django Support``.  To do this go to ``PyCharm -> Preferences -> Languages & Frameworks -> Django``
 Click ``Enable Django Support``.  For ``Django Project root`` just add the root of the Devlandia project and you're done. 
@@ -47,5 +47,4 @@ run configuration that should work with the settings we've setup to this point. 
 in your app.  Click ``Run -> Debug - 'Juicebox - Debug'``.  It will create a new debug server running on port 8888.  Go to
 ``http://localhost:8888`` to interact with this debugging instance.  It should now break on your break points.  
 
-If you switch between environments you you'll need to setup a remote interpreter for each environment/branch and change 
-your run configuration to reflect your new interpreter, but the rest of the settings should be the same.
+If you switch between environments you'll most likely need to setup a remote interpreter for each environment/branch and change your run configuration to reflect your new interpreter, but the rest of the settings should be the same.
