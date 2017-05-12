@@ -3,9 +3,9 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
+      <env name="PYTHONUNBUFFERED" value="1" />
       <env name="DJANGO_SETTINGS_MODULE" value="fruition.settings.hstm_docker" />
       <env name="APP_ID" value="1ec756a5-e04a-4885-87ad-3325bbdd4872" />
-      <env name="PYTHONUNBUFFERED" value="1" />
       <env name="ENVIRONMENT" value="docker" />
       <env name="REGION" value="us-east-1" />
     </envs>

@@ -48,4 +48,4 @@ in your app.  Click ``Run -> Debug - 'Juicebox'``.  It will create a new debug s
 ``http://localhost:8888`` to interact with this debugging instance.  It should now break on your break points.
 
 HealthStream environments have a separate Run configuration ``HSTM-Juicebox``.  To debug, click 
-``Run -> Debug - 'HSTM-Juicebox'``
+``Run -> Debug - 'HSTM-Juicebox'``.
