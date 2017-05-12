@@ -49,3 +49,11 @@ in your app.  Click ``Run -> Debug - 'Juicebox'``.  It will create a new debug s
 
 HealthStream environments have a separate Run configuration ``HSTM-Juicebox``.  To debug, click 
 ``Run -> Debug - 'HSTM-Juicebox'``.
+
+# Troubleshooting
+In some cases you may encounter some variation of the following error: ``Error starting userland proxy: Bind for 
+0.0.0.0:8000 failed: port is already allocated``.  This is most likely due to a program running on the port we need 
+(Juicebox in Vagrant for example).  Be sure to kill the task that's using the port, and try again.  If you still 
+encounter this issue and you're sure you've killed the necessary, try restarting Docker.  On Mac there will be a Whale 
+icon in your top task bar, click that, and restart should be the first option.  If all else fails try a full restart of 
+your computer.
