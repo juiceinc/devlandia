@@ -4,7 +4,9 @@ It's Juicebox development and implementations environments... it's DEVLANDIA!
 # Getting Started
 First, if you don't already have it, you'll need to
 [download and install Docker](https://download.docker.com/mac/stable/Docker.dmg) on your machine.
-Documentation can be found [here](https://docs.docker.com/docker-for-mac/install/).
+Documentation can be found [here](https://docs.docker.com/docker-for-mac/install/).  Windows users on anything other
+than Windows 10 Pro, Enterprise, or Education with a minimum build number of 10586 will need to install
+[Docker Toolbox](https://download.docker.com/win/stable/DockerToolbox.exe).  Run the full installation.
 
 Create a new virtualenv for devlandia by changing to the desired directory and running ``virtualenv devlandia``.
 This can be done in a central place such as ``~/.virtualenvs`` or in your project directory.  Devlandia should 
