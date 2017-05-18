@@ -1,4 +1,4 @@
-version: '3'
+version: '2'
 services:
   juicebox:
     container_name: juicebox
@@ -6,6 +6,8 @@ services:
     command: bash -c "python docker/entrypoint.py"
     ports:
       - "8000:8000"
+      - "8888:8888"
+      - "2222:22"
     depends_on:
       - "redis"
       - "postgres"
@@ -25,6 +27,6 @@ services:
       - POSTGRES_USER=juicebox
       - POSTGRES_PASSWORD=juicebox
       - POSTGRES_DB=juicebox
-    image: "postgres:9.5-alpine"
+    image: "postgres:9.3-alpine"
   redis:
     image: "redis:2.8.6"
