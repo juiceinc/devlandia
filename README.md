@@ -15,16 +15,14 @@ your virtual environment, run ``virtualenv -p /path/to/python/install devlandia`
 environment to ``~/.virtualenvs/`` you'll need to run ``source ~/.virtualenvs/devlandia/bin/activate`` to activate it.
 Once your environment is setup and activated run ``pip install -r requirements.txt`` from the root directory of devlandia.
 
-Next, still in the devlandia root directory, run ``npm install --only=dev``.  This is necessary for the watcher to work. 
+Next, still in the devlandia root directory, run ``npm install``.  This is necessary for the watcher to work. 
 Run ``make ecr_login``.  To automate this login step, copy the ``postactivate`` file in the scripts folder to the bin 
 directory for your devlandia virtual environment.  Be sure to edit the file to point to the root of your devlandia 
 directory.  This will automatically log you in to our private Docker registry every time you activate the virtual
 environment.
 
 Finally you'll need to cd into the desired environment at 
-``environments/<env>`` and run ``jb start`` as normal.  Currently the only images available are `environments/test`, 
-and ``environments/hstm-test``.  Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  
-After the images are downloaded it will go through its initialization and will come up at ``http://localhost:8000/``.
+``environments/<env>`` and run ``jb start`` as normal.  Currently the only images available are `environments/test`, `environments/stable', and ``environments/hstm-test``.  Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it will go through its initialization and will come up at ``http://localhost:8000/``.
 
 Docker will be expecting to find your AWS credentials at ~/.boto.  If you have your credentials in another location 
 please at least copy them here with the form:
@@ -57,9 +55,16 @@ HealthStream environments have a separate Run configuration ``HSTM-Juicebox``.  
 ``Run -> Debug - 'HSTM-Juicebox'``.
 
 # Troubleshooting
+
+## Port Already Allocated
 In some cases you may encounter some variation of the following error: ``Error starting userland proxy: Bind for 
 0.0.0.0:8000 failed: port is already allocated``.  This is most likely due to a program running on the port we need 
 (Juicebox in Vagrant for example).  Be sure to kill the task that's using the port, and try again.  If you still 
 encounter this issue and you're sure you've killed the necessary, try restarting Docker.  On Mac there will be a Whale 
 icon in your top task bar, click that, and restart should be the first option.  If all else fails try a full restart of 
 your computer.
+
+## Signature Expired
+The following error seems to come up if you've started Juicebox and left it running for quite a while.  The credential 
+session expires after 12 hours in most cases.  Normally a restart of Docker fixes this issue, but if not try a full reboot.
+``botocore.exceptions.ClientError: An error occurred (InvalidSignatureException) when calling the Query operation: Signature expired: 20170519T122830Z is now earlier than 20170519T124310Z (20170519T125810Z - 15 min.)``
