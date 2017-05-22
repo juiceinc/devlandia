@@ -21,11 +21,10 @@ directory for your devlandia virtual environment.  Be sure to edit the file to p
 directory.  This will automatically log you in to our private Docker registry every time you activate the virtual
 environment.
 
-Finally you'll need to cd into the desired environment at 
-``environments/<env>`` and run ``jb start`` as normal.  Currently the only images available are ``environments/test``, 
-``environments/stable``, and ``environments/hstm-test``.  Docker will pull down 3 images: Postgres, Redis, and the 
-pre-built Juicebox image.  After the images are downloaded it will go through its initialization and will come up at 
-``http://localhost:8000/``.
+Finally you'll need to cd into the desired environment at ``environments/<env>`` and run ``jb start`` as normal.  
+Currently the only images available are ``environments/test``, ``environments/stable``, and ``environments/hstm-test``.  
+Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it 
+will go through its initialization and will come up at ``http://localhost:8000/``.
 
 An important note, the default behavior of running ``jb start`` now is to look for changes with
 the local image you're working on compared to the server version and to pull these updates so you'll always be up to 
