@@ -22,7 +22,15 @@ directory.  This will automatically log you in to our private Docker registry ev
 environment.
 
 Finally you'll need to cd into the desired environment at 
-``environments/<env>`` and run ``jb start`` as normal.  Currently the only images available are ``environments/test``, ``environments/stable``, and ``environments/hstm-test``.  Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it will go through its initialization and will come up at ``http://localhost:8000/``.
+``environments/<env>`` and run ``jb start`` as normal.  Currently the only images available are ``environments/test``, 
+``environments/stable``, and ``environments/hstm-test``.  Docker will pull down 3 images: Postgres, Redis, and the 
+pre-built Juicebox image.  After the images are downloaded it will go through its initialization and will come up at 
+``http://localhost:8000/``.
+
+An important note, the default behavior of running ``jb start`` now is to look for changes with
+the local image you're working on compared to the server version and to pull these updates so you'll always be up to 
+date.  If for whatever reason you don't want to update the Juicebox image immediately, you can call the command 
+as follows: ``jb start --noupdate``.  This has to be done every time you start if you don't want the image to update.
 
 Docker will be expecting to find your AWS credentials at ~/.boto.  If you have your credentials in another location 
 please at least copy them here with the form:
