@@ -19,7 +19,7 @@ functools32==3.2.3.post2
 future==0.16.0
 gabbi==1.24.0
 ipaddress==1.0.18
--e git+ssh://git@github.com/juiceinc/jbcli.git@6b4f3d35eebaeff620bfed294cf1f8abd6848b3d#egg=jbcli
+-e git+ssh://git@github.com/juiceinc/jbcli.git@5d65b15b1a65b1f30cbfd0d067098241b5a4af27#egg=jbcli
 Jinja2==2.9.6
 jsonpath-rw==1.4.0
 jsonpath-rw-ext==1.1.1
