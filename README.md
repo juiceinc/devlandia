@@ -22,9 +22,9 @@ directory.  This will automatically log you in to our private Docker registry ev
 environment.
 
 Finally you'll need to cd into the desired environment at ``environments/<env>`` and run ``jb start`` as normal.  
-Currently the only images available are ``environments/test``, ``environments/stable``, and ``environments/hstm-test``.  
 Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it 
-will go through its initialization and will come up at ``http://localhost:8000/``.
+will go through its initialization and will come up at ``http://localhost:8000/``.  To add new apps, go to the root of 
+Devlandia and run ``jb add <app_name>``.
 
 An important note, the default behavior of running ``jb start`` now is to look for changes with
 the local image you're working on compared to the server version and to pull these updates so you'll always be up to 
