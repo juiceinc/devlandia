@@ -38,6 +38,12 @@ please at least copy them here with the form:
     aws_access_key_id = NEW_ACCESS_KEY
     aws_secret_access_key = NEW_SECRET_KEY
 
+You will also need to have your credentials in the ~/.aws/credentials file (for use with the AWS cli, it doesn't seem to pull credentials from ~/.boto).  It is in the following format:
+ 
+    [default]
+    aws_access_key_id = NEW_ACCESS_KEY
+    aws_secret_access_key = NEW_SECRET_KEY
+
 # Debugging
 The juicebox image is built with SSH enabled so that we can setup a remote interpreter through the connection.  For 
 local development purposes, a default insecure_key is installed to make it easier to setup and distribute.  The private
