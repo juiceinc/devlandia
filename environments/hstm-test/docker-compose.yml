@@ -13,7 +13,7 @@ services:
       - "postgres"
     volumes:
       - ./apps:/code/apps
-      - ~/.boto:/root/.boto:ro
+      - ~/.aws:/root/.aws:ro
     links:
       - postgres
       - redis
@@ -22,6 +22,7 @@ services:
       - DJANGO_SETTINGS_MODULE=fruition.settings.docker
       - REGION=us-east-1
       - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
+      - AWS_PROFILE=hstm
   postgres:
     container_name: "postgres"
     environment:
