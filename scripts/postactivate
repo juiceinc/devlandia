@@ -1,6 +1,0 @@
-#!/bin/bash
-# This hook is run after this virtualenv is activated.
-# Place this file at $DEVLANDIA_VIRTUAL_ENV/bin/
-
-cd PATH_TO_DEVLANDIA_DIR && make ecr_login
-

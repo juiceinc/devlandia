@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Juicebox" type="Python.DjangoServer" factoryName="Django server">
+  <configuration default="false" name="HSTM-Juicebox Debug Fix" type="Python.DjangoServer" factoryName="Django server" activateToolWindowBeforeRun="false">
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
@@ -36,20 +36,13 @@
         <list />
       </option>
     </EXTENSION>
-    <PathMappingSettings>
-      <option name="pathMappings">
-        <list>
-          <mapping local-root="$PROJECT_DIR$/apps" remote-root="/code/apps" />
-        </list>
-      </option>
-    </PathMappingSettings>
     <option name="launchJavascriptDebuger" value="false" />
     <option name="host" value="" />
-    <option name="additionalOptions" value="runserver 0.0.0.0:8888 --settings=fruition.settings.docker" />
-    <option name="browserUrl" value="http://localhost:8888/" />
+    <option name="additionalOptions" value="0.0.0.0:8888 --settings=fruition.settings.docker" />
+    <option name="browserUrl" value="http://localhost:8888/admin" />
     <option name="runTestServer" value="false" />
     <option name="runNoReload" value="false" />
-    <option name="useCustomRunCommand" value="true" />
+    <option name="useCustomRunCommand" value="false" />
     <option name="customRunCommand" value="/code/manage.py" />
     <method />
   </configuration>
