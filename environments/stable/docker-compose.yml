@@ -1,7 +1,6 @@
 version: '2'
 services:
   juicebox:
-    container_name: juicebox
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-dev:stable"
     command: bash -c "python docker/entrypoint.py"
     ports:
@@ -23,12 +22,10 @@ services:
       - REGION=us-east-1
       - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
   postgres:
-    container_name: "postgres"
     environment:
       - POSTGRES_USER=juicebox
       - POSTGRES_PASSWORD=juicebox
       - POSTGRES_DB=juicebox
     image: "postgres:9.3-alpine"
   redis:
-    container_name: "redis"
     image: "redis:2.8.6"
