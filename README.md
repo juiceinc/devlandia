@@ -81,3 +81,8 @@ your computer.
 The following error seems to come up if you've started Juicebox and left it running for quite a while.  The credential 
 session expires after 12 hours in most cases.  Normally a restart of Docker fixes this issue, but if not try a full reboot.
 ``botocore.exceptions.ClientError: An error occurred (InvalidSignatureException) when calling the Query operation: Signature expired: 20170519T122830Z is now earlier than 20170519T124310Z (20170519T125810Z - 15 min.)``
+
+# Core Development
+If you'll be working on the core and wanted to test things in Devlandia, you'll use a bit of a different workflow.  After 
+you make your code changes in the fruition repo you're going to want to run ``make docker_build``.  This will build the 
+new image against your changes.  Find the tag of your newly built image using ``docker images`` and go to the correct environment.  
