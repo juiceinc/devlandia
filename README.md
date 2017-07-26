@@ -84,8 +84,9 @@ session expires after 12 hours in most cases.  Normally a restart of Docker fixe
 
 # Core Development
 If you'll be working on the core and wanted to test things in Devlandia, you'll use a bit of a different workflow.  Clone
-the develop branch of fruition into `/environments/core/`.  The core docker-compose file is currently based on the image
-from `/environments/stable`.  The docker-compose file selectively mounts your local Juicebox code subdirectories into 
-corresponding directories inside the container at `/code/`.  Edits to local core code should be reflected inside the 
-running container.  You will be responsible for keeping this branch up to date.  It's not something Devlandia will handle
-itself.  Until the docker branch is merged, you'll need to copy the `docker.py` settings file from the `JB-1174/dockerize-dev-environment` branch in the settings folder.
+the develop branch of fruition into `/environments/core/` with `git clone --recursive git@github.com:juiceinc/fruition.git`.
+You should now have a structure like the following `environments/core/fruition/`.  The core docker-compose file is 
+currently based on the image from `/environments/stable`.  The docker-compose file selectively mounts your local Juicebox 
+code subdirectories into corresponding directories inside the container at `/code/`.  Edits to local core code should be 
+reflected inside the running container.  You will be responsible for keeping this branch up to date.  It's not something
+Devlandia will handle itself.  Until the docker branch is merged, you'll need to copy the `docker.py` settings file from the `JB-1174/dockerize-dev-environment` branch in the settings folder.
