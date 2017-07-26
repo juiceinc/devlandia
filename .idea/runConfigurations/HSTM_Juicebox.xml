@@ -7,11 +7,12 @@
       <env name="DJANGO_SETTINGS_MODULE" value="fruition.settings.docker" />
       <env name="APP_ID" value="1ec756a5-e04a-4885-87ad-3325bbdd4872" />
       <env name="ENVIRONMENT" value="docker" />
+      <env name="AWS_PROFILE" value="hstm" />
       <env name="REGION" value="us-east-1" />
     </envs>
-    <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="" />
-    <option name="IS_MODULE_SDK" value="true" />
+    <option name="SDK_HOME" value="ssh://root@localhost:2222/usr/bin/python" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/apps" />
+    <option name="IS_MODULE_SDK" value="false" />
     <option name="ADD_CONTENT_ROOTS" value="true" />
     <option name="ADD_SOURCE_ROOTS" value="true" />
     <module name="devlandia" />
