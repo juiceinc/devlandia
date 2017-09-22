@@ -82,6 +82,9 @@ The following error seems to come up if you've started Juicebox and left it runn
 session expires after 12 hours in most cases.  Normally a restart of Docker fixes this issue, but if not try a full reboot.
 ``botocore.exceptions.ClientError: An error occurred (InvalidSignatureException) when calling the Query operation: Signature expired: 20170519T122830Z is now earlier than 20170519T124310Z (20170519T125810Z - 15 min.)``
 
+## Debugging Not Working
+There could be a couple issues at play here.  In the PyCharm menu -> Project: devlandia -> Project Interpreter, check to be sure you have a path mapping set.  It should be <Project root>/apps -> /code/apps.  If it's already set but you can't hit any breakpoints, try removing and readding this path mapping.  Map the root of your devlandia direoctory/apps -> /code/apps.  The project root is a virtual mapping that gets expanded, but due to quirks in PyCharm it doesn't always get translated correctly and you're left with an invalid path that doesn't map to anything.
+
 # Core Development
 If you'll be working on the core and wanted to test things in Devlandia, you'll use a bit of a different workflow.  Clone
 the develop branch of fruition into `/environments/core/` with `git clone --recursive git@github.com:juiceinc/fruition.git`.
@@ -89,4 +92,4 @@ You should now have a structure like the following `environments/core/fruition/`
 currently based on the image from `/environments/stable`.  The docker-compose file selectively mounts your local Juicebox 
 code subdirectories into corresponding directories inside the container at `/code/`.  Edits to local core code should be 
 reflected inside the running container.  You will be responsible for keeping this branch up to date.  It's not something
-Devlandia will handle itself.  Until the docker branch is merged, you'll need to copy the `docker.py` settings file from the `JB-1174/dockerize-dev-environment` branch in the settings folder.
+Devlandia will handle itself.  Until the docker branch is merged, you'll need to copy the [docker.py](https://github.com/juiceinc/fruition/blob/JB-1174/dockerize-dev-environment/fruition/settings/docker.py) settings file from the `JB-1174/dockerize-dev-environment` branch in the settings folder.
