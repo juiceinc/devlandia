@@ -23,7 +23,7 @@ future==0.16.0
 futures==3.1.1
 gabbi==1.24.0
 ipaddress==1.0.18
--e git+ssh://git@github.com/juiceinc/jbcli.git@61b8d0b366bd0a0c91bd877b0464d1ab5ed1a301#egg=jbcli
+-e git+ssh://git@github.com/juiceinc/jbcli.git#egg=jbcli
 Jinja2==2.9.6
 jmespath==0.9.3
 jsonpath-rw==1.4.0
