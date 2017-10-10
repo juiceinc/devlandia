@@ -80,7 +80,11 @@ your computer.
 ## Signature Expired
 The following error seems to come up if you've started Juicebox and left it running for quite a while.  The credential 
 session expires after 12 hours in most cases.  Normally a restart of Docker fixes this issue, but if not try a full reboot.
+We have seen a couple of variations of the message, listed below, but the fix is the same.
+
 ``botocore.exceptions.ClientError: An error occurred (InvalidSignatureException) when calling the Query operation: Signature expired: 20170519T122830Z is now earlier than 20170519T124310Z (20170519T125810Z - 15 min.)``
+
+``credstash.KmsError: KMS ERROR: Decryption error An error occurred (InvalidSignatureException) when calling the Decrypt operation: Signature expired: 20171010T195804Z is now earlier than 20171010T200613Z (20171010T201113Z - 5 min.)``
 
 ## Debugging Not Working
 There could be a couple issues at play here.  In the PyCharm menu -> Project: devlandia -> Project Interpreter, check to be sure you have a path mapping set.  It should be <Project root>/apps -> /code/apps.  If it's already set but you can't hit any breakpoints, try removing and readding this path mapping.  Map the root of your devlandia direoctory/apps -> /code/apps.  The project root is a virtual mapping that gets expanded, but due to quirks in PyCharm it doesn't always get translated correctly and you're left with an invalid path that doesn't map to anything.
