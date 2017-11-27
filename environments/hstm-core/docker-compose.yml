@@ -30,6 +30,7 @@ services:
     links:
       - postgres
       - redis
+      - loginproxy
     environment:
       - ENVIRONMENT=docker
       - DJANGO_SETTINGS_MODULE=fruition.settings.docker
@@ -44,3 +45,7 @@ services:
     image: "postgres:9.3-alpine"
   redis:
     image: "redis:2.8.6"
+  loginproxy:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/hstm-loginproxy-devlandia:1.0"
+    ports:
+      - "8889:8889"
