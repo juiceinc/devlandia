@@ -2,7 +2,7 @@ version: '2'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/controlcenter-dev:dev-JB-1196_dockerize"
-    command: bash -c "python docker/entrypoint.py"
+    command: bash -c "/venv/bin/python docker/entrypoint.py"
     ports:
       - "8000:8000"
       - "8888:8888"
@@ -11,20 +11,7 @@ services:
       - "redis"
       - "postgres"
     volumes:
-      - ./hstm-juicebox/data:/code/data
-      - ./hstm-juicebox/dataservices:/code/dataservices
-      - ./hstm-juicebox/fruition:/code/hstm-juicebox/
-      - ./hstm-juicebox/hashr:/code/hashr
-      - ./hstm-juicebox/invitation:/code/invitation
-      - ./hstm-juicebox/jbcommands:/code/jbcommands
-      - ./hstm-juicebox/metadata:/code/metadata
-      - ./hstm-juicebox/people:/code/people
-      - ./hstm-juicebox/public:/code/public
-      - ./hstm-juicebox/snapshots:/code/snapshots
-      - ./hstm-juicebox/stacks:/code/stacks
-      - ./hstm-juicebox/templates:/code/templates
-      - ./hstm-juicebox/themes:/code/themes
-      - ./hstm-juicebox/tours:/code/tours
+      - ./hstm-juicebox:/code
       - ./apps:/code/apps
       - ~/.aws:/root/.aws:ro
     links:
