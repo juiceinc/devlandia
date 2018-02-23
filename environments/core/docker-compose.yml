@@ -1,7 +1,7 @@
 version: '2'
 services:
   juicebox:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:stable"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:dev"
     command: bash -c "/venv/bin/python docker/entrypoint.py"
     ports:
       - "8000:8000"
@@ -11,20 +11,7 @@ services:
       - "redis"
       - "postgres"
     volumes:
-      - ./fruition/data:/code/data
-      - ./fruition/dataservices:/code/dataservices
-      - ./fruition/fruition:/code/fruition/
-      - ./fruition/hashr:/code/hashr
-      - ./fruition/invitation:/code/invitation
-      - ./fruition/jbcommands:/code/jbcommands
-      - ./fruition/metadata:/code/metadata
-      - ./fruition/people:/code/people
-      - ./fruition/public:/code/public
-      - ./fruition/snapshots:/code/snapshots
-      - ./fruition/stacks:/code/stacks
-      - ./fruition/templates:/code/templates
-      - ./fruition/themes:/code/themes
-      - ./fruition/tours:/code/tours
+      - ./fruition:/code
       - ./apps:/code/apps
       - ~/.boto:/root/.boto:ro
     links:
