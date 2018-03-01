@@ -15,8 +15,7 @@ your virtual environment, run ``virtualenv -p /path/to/python/install devlandia`
 environment to ``~/.virtualenvs/`` you'll need to run ``source ~/.virtualenvs/devlandia/bin/activate`` to activate it.
 Once your environment is setup and activated run ``pip install -r requirements.txt`` from the root directory of devlandia.
 
-Next, still in the devlandia root directory, run ``npm install``.  This is necessary for the watcher to work. 
-Run ``make ecr_login``.  To automate this login step, copy the ``postactivate`` file in the scripts folder to the bin 
+ Run ``make ecr_login``.  To automate this login step, copy the ``postactivate`` file in the scripts folder to the bin 
 directory for your devlandia virtual environment.  Be sure to edit the file to point to the root of your devlandia 
 directory.  This will automatically log you in to our private Docker registry every time you activate the virtual
 environment.
