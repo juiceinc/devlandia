@@ -22,7 +22,8 @@ environment.
 
 Finally you'll need to cd into the desired environment at ``environments/<env>`` and run ``jb start`` as normal.  
 Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it 
-will go through its initialization and will come up at ``http://localhost:8000/``.  To add new apps, go to the root of 
+will go through its initialization and will come up at ``http://localhost:8000/``.  If you're starting in a HSTM specific
+environment, go to ``http://localhost:8000/admin`` to bypass the single signon.  To add new apps, go to the root of
 Devlandia and run ``jb add <app_name>``.
 
 An important note, the default behavior of running ``jb start`` now is to look for changes with
