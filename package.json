@@ -1,0 +1,12 @@
+{
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/juiceinc/devlandia.git"
+  },
+  "dependencies": {
+    "generator-juicebox": "git@github.com:juiceinc/generator-juicebox.git#master"
+  },
+  "engines": {
+    "npm": ">= 5.4"
+  }
+}

@@ -91,3 +91,6 @@ ENV/
 
 .idea
 !.idea/runConfigurations/*
+
+# yo juicebox ignore
+.yo-rc.json
