@@ -12,7 +12,7 @@ services:
       - "postgres"
     volumes:
       - ./fruition:/code
-      - ./apps:/code/apps
+      - ../../apps:/code/apps
       - ~/.boto:/root/.boto:ro
     links:
       - postgres

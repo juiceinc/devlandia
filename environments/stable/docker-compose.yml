@@ -11,7 +11,7 @@ services:
       - "redis"
       - "postgres"
     volumes:
-      - ./apps:/code/apps
+      - ../../apps:/code/apps
       - ~/.boto:/root/.boto:ro
     links:
       - postgres
