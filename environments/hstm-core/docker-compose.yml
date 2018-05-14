@@ -14,6 +14,7 @@ services:
       - ./hstm-juicebox:/code
       - ../../apps:/code/apps
       - ~/.aws:/root/.aws:ro
+      - ~/.config/juicebox:/root/.config/juicebox:ro
     links:
       - postgres
       - redis
