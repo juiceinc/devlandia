@@ -14,6 +14,7 @@ services:
       - ./fruition:/code
       - ../../apps:/code/apps
       - ~/.boto:/root/.boto:ro
+      - ~/.config/juicebox:/root/.config/juicebox:ro
     links:
       - postgres
       - redis
