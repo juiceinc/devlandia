@@ -54,3 +54,4 @@ websocket-client==0.40.0
 whichcraft==0.4.1
 wsgi-intercept==1.5.0
 pywin32==223 ; sys_platform == 'win32'
+jbcli
