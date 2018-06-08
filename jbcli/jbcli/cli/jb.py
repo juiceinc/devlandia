@@ -321,24 +321,6 @@ def start(ctx, noupdate, noupgrade):
 
 
 @cli.command()
-def cli_upgrade():
-    """Attempt to upgrade JBCLI to the current version"""
-    cmd = ['pip', 'install', '--upgrade', 'git+ssh://git@github.com/juiceinc/jbcli.git']
-    if sys.platform == 'win32':
-        print(
-            "We can't auto-upgrade the jbcli on Windows.\n"
-            "Keep up to date with `{}`!".format(' '.join(cmd))
-        )
-        return
-    try:
-        subprocess.check_call(cmd)
-        echo_success('Updated successfully')
-    except subprocess.CalledProcessError:
-        echo_warning('Failed to upgrade jbcli')
-        click.get_current_context().abort()
-
-
-@cli.command()
 def yo_upgrade():
     """ Attempt to upgrade yo juicebox to the current version
     """
@@ -385,7 +367,6 @@ def upgrade(ctx):
     except subprocess.CalledProcessError:
         echo_warning('Failed to `git pull`')
         click.get_current_context().abort()
-    ctx.invoke(cli_upgrade)
     ctx.invoke(yo_upgrade)
 
 
