@@ -605,19 +605,6 @@ class TestDocker:
         ]
         assert 'Cloning from cookies to chocolate_chip' in result.output
 
-    @patch('jbcli.cli.jb.subprocess')
-    @patch.object(sys, 'platform', 'linux')
-    def test_cli_upgrade(self, proc_mock):
-        runner = CliRunner()
-        result = runner.invoke(cli, ['cli_upgrade'])
-
-        assert proc_mock.mock_calls == [
-            call.check_call([
-                'pip', 'install', '--upgrade',
-                'git+ssh://git@github.com/juiceinc/jbcli.git']),
-        ]
-        assert result.exit_code == 0
-
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
@@ -639,21 +626,6 @@ class TestDocker:
             call.check_call().__unicode__()
         ]
         # assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.subprocess.check_call')
-    @patch.object(sys, 'platform', 'linux')
-    def test_cli_upgrade_fail(self, proc_mock):
-        proc_mock.side_effect = CalledProcessError(2, 'cmd', 'Ugh Cake')
-        runner = CliRunner()
-        result = runner.invoke(cli, ['cli_upgrade'])
-
-        assert proc_mock.mock_calls == [
-            call.check_call([
-                'pip', 'install', '--upgrade',
-                'git+ssh://git@github.com/juiceinc/jbcli.git'])
-        ]
-        assert result.exit_code == 1
-        assert 'Failed to upgrade jbcli' in result.output
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_test_app(self, dockerutil_mock):
