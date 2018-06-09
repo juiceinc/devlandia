@@ -36,7 +36,8 @@ pipeline {
 virtualenv --no-site-packages .venv
 . .venv/bin/activate
 pip install -qq -U pip wheel
-pip install -qq --exists-action w -r requirements-dev.txt
+pip install -qq --exists-action w -r requirements.txt
+pip install -qq --exists-action w -r jbcli/requirements-dev.txt
 '''
       }
     }
@@ -54,6 +55,7 @@ flake8 --output-file=flake8_errors.txt --exit-zero . '''
         sh '''
 #!/usr/bin/bash
 . .venv/bin/activate
+cd jbcli
 pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli
 '''
       }
@@ -64,6 +66,7 @@ pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli
 #!/usr/bin/bash
 . .venv/bin/activate
 export AWS_SECURITY_TOKEN=`echo $AWS_SESSION_TOKEN`
+cd jbcli
 make docs
 aws s3 sync docs/_build/html s3://internal.juiceboxdata.com/projects/jbcli --acl bucket-owner-full-control --delete
 '''
