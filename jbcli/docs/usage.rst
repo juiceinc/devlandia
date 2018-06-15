@@ -333,21 +333,6 @@ Example::
     $ jb start --noupdate
 
 
-CLI Commands
-============
-
-These commands are for working with the CLI itself.
-
-cli_upgrade
------------
-
-This command will upgrade your Juicebox CLI to the latest version. It assumes
-you are using not system Python.
-
-Example::
-
-    $ jb cli_upgrade
-
 
 Built-in Help
 =============
