@@ -47,7 +47,7 @@ pip install -qq --exists-action w -r jbcli/requirements-dev.txt
 #!/usr/bin/bash
 . .venv/bin/activate
 echo "flake8">> flake8_errors.txt
-flake8 --output-file=flake8_errors.txt --exit-zero . '''
+flake8 --output-file=flake8_errors.txt --exit-zero jbcli '''
       }
     }
     stage('Testing') {
