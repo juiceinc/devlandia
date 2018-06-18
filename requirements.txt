@@ -23,7 +23,6 @@ future==0.16.0
 futures==3.1.1
 gabbi==1.24.0
 ipaddress==1.0.18
--e git+ssh://git@github.com/juiceinc/jbcli.git#egg=jbcli
 Jinja2==2.9.6
 jmespath==0.9.3
 jsonpath-rw==1.4.0
@@ -54,3 +53,5 @@ websocket-client==0.40.0
 whichcraft==0.4.1
 wsgi-intercept==1.5.0
 pywin32==223 ; sys_platform == 'win32'
+-r jbcli/requirements.txt
+-e ./jbcli
