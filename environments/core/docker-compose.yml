@@ -2,7 +2,7 @@ version: '2'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:dev"
-    command: bash -c "/venv/bin/python docker/entrypoint.py"
+    command: bash -c "/venv/bin/pip install -q -r requirements.txt && /venv/bin/python docker/entrypoint.py"
     ports:
       - "8000:8000"
       - "8888:8888"
