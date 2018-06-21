@@ -11,8 +11,7 @@ set -x
 pip install virtualenv virtualenvwrapper
 
 grep "WORKON_HOME" ~/.bash_profile || echo "WORKON_HOME="~/.virtualenvs"" >> ~/.bash_profile
-if [ -f /usr/local/bin/setup.sh ]
-   grep "/usr/local/bin/setup.sh" ~/.bash_profile || echo "source /usr/local/bin/setup.sh" >> ~/.bash_profile
+grep "/usr/local/bin/virtualenvwrapper.sh" ~/.bash_profile || echo "source /usr/local/bin/virtualenvwrapper.sh" >> ~/.bash_profile
 source $HOME/.bash_profile
 chmod 400 insecure_key && cp insecure_key ~/.ssh/
 mkvirtualenv devlandia -p python2.7
