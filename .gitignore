@@ -91,7 +91,7 @@ ENV/
 .ropeproject
 
 .idea
-!.idea/runConfigurations/*
+!.idea/runConfigurations/
 
 # yo juicebox ignore
 .yo-rc.json
