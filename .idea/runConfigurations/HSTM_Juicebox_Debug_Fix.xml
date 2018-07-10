@@ -1,0 +1,50 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="HSTM-Juicebox Debug Fix" type="Python.DjangoServer" factoryName="Django server" activateToolWindowBeforeRun="false">
+    <option name="INTERPRETER_OPTIONS" value="" />
+    <option name="PARENT_ENVS" value="true" />
+    <envs>
+      <env name="DJANGO_SETTINGS_MODULE" value="fruition.settings.docker" />
+      <env name="APP_ID" value="1ec756a5-e04a-4885-87ad-3325bbdd4872" />
+      <env name="PYTHONUNBUFFERED" value="1" />
+      <env name="ENVIRONMENT" value="docker" />
+      <env name="AWS_DEFAULT_REGION" value="us-east-1" />
+      <env name="REGION" value="us-east-1" />
+    </envs>
+    <option name="SDK_HOME" value="" />
+    <option name="WORKING_DIRECTORY" value="" />
+    <option name="IS_MODULE_SDK" value="true" />
+    <option name="ADD_CONTENT_ROOTS" value="true" />
+    <option name="ADD_SOURCE_ROOTS" value="true" />
+    <module name="devlandia" />
+    <EXTENSION ID="DockerContainerSettingsRunConfigurationExtension">
+      <option name="envVars">
+        <list />
+      </option>
+      <option name="extraHosts">
+        <list />
+      </option>
+      <option name="links">
+        <list />
+      </option>
+      <option name="networkDisabled" value="false" />
+      <option name="networkMode" value="bridge" />
+      <option name="portBindings">
+        <list />
+      </option>
+      <option name="publishAllPorts" value="false" />
+      <option name="version" value="1" />
+      <option name="volumeBindings">
+        <list />
+      </option>
+    </EXTENSION>
+    <option name="launchJavascriptDebuger" value="false" />
+    <option name="host" value="" />
+    <option name="additionalOptions" value="0.0.0.0:8888 --settings=fruition.settings.docker" />
+    <option name="browserUrl" value="http://localhost:8888/admin" />
+    <option name="runTestServer" value="false" />
+    <option name="runNoReload" value="false" />
+    <option name="useCustomRunCommand" value="false" />
+    <option name="customRunCommand" value="/code/manage.py" />
+    <method />
+  </configuration>
+</component>
