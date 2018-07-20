@@ -330,7 +330,7 @@ def yo_upgrade():
     try:
         # Get the latest generator-juicebox
         output = subprocess.check_call(
-            ['npm', 'update', '--force'])
+            ['npm', 'install', 'generator-juicebox'])
         click.echo(output)
         echo_success('Updated yo juicebox successfully')
 
