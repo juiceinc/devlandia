@@ -2,6 +2,7 @@
 """
 from __future__ import print_function
 
+from glob import glob
 import json
 import time
 from operator import itemgetter
@@ -34,20 +35,33 @@ class WatchHandler(FileSystemEventHandler):
         click.echo('Waiting for changes...')
 
 
+def _intersperse(el, l):
+    return [y for x in zip([el]*len(l), l) for y in x]
+
+
+def docker_compose(*args):
+    file_args = _intersperse('-f', glob('docker-compose-*.yml'))
+    cmd = (
+        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + list(args)
+    )
+
+    return check_call(cmd)
+
+
 def up():
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml """
-    check_call(['docker-compose', 'up'])
+    docker_compose('up')
 
 
 def destroy():
     """Removes all containers and networks defined in docker-compose.yml"""
-    check_call(['docker-compose', 'down'])
+    docker_compose('down')
 
 
 def halt():
     """Halts all containers defined in docker-compose file."""
-    check_call(['docker-compose', 'stop'])
+    docker_compose('stop')
 
 
 def is_running():
