@@ -10,21 +10,21 @@ class TestDocker:
     def test_up(self, check_mock):
         dockerutil.up()
         assert check_mock.mock_calls == [
-            call(['docker-compose', 'up'])
+            call(['docker-compose', '-f', 'docker-compose.yml', 'up'])
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
     def test_destroy(self, check_mock):
         dockerutil.destroy()
         assert check_mock.mock_calls == [
-            call(['docker-compose', 'down'])
+            call(['docker-compose', '-f', 'docker-compose.yml', 'down'])
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
     def test_halt(self, check_mock):
         dockerutil.halt()
         assert check_mock.mock_calls == [
-            call(['docker-compose', 'stop'])
+            call(['docker-compose', '-f', 'docker-compose.yml', 'stop'])
         ]
 
     @patch('jbcli.utils.dockerutil.client')
