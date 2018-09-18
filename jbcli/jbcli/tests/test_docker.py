@@ -27,6 +27,27 @@ class TestDocker:
             call(['docker-compose', '-f', 'docker-compose.yml', 'stop'])
         ]
 
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.utils.dockerutil.glob')
+    def test_multiple_docker_compose_files(self, glob_mock, check_mock):
+        """When additional `docker-compose-*.yml` files are available, they
+        are passed to `docker-compose`.
+        """
+        glob_mock.return_value = [
+            'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
+        dockerutil.up()
+        assert check_mock.mock_calls == [
+            call([
+                'docker-compose',
+                '-f', 'docker-compose.yml',
+                '-f', 'docker-compose-coolio.yml',
+                '-f', 'docker-compose-2pac.yml',
+                'up',
+            ])
+        ]
+
+
+
     @patch('jbcli.utils.dockerutil.client')
     def test_get_state_running(self, dockerutil_mock):
         Container = namedtuple('Container', ['status'])

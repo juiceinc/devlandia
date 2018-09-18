@@ -2,7 +2,7 @@
 """
 from __future__ import print_function
 
-import glob
+from glob import glob
 import json
 import time
 from operator import itemgetter
@@ -40,7 +40,7 @@ def _intersperse(el, l):
 
 
 def docker_compose(*args):
-    file_args = _intersperse('-f', glob.glob('docker-compose-*.yml'))
+    file_args = _intersperse('-f', glob('docker-compose-*.yml'))
     cmd = (
         ['docker-compose', '-f', 'docker-compose.yml'] + file_args + list(args)
     )
