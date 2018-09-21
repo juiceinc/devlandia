@@ -622,7 +622,7 @@ class TestDocker:
 
         # TODO: Improve these tests
         assert proc_mock.mock_calls == [
-            call.check_call(['npm', 'install', 'generator-juicebox']),
+            call.check_call(['npm', 'install', '--package-lock=false', 'generator-juicebox']),
             call.check_call().__unicode__()
         ]
         # assert result.exit_code == 0
