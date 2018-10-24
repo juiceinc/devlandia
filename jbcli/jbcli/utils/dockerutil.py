@@ -31,7 +31,10 @@ class WatchHandler(FileSystemEventHandler):
         else:
             path = event.src_path.split('/')
         click.echo('Change detected in app: {}.'.format(path))
-        run('/venv/bin/python manage.py loadjuiceboxapp ' + path[3])
+
+        if path[-1] != '.git':
+            run('/venv/bin/python manage.py loadjuiceboxapp ' + path[3])
+
         click.echo('Waiting for changes...')
 
 
@@ -237,13 +240,15 @@ def get_state(container_name):
     return client.containers.get(container_name).status
 
 
-def jb_watch():
+def jb_watch(app=''):
     """Run the Juicebox project watcher"""
     if is_running() and ensure_home():
         click.echo('I\'m watching you Wazowski...always watching...always.')
+
         event_handler = WatchHandler()
         observer = Observer()
-        observer.schedule(event_handler, path='../../apps/', recursive=True)
+
+        observer.schedule(event_handler, path='../../apps/' + app, recursive=True)
         observer.start()
         try:
             while True:

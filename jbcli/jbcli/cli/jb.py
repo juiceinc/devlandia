@@ -223,11 +223,12 @@ def remove(applications):
 
 @click.option('--includejs', default=False, help='Watch for js changes',
               is_flag=True)
+@click.option('--app', default='', help='Watch a specific app.')
 @cli.command()
-def watch(includejs=False):
+def watch(includejs=False, app=''):
     """ Watch for changes in apps and js and reload/rebuild"""
     procs = []
-    jb_watch_proc = Process(target=dockerutil.jb_watch)
+    jb_watch_proc = Process(target=dockerutil.jb_watch, kwargs={'app': app})
     jb_watch_proc.start()
     procs.append(jb_watch_proc)
 
