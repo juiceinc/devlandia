@@ -401,7 +401,25 @@ class TestDocker:
         result = runner.invoke(cli, ['watch'])
 
         assert process_mock.mock_calls == [
-            call(target=dockerutil_mock.jb_watch),
+            call(target=dockerutil_mock.jb_watch, kwargs={'app': ''}),
+            call().start(),
+            call().join()
+        ]
+
+        assert result.exit_code == 0
+
+    @patch('jbcli.cli.jb.Process')
+    @patch('jbcli.cli.jb.time')
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_watch_for_specific_app(self, dockerutil_mock, time_mock, process_mock):
+        dockerutil_mock.is_running.return_value = True
+        dockerutil_mock.ensure_home.return_value = True
+        time_mock.sleep.side_effect = KeyboardInterrupt
+        runner = CliRunner()
+        result = runner.invoke(cli, ['watch', '--app', 'test'])
+
+        assert process_mock.mock_calls == [
+            call(target=dockerutil_mock.jb_watch, kwargs={'app': 'test'}),
             call().start(),
             call().join()
         ]
@@ -419,7 +437,7 @@ class TestDocker:
         result = runner.invoke(cli, ['watch', '--includejs'])
 
         assert process_mock.mock_calls == [
-            call(target=dockerutil_mock.jb_watch),
+            call(target=dockerutil_mock.jb_watch, kwargs={'app': ''}),
             call().start(),
             call(target=dockerutil_mock.js_watch),
             call().start(),
