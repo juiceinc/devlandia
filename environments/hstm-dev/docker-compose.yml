@@ -4,7 +4,7 @@ services:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/controlcenter-dev:dev-JB-1196_dockerize"
     command: bash -c "python docker/entrypoint.py"
     ports:
-      - "8000:8000"
+      - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
       - "2222:22"
     depends_on:
