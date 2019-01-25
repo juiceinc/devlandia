@@ -11,7 +11,6 @@ requirements = [
     'docker-compose==1.12.0',
     'botocore==1.5.76',
     'watchdog==0.8.3',
-    'maya==0.3.3',
     'tabulate==0.8.2'
 ]
 
