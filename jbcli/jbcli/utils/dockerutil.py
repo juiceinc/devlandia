@@ -10,7 +10,6 @@ import datetime
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from tabulate import tabulate
-import maya
 import re
 import sys
 import os
@@ -203,25 +202,24 @@ def image_list(showall=False, print_flag=True, semantic=False):
     imageList = []
     cmd = "aws ecr describe-images --registry-id 423681189101 --repository-name juicebox-devlandia"
     images = json.loads(check_output(cmd.split()))
+    now = datetime.datetime.now()
     for image in images['imageDetails']:
         if 'imageTags' in image:
+            pushed = datetime.datetime.fromtimestamp(int(image['imagePushedAt']))
+            pushed = pushed + datetime.timedelta(hours=5) # Why do we add 5 hours?
             for tag in image['imageTags']:
-
-                pushed = maya.MayaDT.from_datetime(
-                    datetime.datetime.fromtimestamp(
-                        int(image['imagePushedAt']))).add(hours=5)
-
+                slang = '{} days ago'.format((now - pushed).days)
                 if not showall and not semantic:
-                    if pushed >= maya.when('30 days ago'):
+                    if pushed >= now - datetime.timedelta(days=30):
                         imageList.append(
-                            [tag, image['imageDigest'][7:], pushed.slang_time()])
+                            [tag, image['imageDigest'][7:], slang])
                 elif showall and not semantic:
                     imageList.append(
-                        [tag, image['imageDigest'][7:], pushed.slang_time()])
+                        [tag, image['imageDigest'][7:], slang])
                 elif semantic and not showall:
                     if '.' in tag:
                         imageList.append([tag, image['imageDigest'][7:],
-                                          pushed.slang_time()])
+                                          slang])
 
     if print_flag:
         print(tabulate(sorted(imageList, key=itemgetter(0)), headers=['Image Name', 'Digest',
