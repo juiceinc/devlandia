@@ -261,4 +261,4 @@ def jb_watch(app=''):
 
 def js_watch():
     if is_running() and ensure_home():
-        run('./node_modules/.bin/webpack --progress --colors --watch')
+        run('./node_modules/.bin/webpack --mode=development --progress --colors --watch')
