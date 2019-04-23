@@ -48,6 +48,10 @@ class JuiceboxLoggingSearcher(object):
                 if k and v:
                     row[k] = v
 
+        # Remove a non-useful cached property from recipe
+        # logs. This seems to be always "True"
+        row.pop('cached', None)
+
         # Handle the log specific extra parts
         if data_service_log == 'recipe':
             row['query'] = extra_parts

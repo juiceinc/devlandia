@@ -486,8 +486,8 @@ def manage(args):
     default='',
     help='A filename to write the output to')
 def search(username, password, env, data_service_log,
-                        lookback_window, limit, service_pattern, user_pattern,
-                        output):
+           lookback_window, limit, service_pattern, user_pattern,
+           output):
     """Query elasticsearch and show results
 
     Environment variables LP_USERNAME and LP_PASSWORD must be set.
@@ -509,7 +509,10 @@ def search(username, password, env, data_service_log,
     dataset = JuiceboxLoggingSearcher().dataset(**params)
 
     print(
-        'Running\njb search --env {env} --data_service_log {data_service_log} --lookback_window {lookback_window} --limit {limit} --service_pattern "{service_pattern}" --user_pattern "{user_pattern}" --output "{output}"\n\n'
+        'Running\njb search --env {env} --data_service_log {data_service_log} '
+        '--lookback_window {lookback_window} --limit {limit} '
+        '--service_pattern "{service_pattern}" '
+        '--user_pattern "{user_pattern}" --output "{output}"\n\n'
             .format(output=output, **params))
 
     if output:
