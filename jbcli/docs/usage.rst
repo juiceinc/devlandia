@@ -333,6 +333,19 @@ Example::
     $ jb start --noupdate
 
 
+stop
+----
+
+This command will stop your Juicebox VM if it is already running.
+
+Options
+~~~~~~~
+
+None
+
+Example::
+
+    $ jb stop
 
 Built-in Help
 =============
