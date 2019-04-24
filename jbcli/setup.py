@@ -7,11 +7,12 @@ requirements = [
     'docker==2.2.1',
     'docker-compose==1.12.0',
     'requests==2.11.1',
-    'docker==2.2.1',
-    'docker-compose==1.12.0',
-    'botocore==1.5.76',
     'watchdog==0.8.3',
-    'tabulate==0.8.2'
+    'tabulate==0.8.2',
+    'certifi==2019.3.9',
+    'elasticsearch==6.3.1',
+    'elasticsearch-dsl==6.3.1',
+    'tablib==0.13.0',
 ]
 
 # Have setuptools generate the entry point
