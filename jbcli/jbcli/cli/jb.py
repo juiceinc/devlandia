@@ -323,6 +323,20 @@ def start(ctx, noupdate, noupgrade):
 
 
 @cli.command()
+@click.pass_context
+def stop(ctx):
+    """Stop a running juicebox in this environment
+    """
+    dockerutil.ensure_home()
+
+    if not dockerutil.is_running():
+        echo_highlight('Juicebox is not running')
+    else:
+        dockerutil.halt()
+        echo_highlight('Juicebox is no longer running.')
+
+
+@cli.command()
 def yo_upgrade():
     """ Attempt to upgrade yo juicebox to the current version
     """

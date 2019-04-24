@@ -448,6 +448,20 @@ class TestDocker:
         assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')
+    def test_stop(self, dockerutil_mock):
+        dockerutil_mock.is_running.return_value = True
+        dockerutil_mock.ensure_home.return_value = True
+        dockerutil_mock.halt.return_value = None
+        runner = CliRunner()
+        result = runner.invoke(cli, ['stop'])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.ensure_home(),
+            call.is_running(),
+            call.halt()
+        ]
+
+    @patch('jbcli.cli.jb.dockerutil')
     def test_start(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True

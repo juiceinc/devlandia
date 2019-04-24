@@ -332,6 +332,20 @@ Example::
     or
     $ jb start --noupdate
 
+stop
+----
+
+This command will stop your Juicebox VM if it is already running.
+
+Options
+~~~~~~~
+
+None
+
+Example::
+
+    $ jb stop
+
 
 search
 ------
@@ -365,14 +379,10 @@ Options
    "--user_pattern","A regular expression that the user must match"
    "--output","A filename to write the output to, if empty, will write to screen"
 
-
-
 Example::
 
     $ jb search
     [fill out the prompts]
-
-
 
 Built-in Help
 =============
