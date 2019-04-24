@@ -521,3 +521,6 @@ def search(username, password, env, data_service_log,
             outf.write(dataset.tsv)
     else:
         print(dataset.tsv)
+
+    if lookback_window > 90:
+        print("There is only 90 days of history retained")
