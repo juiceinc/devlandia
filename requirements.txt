@@ -27,6 +27,7 @@ jsonpath-rw-ext==1.1.1
 jsonschema==2.6.0
 MarkupSafe==1.0
 packaging==16.8
+paramiko>=2.4.2
 pathtools==0.1.2
 pbr==3.0.0
 ply==3.10
@@ -36,7 +37,7 @@ pyparsing==2.2.0
 pytest==3.0.7
 python-dateutil==2.6.0
 pytz==2017.2
-pyyaml==5.1
+pyyaml==3.13
 requests==2.20.1
 rsa==3.4.2
 ruamel.ordereddict==0.4.9
