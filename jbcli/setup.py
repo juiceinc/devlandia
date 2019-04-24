@@ -6,12 +6,12 @@ requirements = [
     'gabbi==1.24.0',
     'docker==2.2.1',
     'docker-compose==1.12.0',
-    'requests==2.11.1',
+    'requests==2.20.1',
     'docker==2.2.1',
     'docker-compose==1.12.0',
     'botocore==1.5.76',
     'watchdog==0.8.3',
-    'tabulate==0.8.2'
+    'tabulate==0.8.3'
 ]
 
 # Have setuptools generate the entry point
