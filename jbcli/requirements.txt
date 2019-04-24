@@ -7,3 +7,7 @@ gabbi==1.24.0
 requests==2.11.1
 watchdog==0.8.3
 tabulate==0.8.2
+certifi==2019.3.9
+elasticsearch==6.3.1
+elasticsearch-dsl==6.3.1
+tablib==0.13.0
