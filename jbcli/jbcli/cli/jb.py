@@ -380,6 +380,7 @@ def upgrade(ctx):
 
     try:
         subprocess.check_call(['git', 'pull'])
+        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt'])
     except subprocess.CalledProcessError:
         echo_warning('Failed to `git pull`')
         click.get_current_context().abort()
