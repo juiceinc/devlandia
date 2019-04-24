@@ -2,14 +2,10 @@ from setuptools import setup, find_packages
 
 requirements = [
     'click==6.2',
-    'cookiecutter==1.3.0',
     'gabbi==1.24.0',
-    'docker==2.2.1',
-    'docker-compose==1.12.0',
+    'docker==3.7.2',
+    'docker-compose==1.24.0',
     'requests==2.20.1',
-    'docker==2.2.1',
-    'docker-compose==1.12.0',
-    'botocore==1.5.76',
     'watchdog==0.8.3',
     'tabulate==0.8.3'
 ]
