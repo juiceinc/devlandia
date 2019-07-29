@@ -29,10 +29,13 @@ class WatchHandler(FileSystemEventHandler):
             path = re.split(r'[\\/]', event.src_path)
         else:
             path = event.src_path.split('/')
-        click.echo('Change detected in app: {}.'.format(path))
+        click.echo('Change detected in app: {}.'.format(event.src_path))
 
-        if path[-1] != '.git':
+        # Ignore .git files and the entire builds directory
+        if '.git' not in path and 'builds' not in path:
             run('/venv/bin/python manage.py loadjuiceboxapp ' + path[3])
+        else:
+            click.echo('Change ignored')
 
         click.echo('Waiting for changes...')
 
