@@ -17,6 +17,7 @@ import os
 import click
 import docker.errors
 from .subprocess import check_call, check_output
+import jbcli.utils.jbapiutil as jbapiutil
 
 from .format import echo_warning
 
@@ -32,7 +33,10 @@ class WatchHandler(FileSystemEventHandler):
         click.echo('Change detected in app: {}.'.format(event.src_path))
 
         if '.git' not in path and 'builds' not in path:
-            run('/venv/bin/python manage.py loadjuiceboxapp ' + path[3])
+            app = path[3]
+            # Try to load the app via api, then try via docker
+            if not jbapiutil.load_app(app):
+                run('/venv/bin/python manage.py loadjuiceboxapp ' + app)
         else:
             click.echo('Change ignored')
 

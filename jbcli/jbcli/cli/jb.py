@@ -12,7 +12,7 @@ import click
 import docker.errors
 from botocore import exceptions
 
-from ..utils import apps, dockerutil, subprocess
+from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
@@ -111,10 +111,10 @@ def add(applications, add_desktop):
                                 'Failed to add {} to Github Desktop.'.format(
                                     app))
                 try:
-                    dockerutil.run(
-                        '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
-                            app))
-                    echo_success('{} was added successfully.'.format(app))
+                    if not jbapiutil.load_app(app):
+                        dockerutil.run(
+                            '/venv/bin/python manage.py loadjuiceboxapp ' + app)
+                        echo_success('{} was added successfully.'.format(app))
 
                 except docker.errors.APIError as e:
                     echo_warning(
@@ -318,7 +318,7 @@ def start(ctx, noupdate, noupgrade):
                 subprocess.check_call(
                     ['killall', '-HUP' 'com.docker.hyperkit'])
                 time.sleep(30)
-                start(noupdate=noupdate)
+                start(noupdate=noupdate)                
     else:
         echo_warning('An instance of Juicebox is already running')
 
