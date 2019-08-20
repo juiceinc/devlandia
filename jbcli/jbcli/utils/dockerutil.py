@@ -43,19 +43,18 @@ def _intersperse(el, l):
     return [y for x in zip([el]*len(l), l) for y in x]
 
 
-def docker_compose(*args):
+def docker_compose(arg, env=None):
     file_args = _intersperse('-f', glob('docker-compose-*.yml'))
     cmd = (
-        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + list(args)
+        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + [arg]
     )
+    return check_call(cmd, env=env)
 
-    return check_call(cmd)
 
-
-def up():
+def up(env=None):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml """
-    docker_compose('up')
+    docker_compose('up', env=env)
 
 
 def destroy():
