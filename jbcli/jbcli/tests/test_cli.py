@@ -5,7 +5,7 @@ from subprocess import CalledProcessError
 
 from click.testing import CliRunner
 from docker.errors import APIError
-from mock import call, patch, Mock
+from mock import call, patch, Mock, ANY
 from watchdog.events import FileSystemEventHandler
 
 import jbcli
@@ -472,7 +472,7 @@ class TestDocker:
             call.ensure_home(),
             call.is_running(),
             call.pull(tag=None),
-            call.up()
+            call.up(env=ANY)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -486,7 +486,7 @@ class TestDocker:
             call.ensure_home(),
             call.is_running(),
             call.pull(tag=None),
-            call.up()
+            call.up(env=ANY)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -498,7 +498,7 @@ class TestDocker:
         assert dockerutil_mock.mock_calls == [
             call.ensure_home(),
             call.is_running(),
-            call.up()
+            call.up(env=ANY)
         ]
         assert result.exit_code == 0
 
