@@ -13,8 +13,8 @@ from ..cli.jb import cli
 from ..utils.dockerutil import WatchHandler
 
 
-@patch('jbcli.utils.secrets.get_paramstore', new=lambda x: "FAKE_SECRET")
-class TestDocker:
+@patch('jbcli.cli.jb.get_paramstore', new=lambda x: "FAKE_SECRET")
+class TestDocker(object):
     def test_base(self):
         runner = CliRunner()
         result = runner.invoke(cli)
