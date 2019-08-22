@@ -1,18 +1,17 @@
 from setuptools import setup, find_packages
 
 requirements = [
-    'click==6.2',
-    'cookiecutter==1.3.0',
-    'gabbi==1.24.0',
-    'docker==2.2.1',
-    'docker-compose==1.12.0',
-    'requests==2.11.1',
-    'watchdog==0.8.3',
-    'tabulate==0.8.2',
-    'certifi==2019.3.9',
-    'elasticsearch==6.3.1',
-    'elasticsearch-dsl==6.3.1',
-    'tablib==0.13.0',
+    'boto3~=1.9.210',
+    'botocore~=1.12.212',
+    'docker~=3.7.3',
+    'docker-compose~=1.24.1',
+    'click~=6.2',
+    'watchdog~=0.8.3',
+    'tabulate~=0.8.2',
+    'certifi~=2019.3.9',
+    'elasticsearch~=6.3.1',
+    'elasticsearch-dsl~=6.3.1',
+    'tablib~=0.13.0',
 ]
 
 # Have setuptools generate the entry point

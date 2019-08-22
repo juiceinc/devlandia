@@ -15,6 +15,7 @@ from botocore import exceptions
 from ..utils import apps, dockerutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
+from ..utils.secrets import get_paramstore
 
 """
 This is the code for the jb cli command.
@@ -309,7 +310,7 @@ def start(ctx, noupdate, noupgrade):
         try:
             if not noupdate:
                 dockerutil.pull(tag=None)
-            dockerutil.up()
+            dockerutil.up(env=populate_env_with_secrets())
         except botocore.exceptions.ClientError as e:
             click.echo(
                 "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
@@ -320,6 +321,12 @@ def start(ctx, noupdate, noupgrade):
                 start(noupdate=noupdate)
     else:
         echo_warning('An instance of Juicebox is already running')
+
+
+def populate_env_with_secrets():
+    env = os.environ.copy()
+    env['JB_GOOGLE_CLOUD_PRIVKEY'] = get_paramstore('jbo-google-cloud-privkey')
+    return env
 
 
 @cli.command()

@@ -7,7 +7,6 @@ import tempfile
 from uuid import uuid4
 
 import click
-from cookiecutter.main import cookiecutter
 
 from .. import conf
 from .format import echo_warning, echo_success
