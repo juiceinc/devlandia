@@ -312,13 +312,15 @@ def start(ctx, noupdate, noupgrade):
                 dockerutil.pull(tag=None)
             dockerutil.up(env=populate_env_with_secrets())
         except botocore.exceptions.ClientError as e:
-            click.echo(
-                "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
             if "Signature expired" in e.message:
+                click.echo(
+                    "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
                 subprocess.check_call(
                     ['killall', '-HUP' 'com.docker.hyperkit'])
                 time.sleep(30)
                 start(noupdate=noupdate)
+            else:
+                raise
     else:
         echo_warning('An instance of Juicebox is already running')
 
