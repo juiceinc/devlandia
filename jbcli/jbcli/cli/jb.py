@@ -328,6 +328,7 @@ def start(ctx, noupdate, noupgrade):
 def populate_env_with_secrets():
     env = os.environ.copy()
     env['JB_GOOGLE_CLOUD_PRIVKEY'] = get_paramstore('jbo-google-cloud-privkey')
+    env['JB_GITHUB_FETCHAPP_CREDS'] = get_paramstore('opslord-github-credentials')
     return env
 
 

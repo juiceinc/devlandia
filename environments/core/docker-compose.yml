@@ -29,6 +29,7 @@ services:
       - AWS_SESSION_TOKEN
       - AWS_SECURITY_TOKEN
       - JB_GOOGLE_CLOUD_PRIVKEY
+      - JB_GITHUB_FETCHAPP_CREDS
   postgres:
     environment:
       - POSTGRES_USER=juicebox
