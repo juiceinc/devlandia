@@ -298,7 +298,6 @@ def select(tag):
 def start(ctx, noupdate, noupgrade):
     """Configure the environment and start Juicebox
     """
-    dockerutil.ensure_home()
 
     if not noupgrade:
         cwd = os.getcwd()
@@ -310,6 +309,7 @@ def start(ctx, noupdate, noupgrade):
         try:
             if not noupdate:
                 dockerutil.pull(tag=None)
+            activate_hstm()
             dockerutil.up(env=populate_env_with_secrets())
         except botocore.exceptions.ClientError as e:
             if "Signature expired" in e.message:
@@ -548,3 +548,8 @@ def search(username, password, env, data_service_log,
 
     if lookback_window > 90:
         print("There is only 90 days of history retained")
+
+
+def activate_hstm():
+    if 'hstm-' in os.getcwd():
+        os.environ['AWS_PROFILE'] = 'hstm'

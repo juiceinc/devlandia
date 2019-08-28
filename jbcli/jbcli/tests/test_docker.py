@@ -68,29 +68,13 @@ class TestDocker:
 
     @patch('jbcli.utils.dockerutil.click')
     @patch('jbcli.utils.dockerutil.os')
-    def test_ensure_home_no_hstm(self, os_mock, click_mock):
+    def test_ensure_home(self, os_mock, click_mock):
         os_mock.path.isfile.return_value = True
         os_mock.path.isdir.return_value = True
-        os_mock.getcwd.return_value = "NotHealthStream"
         dockerutil.ensure_home()
         assert os_mock.mock_calls == [
             call.path.isfile('docker-compose.yml'),
             call.path.isdir('../../apps'),
-            call.getcwd()
-        ]
-
-    @patch('jbcli.utils.dockerutil.click')
-    @patch('jbcli.utils.dockerutil.os')
-    def test_ensure_home_hstm(self, os_mock, click_mock):
-        os_mock.path.isfile.return_value = True
-        os_mock.path.isdir.return_value = True
-        os_mock.getcwd.return_value = "hstm-"
-        dockerutil.ensure_home()
-        assert os_mock.mock_calls == [
-            call.path.isfile('docker-compose.yml'),
-            call.path.isdir('../../apps'),
-            call.getcwd(),
-            call.environ.__setitem__('AWS_PROFILE', 'hstm')
         ]
 
     @patch('jbcli.utils.dockerutil.click')
@@ -98,12 +82,10 @@ class TestDocker:
     def test_ensure_home_missing_apps(self, os_mock, click_mock):
         os_mock.path.isfile.return_value = True
         os_mock.path.isdir.return_value = False
-        os_mock.getcwd.return_value = "NoHealthStream"
         dockerutil.ensure_home()
         assert os_mock.mock_calls == [
             call.path.isfile('docker-compose.yml'),
             call.path.isdir('../../apps'),
-            call.getcwd()
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
@@ -114,11 +96,9 @@ class TestDocker:
     @patch('jbcli.utils.dockerutil.os')
     def test_ensure_home_missing_dc_file(self, os_mock, click_mock):
         os_mock.path.isfile.return_value = False
-        os_mock.getcwd.return_value = "NoHealthStream"
         dockerutil.ensure_home()
         assert os_mock.mock_calls == [
             call.path.isfile('docker-compose.yml'),
-            call.getcwd()
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
@@ -179,7 +159,6 @@ class TestDocker:
         assert os_mock.mock_calls == [
             call.path.isfile('docker-compose.yml'),
             call.path.isdir('../../apps'),
-            call.getcwd(),
             call.getcwd(),
             call.path.abspath(os_mock.getcwd.return_value),
             call.chdir('../..'),

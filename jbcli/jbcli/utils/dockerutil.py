@@ -85,7 +85,7 @@ def is_running():
     return running
 
 
-def ensure_root(output=True):
+def ensure_root():
     """Verifies that we are in the devlandia root directory
 
     :rtype: ``bool``
@@ -99,7 +99,7 @@ def ensure_root(output=True):
     return True
 
 
-def ensure_virtualenv(output=True):
+def ensure_virtualenv():
     """Verifies that a virtualenv is active
 
     :rtype: ``bool``
@@ -110,7 +110,7 @@ def ensure_virtualenv(output=True):
     return True
 
 
-def ensure_home(output=True):
+def ensure_home():
     """Verifies that we are in a Juicebox directory
 
     :rtype: ``bool``
@@ -121,8 +121,6 @@ def ensure_home(output=True):
             'Please run this command from inside the desired environment in '
             'Devlandia.')
         click.get_current_context().abort()
-    if 'hstm-' in os.getcwd():
-        os.environ['AWS_PROFILE'] = 'hstm'
     return True
 
 
@@ -190,7 +188,7 @@ def pull(tag):
 
     :param tag: Tag of image to download from the current environment
     """
-    if ensure_home(output=False) is True:
+    if ensure_home() is True:
         full_path = parse_dc_file(tag=tag)
         abs_path = os.path.abspath(os.getcwd())
         os.chdir('../..')

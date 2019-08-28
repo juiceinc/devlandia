@@ -470,7 +470,6 @@ class TestDocker(object):
         result = runner.invoke(cli, ['start', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
-            call.ensure_home(),
             call.is_running(),
             call.pull(tag=None),
             call.up(env=ANY)
@@ -484,7 +483,6 @@ class TestDocker(object):
         result = runner.invoke(cli, ['start', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
-            call.ensure_home(),
             call.is_running(),
             call.pull(tag=None),
             call.up(env=ANY)
@@ -497,7 +495,6 @@ class TestDocker(object):
         runner = CliRunner()
         result = runner.invoke(cli, ['start', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [
-            call.ensure_home(),
             call.is_running(),
             call.up(env=ANY)
         ]
@@ -513,7 +510,6 @@ class TestDocker(object):
         assert 'An instance of Juicebox is already running' in result.output
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
-            call.ensure_home(),
             call.is_running()
         ]
 
