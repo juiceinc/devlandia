@@ -10,21 +10,24 @@ class TestDocker:
     def test_up(self, check_mock):
         dockerutil.up()
         assert check_mock.mock_calls == [
-            call(['docker-compose', '-f', 'docker-compose.yml', 'up'], env=None)
+            call(['docker-compose', '--verbose', '-f', 'docker-compose.yml',
+                  'up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
     def test_destroy(self, check_mock):
         dockerutil.destroy()
         assert check_mock.mock_calls == [
-            call(['docker-compose', '-f', 'docker-compose.yml', 'down'], env=None)
+            call(['docker-compose', '--verbose', '-f', 'docker-compose.yml',
+                  'down'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
     def test_halt(self, check_mock):
         dockerutil.halt()
         assert check_mock.mock_calls == [
-            call(['docker-compose', '-f', 'docker-compose.yml', 'stop'], env=None)
+            call(['docker-compose', '--verbose', '-f', 'docker-compose.yml',
+                  'stop'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -39,14 +42,13 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
+                '--verbose',
                 '-f', 'docker-compose.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
                 'up',
             ], env=None)
         ]
-
-
 
     @patch('jbcli.utils.dockerutil.client')
     def test_get_state_running(self, dockerutil_mock):
@@ -160,11 +162,13 @@ class TestDocker:
         os_mock.path.isfile.return_value = True
         os_mock.path.isdir.return_value = True
         os_mock.getcwd.return_value = '/path'
+
         def check_output(args):
             assert args == [
                 'aws', 'ecr', 'get-login', '--registry-ids', '423681189101',
                 '--no-include-email']
             return "do a thing!"
+
         check_output_mock.side_effect = check_output
         dockerutil.pull('latest')
         assert check_mock.mock_calls == [
