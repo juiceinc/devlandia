@@ -150,9 +150,11 @@ def run(command):
             for output in command_run:
                 if isinstance(output, types.GeneratorType):
                     for o in output:
-                        print(o)
+                        if o is not None:
+                            print(o)
                 else:
-                    print(output)
+                    if output is not None:
+                        print(output)
 
 
 def parse_dc_file(tag):
