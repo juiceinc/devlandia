@@ -73,9 +73,7 @@ def package(applications, bucket):
 
 
 @cli.command()
-@click.argument('datafile', 
-                nargs=1, 
-                required=True)
+@click.argument('datafile', nargs=1, required=True)
 @click.option('--app', help='The app to upload data to', required=True)
 def upload(datafile, app):
     """Upload data to a juicebox app 
