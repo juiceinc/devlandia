@@ -141,6 +141,24 @@ class TestDocker(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.os')
+    def test_upload(self, os_mock, dockerutil_mock):
+        os_mock.path.isdir.return_value = False
+        dockerutil_mock.is_running.return_value = True
+
+        runner = CliRunner()
+        result = runner.invoke(cli, ['upload', '--app=foo', 'cookies.csv'])
+
+        assert 'Uploading...' in result.output
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.ensure_home(),
+            call.ensure_home().__nonzero__(),
+            call.run('/venv/bin/python manage.py upload --app=foo cookies.csv')
+        ]
+
+    @patch('jbcli.cli.jb.dockerutil')
+    @patch('jbcli.cli.jb.os')
     def test_add_app_exists(self, os_mock, dockerutil_mock):
         os_mock.path.isdir.return_value = True
         dockerutil_mock.is_running.return_value = True

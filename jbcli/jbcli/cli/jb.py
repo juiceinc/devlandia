@@ -73,6 +73,31 @@ def package(applications, bucket):
 
 
 @cli.command()
+@click.argument('datafile', 
+                nargs=1, 
+                required=True)
+@click.option('--app', help='The app to upload data to', required=True)
+def upload(datafile, app):
+    """Upload data to a juicebox app 
+    """
+    if dockerutil.is_running() and dockerutil.ensure_home():
+        failed_apps = []
+        try:
+            echo_highlight('Uploading...'.format(app))
+            dockerutil.run(
+                '/venv/bin/python manage.py upload --app={} {}'.format(
+                    app, datafile))
+
+        except docker.errors.APIError:
+            print(docker.errors.APIError.message)
+            failed_apps.append(app)
+    else:
+        echo_warning(
+            'Juicebox is not running or you\'re not in a home directory.')
+        click.get_current_context().abort()
+
+
+@cli.command()
 @click.argument('applications', nargs=-1, required=True)
 @click.option('--add-desktop/--no-add-desktop', default=False,
               help='Optionally add to Github Desktop')
