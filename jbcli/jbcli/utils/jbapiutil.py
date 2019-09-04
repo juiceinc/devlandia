@@ -33,8 +33,10 @@ def load_app(app):
             'Content-Type': 'application-json'
         }
         response = requests.post(url, headers=headers)
-        if response.status_code == 204:
+        if response.status_code == 200:
+            result = response.json()
             echo_success('{} was added successfully via API.'.format(app))
+            echo_success(result)
             return True
         else:
             echo_warning('Loading app status code was {}'.format(response.status_code))
