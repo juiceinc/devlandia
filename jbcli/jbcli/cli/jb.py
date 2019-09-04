@@ -16,6 +16,7 @@ from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
+from ..utils.storageutil import stash
 
 """
 This is the code for the jb cli command.
@@ -66,6 +67,29 @@ def package(applications, bucket):
             echo_warning(
                 'Failed to package: {}.'.format(', '.join(failed_apps)))
             click.get_current_context().abort()
+    else:
+        echo_warning(
+            'Juicebox is not running or you\'re not in a home directory.')
+        click.get_current_context().abort()
+
+
+@cli.command()
+@click.argument('datafile', nargs=1, required=True)
+@click.option('--app', help='The app to upload data to', required=True)
+def upload(datafile, app):
+    """Upload data to a juicebox app 
+    """
+    if dockerutil.is_running() and dockerutil.ensure_home():
+        failed_apps = []
+        try:
+            echo_highlight('Uploading...'.format(app))
+            dockerutil.run(
+                '/venv/bin/python manage.py upload --app={} {}'.format(
+                    app, datafile))
+
+        except docker.errors.APIError:
+            print(docker.errors.APIError.message)
+            failed_apps.append(app)
     else:
         echo_warning(
             'Juicebox is not running or you\'re not in a home directory.')
@@ -270,6 +294,7 @@ def select(tag):
             if tag in tagset[0]:
 
                 found = True
+                stash.put('jb_select', tag)
                 dockerutil.pull(tag)
                 with open("./docker-compose.yml", "rt") as dc:
                     with open("out.txt", "wt") as out:
@@ -312,13 +337,15 @@ def start(ctx, noupdate, noupgrade):
                 dockerutil.pull(tag=None)
             dockerutil.up(env=populate_env_with_secrets())
         except botocore.exceptions.ClientError as e:
-            click.echo(
-                "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
             if "Signature expired" in e.message:
+                click.echo(
+                    "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
                 subprocess.check_call(
                     ['killall', '-HUP' 'com.docker.hyperkit'])
                 time.sleep(30)
-                start(noupdate=noupdate)                
+                start(noupdate=noupdate)
+            else:
+                raise
     else:
         echo_warning('An instance of Juicebox is already running')
 
@@ -326,6 +353,7 @@ def start(ctx, noupdate, noupgrade):
 def populate_env_with_secrets():
     env = os.environ.copy()
     env['JB_GOOGLE_CLOUD_PRIVKEY'] = get_paramstore('jbo-google-cloud-privkey')
+    env['JB_GITHUB_FETCHAPP_CREDS'] = get_paramstore('opslord-github-credentials')
     return env
 
 

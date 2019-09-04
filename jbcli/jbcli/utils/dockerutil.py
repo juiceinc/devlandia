@@ -5,6 +5,7 @@ from __future__ import print_function
 from glob import glob
 import json
 import time
+import types
 from operator import itemgetter
 import datetime
 from watchdog.events import FileSystemEventHandler
@@ -151,7 +152,13 @@ def run(command):
             juicebox = client.containers.get(container.name)
             command_run = juicebox.exec_run(command, stream=True)
             for output in command_run:
-                print(output)
+                if isinstance(output, types.GeneratorType):
+                    for o in output:
+                        if o is not None:
+                            print(o)
+                else:
+                    if output is not None:
+                        print(output)
 
 
 def parse_dc_file(tag):
