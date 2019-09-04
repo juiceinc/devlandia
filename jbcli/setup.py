@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 requirements = [
     'boto3~=1.9.210',
     'botocore~=1.12.212',
-    'docker~=3.7.3',
-    'docker-compose~=1.24.1',
+    'docker',
+    'docker-compose',
     'click~=6.2',
     'watchdog~=0.8.3',
     'tabulate~=0.8.2',
