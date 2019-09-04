@@ -249,13 +249,20 @@ def remove(applications):
 @click.option('--includejs', default=False, help='Watch for js changes',
               is_flag=True)
 @click.option('--app', default='', help='Watch a specific app.')
+@click.option('--reload', default=False, help='Live reload app after making a changes.',
+              is_flag=True)
 @cli.command()
-def watch(includejs=False, app=''):
+def watch(includejs=False, app='', reload=False):
     """ Watch for changes in apps and js and reload/rebuild"""
     procs = []
-    jb_watch_proc = Process(target=dockerutil.jb_watch, kwargs={'app': app})
+    jb_watch_proc = Process(target=dockerutil.jb_watch, kwargs={'app': app, 'reload': reload})
     jb_watch_proc.start()
     procs.append(jb_watch_proc)
+
+    if reload:
+        # Create proxy browser instance for hot reloading
+        cmd = 'npx browser-sync start --proxy="localhost:8000"'
+        os.system(cmd)
 
     if includejs:
         js_watch_proc = Process(target=dockerutil.js_watch)
