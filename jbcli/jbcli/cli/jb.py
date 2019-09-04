@@ -16,6 +16,7 @@ from ..utils import apps, dockerutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
+from ..utils.storageutil import stash
 
 """
 This is the code for the jb cli command.
@@ -293,6 +294,7 @@ def select(tag):
             if tag in tagset[0]:
 
                 found = True
+                stash.put('jb_select', tag)
                 dockerutil.pull(tag)
                 with open("./docker-compose.yml", "rt") as dc:
                     with open("out.txt", "wt") as out:
