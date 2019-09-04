@@ -47,7 +47,7 @@ def _intersperse(el, l):
 def docker_compose(arg, env=None):
     file_args = _intersperse('-f', glob('docker-compose-*.yml'))
     cmd = (
-        ['docker-compose', '--verbose', '-f', 'docker-compose.yml'] + file_args + [arg]
+        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + [arg]
     )
     return check_call(cmd, env=env)
 

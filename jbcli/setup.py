@@ -1,17 +1,17 @@
 from setuptools import setup, find_packages
 
 requirements = [
-    'boto3~=1.9.210',
-    'botocore~=1.12.212',
-    'docker~=3.7.3',
-    'docker-compose~=1.24.1',
-    'click~=6.2',
-    'watchdog~=0.8.3',
-    'tabulate~=0.8.2',
-    'certifi~=2019.3.9',
-    'elasticsearch~=6.3.1',
-    'elasticsearch-dsl~=6.3.1',
-    'tablib~=0.13.0',
+    'boto3',
+    'botocore',
+    'docker',
+    'docker-compose',
+    'click',
+    'watchdog',
+    'tabulate',
+    'certifi',
+    'elasticsearch',
+    'elasticsearch-dsl',
+    'tablib',
 ]
 
 # Have setuptools generate the entry point
@@ -24,7 +24,7 @@ jb-manage=jbcli.cli.jb_manage:cli
 
 setup(
     name='jbcli',
-    version='0.11.2',
+    version='0.11.3',
     description='Juicebox command line',
     author="Casey Wireman",
     author_email='casey.wireman@juiceanalytics.com',
