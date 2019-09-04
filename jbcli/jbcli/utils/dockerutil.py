@@ -11,6 +11,7 @@ import datetime
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from tabulate import tabulate
+from requests import get
 import re
 import sys
 import os
@@ -25,6 +26,10 @@ client = docker.from_env()
 
 
 class WatchHandler(FileSystemEventHandler):
+
+    def __init__(self, should_reload=False):
+        self.should_reload = should_reload
+
     def on_modified(self, event):
         if sys.platform == 'win32':
             path = re.split(r'[\\/]', event.src_path)
@@ -32,12 +37,28 @@ class WatchHandler(FileSystemEventHandler):
             path = event.src_path.split('/')
         click.echo('Change detected in app: {}.'.format(event.src_path))
 
+
         if '.git' not in path and 'builds' not in path:
+            extension = path[-1].split('.')[-1]
+            # if extension != 'py':
             run('/venv/bin/python manage.py loadjuiceboxapp ' + path[3])
+            if self.should_reload:
+                reload_browser()
         else:
             click.echo('Change ignored')
 
         click.echo('Waiting for changes...')
+
+
+def reload_browser():
+    try:
+        response = get('http://localhost:8000')
+        if response and response.status_code == 200:
+            cmd = "npx browser-sync reload"
+            os.system(cmd)
+    except:
+        time.sleep(5)
+        reload_browser()
 
 
 def _intersperse(el, l):
@@ -246,12 +267,12 @@ def get_state(container_name):
     return client.containers.get(container_name).status
 
 
-def jb_watch(app=''):
+def jb_watch(app='', reload=False):
     """Run the Juicebox project watcher"""
     if is_running() and ensure_home():
         click.echo('I\'m watching you Wazowski...always watching...always.')
 
-        event_handler = WatchHandler()
+        event_handler = WatchHandler(reload)
         observer = Observer()
 
         observer.schedule(event_handler, path='../../apps/' + app, recursive=True)
