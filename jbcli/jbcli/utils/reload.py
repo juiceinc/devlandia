@@ -28,7 +28,7 @@ def refresh_browser(timeout=None):
 
     def attempt_refresh():
         try:
-            response = get('http://localhost:8000')
+            response = get('http://localhost:8000/health_check')
             if response and response.status_code == 200:
                 click.echo('Refreshing browser...')
                 cmd = "npx browser-sync reload"
