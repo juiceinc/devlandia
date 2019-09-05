@@ -37,28 +37,43 @@ class WatchHandler(FileSystemEventHandler):
             path = event.src_path.split('/')
         click.echo('Change detected in app: {}.'.format(event.src_path))
 
-
         if '.git' not in path and 'builds' not in path:
-            extension = path[-1].split('.')[-1]
-            # if extension != 'py':
-            run('/venv/bin/python manage.py loadjuiceboxapp ' + path[3])
-            if self.should_reload:
-                reload_browser()
+            file_parts = path[-1].split('.')
+            if len(file_parts) == 2:
+                extension = path[-1].split('.')[-1]
+                is_py = extension == 'py'
+                if not is_py:
+                    run('/venv/bin/python manage.py loadjuiceboxapp ' +
+                        path[3])
+
+                if self.should_reload:
+                    timeout = 5 if is_py else None
+                    refresh_browser(timeout)
         else:
             click.echo('Change ignored')
 
         click.echo('Waiting for changes...')
 
 
-def reload_browser():
-    try:
-        response = get('http://localhost:8000')
-        if response and response.status_code == 200:
-            cmd = "npx browser-sync reload"
-            os.system(cmd)
-    except:
-        time.sleep(5)
-        reload_browser()
+def refresh_browser(timeout=None):
+    click.echo('Checking server status...')
+
+    if timeout:
+        time.sleep(timeout)
+
+    def attempt_refresh():
+        try:
+            response = get('http://localhost:8000')
+            if response and response.status_code == 200:
+                click.echo('Refreshing browser...')
+                cmd = "npx browser-sync reload"
+                os.system(cmd)
+        except:
+            click.echo('Almost done...')
+            if timeout:
+                time.sleep(timeout)
+            attempt_refresh()
+    attempt_refresh()
 
 
 def _intersperse(el, l):
