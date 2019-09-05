@@ -11,7 +11,7 @@ import datetime
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 from tabulate import tabulate
-from requests import get
+
 import re
 import sys
 import os
@@ -19,6 +19,7 @@ import os
 import click
 import docker.errors
 from .subprocess import check_call, check_output
+from .reload import refresh_browser
 
 from .format import echo_warning
 
@@ -53,27 +54,6 @@ class WatchHandler(FileSystemEventHandler):
             click.echo('Change ignored')
 
         click.echo('Waiting for changes...')
-
-
-def refresh_browser(timeout=None):
-    click.echo('Checking server status...')
-
-    if timeout:
-        time.sleep(timeout)
-
-    def attempt_refresh():
-        try:
-            response = get('http://localhost:8000')
-            if response and response.status_code == 200:
-                click.echo('Refreshing browser...')
-                cmd = "npx browser-sync reload"
-                os.system(cmd)
-        except:
-            click.echo('Almost done...')
-            if timeout:
-                time.sleep(timeout)
-            attempt_refresh()
-    attempt_refresh()
 
 
 def _intersperse(el, l):
@@ -282,12 +262,12 @@ def get_state(container_name):
     return client.containers.get(container_name).status
 
 
-def jb_watch(app='', reload=False):
+def jb_watch(app='', should_reload=False):
     """Run the Juicebox project watcher"""
     if is_running() and ensure_home():
         click.echo('I\'m watching you Wazowski...always watching...always.')
 
-        event_handler = WatchHandler(reload)
+        event_handler = WatchHandler(should_reload)
         observer = Observer()
 
         observer.schedule(event_handler, path='../../apps/' + app, recursive=True)

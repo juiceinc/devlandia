@@ -16,6 +16,7 @@ from ..utils import apps, dockerutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
+from ..utils.reload import create_browser_instance
 
 """
 This is the code for the jb cli command.
@@ -260,9 +261,7 @@ def watch(includejs=False, app='', reload=False):
     procs.append(jb_watch_proc)
 
     if reload:
-        # Create proxy browser instance for hot reloading
-        cmd = 'npx browser-sync start --proxy="localhost:8000"'
-        os.system(cmd)
+        create_browser_instance()
 
     if includejs:
         js_watch_proc = Process(target=dockerutil.js_watch)
