@@ -1,3 +1,5 @@
+"""Handles watcher-related tasks for app reloading
+"""
 import os
 import time
 
@@ -6,12 +8,19 @@ from requests import get
 
 
 def create_browser_instance():
-    # Create proxy browser instance for hot reloading
+    """Create proxy browser instance for hot reloading
+    """
     cmd = 'npx browser-sync start --proxy="localhost:8000"'
     os.system(cmd)
 
 
 def refresh_browser(timeout=None):
+    """Refreshes browser-sync browser instance if
+    Django server is ready
+
+    :param timeout: Optional timeout duration before checking
+    server status
+    """
     click.echo('Checking server status...')
 
     if timeout:
