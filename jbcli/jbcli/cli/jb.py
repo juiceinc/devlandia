@@ -257,7 +257,7 @@ def remove(applications):
 def watch(includejs=False, app='', reload=False):
     """ Watch for changes in apps and js and reload/rebuild"""
     procs = []
-    jb_watch_proc = Process(target=dockerutil.jb_watch, kwargs={'app': app, 'reload': reload})
+    jb_watch_proc = Process(target=dockerutil.jb_watch, kwargs={'app': app, 'should_reload': reload})
     jb_watch_proc.start()
     procs.append(jb_watch_proc)
 

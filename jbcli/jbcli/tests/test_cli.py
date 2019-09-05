@@ -420,7 +420,8 @@ class TestDocker(object):
         result = runner.invoke(cli, ['watch'])
 
         assert process_mock.mock_calls == [
-            call(target=dockerutil_mock.jb_watch, kwargs={'app': '', "reload": False}),
+            call(target=dockerutil_mock.jb_watch, kwargs={
+                 'app': '', "should_reload": False}),
             call().start(),
             call().join()
         ]
@@ -439,7 +440,7 @@ class TestDocker(object):
 
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': 'test', "reload": False}),
+                 'app': 'test', "should_reload": False}),
             call().start(),
             call().join()
         ]
@@ -459,7 +460,7 @@ class TestDocker(object):
         result = runner.invoke(cli, ['watch', '--reload'])
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': '', "reload": True}),
+                 'app': '', "should_reload": True}),
             call().start(),
             call().join()
         ]
@@ -479,7 +480,7 @@ class TestDocker(object):
         result = runner.invoke(cli, ['watch', '--app', 'test', '--reload'])
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': 'test', "reload": True}),
+                 'app': 'test', "should_reload": True}),
             call().start(),
             call().join()
         ]
@@ -499,7 +500,7 @@ class TestDocker(object):
 
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch,
-                 kwargs={'app': '', "reload": False}),
+                 kwargs={'app': '', "should_reload": False}),
             call().start(),
             call(target=dockerutil_mock.js_watch),
             call().start(),
