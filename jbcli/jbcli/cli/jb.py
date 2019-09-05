@@ -410,7 +410,7 @@ def yo_upgrade():
 @cli.command()
 @click.pass_context
 def upgrade(ctx):
-    """ Attempt to upgrade jb command line and yo juicebox """
+    """ Attempt to upgrade jb command line """
     dockerutil.ensure_root()
 
     try:
@@ -419,7 +419,6 @@ def upgrade(ctx):
     except subprocess.CalledProcessError:
         echo_warning('Failed to `git pull`')
         click.get_current_context().abort()
-    ctx.invoke(yo_upgrade)
 
 
 @cli.command()
