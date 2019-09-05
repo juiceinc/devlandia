@@ -250,7 +250,7 @@ def remove(applications):
 @click.option('--includejs', default=False, help='Watch for js changes',
               is_flag=True)
 @click.option('--app', default='', help='Watch a specific app.')
-@click.option('--reload', default=False, help='Live reload app after making a changes.',
+@click.option('--reload', default=False, help='Refresh browser after file changes.',
               is_flag=True)
 @cli.command()
 def watch(includejs=False, app='', reload=False):
