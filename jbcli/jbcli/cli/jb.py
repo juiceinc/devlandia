@@ -17,6 +17,7 @@ from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
 from ..utils.reload import create_browser_instance
+from ..utils.storageutil import stash
 
 """
 This is the code for the jb cli command.
@@ -299,6 +300,7 @@ def select(tag):
             if tag in tagset[0]:
 
                 found = True
+                stash.put('jb_select', tag)
                 dockerutil.pull(tag)
                 with open("./docker-compose.yml", "rt") as dc:
                     with open("out.txt", "wt") as out:
@@ -414,7 +416,7 @@ def yo_upgrade():
 @cli.command()
 @click.pass_context
 def upgrade(ctx):
-    """ Attempt to upgrade jb command line and yo juicebox """
+    """ Attempt to upgrade jb command line """
     dockerutil.ensure_root()
 
     try:
@@ -423,7 +425,6 @@ def upgrade(ctx):
     except subprocess.CalledProcessError:
         echo_warning('Failed to `git pull`')
         click.get_current_context().abort()
-    ctx.invoke(yo_upgrade)
 
 
 @cli.command()
