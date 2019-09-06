@@ -36,10 +36,13 @@ def load_app(app):
         if response.status_code == 200:
             result = response.json()
             echo_success('{} was added successfully via API.'.format(app))
+            # TODO: We could format the logs nicely
             echo_success(result)
             return True
         else:
             echo_warning('Loading app status code was {}'.format(response.status_code))
+            # TODO: We could format the logs nicely
+            echo_warning(response.json())
             return False
     else:
         return False
