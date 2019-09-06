@@ -24,7 +24,7 @@ jb-manage=jbcli.cli.jb_manage:cli
 
 setup(
     name='jbcli',
-    version='0.11.4',
+    version='0.11.5',
     description='Juicebox command line',
     author="Casey Wireman",
     author_email='casey.wireman@juiceanalytics.com',
