@@ -420,7 +420,8 @@ class TestDocker(object):
         result = runner.invoke(cli, ['watch'])
 
         assert process_mock.mock_calls == [
-            call(target=dockerutil_mock.jb_watch, kwargs={'app': ''}),
+            call(target=dockerutil_mock.jb_watch, kwargs={
+                 'app': '', "should_reload": False}),
             call().start(),
             call().join()
         ]
@@ -438,12 +439,54 @@ class TestDocker(object):
         result = runner.invoke(cli, ['watch', '--app', 'test'])
 
         assert process_mock.mock_calls == [
-            call(target=dockerutil_mock.jb_watch, kwargs={'app': 'test'}),
+            call(target=dockerutil_mock.jb_watch, kwargs={
+                 'app': 'test', "should_reload": False}),
             call().start(),
             call().join()
         ]
 
         assert result.exit_code == 0
+
+
+    @patch('jbcli.cli.jb.Process')
+    @patch('jbcli.cli.jb.time')
+    @patch('jbcli.cli.jb.dockerutil')
+    @patch('jbcli.cli.jb.create_browser_instance')
+    def test_watch_with_reload(self, browser_mock, dockerutil_mock, time_mock, process_mock):
+        dockerutil_mock.is_running.return_value = True
+        dockerutil_mock.ensure_home.return_value = True
+        time_mock.sleep.side_effect = KeyboardInterrupt
+        runner = CliRunner()
+        result = runner.invoke(cli, ['watch', '--reload'])
+        assert process_mock.mock_calls == [
+            call(target=dockerutil_mock.jb_watch, kwargs={
+                 'app': '', "should_reload": True}),
+            call().start(),
+            call().join()
+        ]
+        assert browser_mock.called == True
+        assert result.exit_code == 0
+
+
+    @patch('jbcli.cli.jb.Process')
+    @patch('jbcli.cli.jb.time')
+    @patch('jbcli.cli.jb.dockerutil')
+    @patch('jbcli.cli.jb.create_browser_instance')
+    def test_watch_with_specific_app_and_reload(self, browser_mock, dockerutil_mock, time_mock, process_mock):
+        dockerutil_mock.is_running.return_value = True
+        dockerutil_mock.ensure_home.return_value = True
+        time_mock.sleep.side_effect = KeyboardInterrupt
+        runner = CliRunner()
+        result = runner.invoke(cli, ['watch', '--app', 'test', '--reload'])
+        assert process_mock.mock_calls == [
+            call(target=dockerutil_mock.jb_watch, kwargs={
+                 'app': 'test', "should_reload": True}),
+            call().start(),
+            call().join()
+        ]
+        assert browser_mock.called == True
+        assert result.exit_code == 0
+
 
     @patch('jbcli.cli.jb.Process')
     @patch('jbcli.cli.jb.time')
@@ -456,7 +499,8 @@ class TestDocker(object):
         result = runner.invoke(cli, ['watch', '--includejs'])
 
         assert process_mock.mock_calls == [
-            call(target=dockerutil_mock.jb_watch, kwargs={'app': ''}),
+            call(target=dockerutil_mock.jb_watch,
+                 kwargs={'app': '', "should_reload": False}),
             call().start(),
             call(target=dockerutil_mock.js_watch),
             call().start(),
