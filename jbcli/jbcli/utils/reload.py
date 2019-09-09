@@ -4,7 +4,7 @@ import os
 import time
 
 import click
-from requests import get
+from requests import get, ConnectionError
 
 
 def create_browser_instance():
@@ -22,20 +22,18 @@ def refresh_browser(timeout=None):
     server status
     """
     click.echo('Checking server status...')
-
-    if timeout:
-        time.sleep(timeout)
-
-    def attempt_refresh():
+    for i in range(5):
+        if timeout:
+            time.sleep(timeout)
+        response = {'status_code': None}
         try:
             response = get('http://localhost:8000/health_check')
+        except ConnectionError:
+            click.echo('Still working...')
+        else:
             if response and response.status_code == 200:
                 click.echo('Refreshing browser...')
                 cmd = "npx browser-sync reload"
                 os.system(cmd)
-        except:
-            click.echo('Almost done...')
-            if timeout:
-                time.sleep(timeout)
-            attempt_refresh()
-    attempt_refresh()
+                return
+    click.echo('Maximum attempts reached! Something might be wrong.')
