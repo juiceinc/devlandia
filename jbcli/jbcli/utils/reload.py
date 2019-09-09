@@ -5,13 +5,13 @@ import time
 
 import click
 from requests import get, ConnectionError
-
+from subprocess import check_output
 
 def create_browser_instance():
     """Create proxy browser instance for hot reloading
     """
-    cmd = 'npx browser-sync start --proxy="localhost:8000"'
-    os.system(cmd)
+    cmd = ['browser-sync', 'start', '--proxy=localhost:8000']
+    check_output(cmd)
 
 
 def refresh_browser(timeout=None):
@@ -32,7 +32,7 @@ def refresh_browser(timeout=None):
         else:
             if response and response.status_code == 200:
                 click.echo('Refreshing browser...')
-                cmd = "npx browser-sync reload"
-                os.system(cmd)
+                cmd = ['browser-sync', 'reload']
+                check_output(cmd)
                 return
     click.echo('Maximum attempts reached! Something might be wrong.')

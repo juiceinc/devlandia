@@ -140,7 +140,7 @@ def add(applications, add_desktop):
                         dockerutil.run(
                             '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
                                 app))
-                        echo_success('{} was added successfully.'.format(app))
+                    echo_success('{} was added successfully.'.format(app))
 
                 except docker.errors.APIError as e:
                     echo_warning(

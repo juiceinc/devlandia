@@ -18,10 +18,11 @@ import os
 
 import click
 import docker.errors
+from .jbapiutil import load_app
 from .subprocess import check_call, check_output
 from .reload import refresh_browser
 
-from .format import echo_warning
+from .format import echo_warning, echo_success
 
 client = docker.from_env()
 
@@ -44,8 +45,12 @@ class WatchHandler(FileSystemEventHandler):
                 extension = path[-1].split('.')[-1]
                 is_py = extension == 'py'
                 if not is_py:
-                    run('/venv/bin/python manage.py loadjuiceboxapp ' +
-                        path[3])
+                    app = path[3]
+                    if not load_app(app):
+                        dockerutil.run(
+                            '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
+                                app))
+                    echo_success('{} was added successfully.'.format(app))
 
                 if self.should_reload:
                     timeout = 5 if is_py else None
