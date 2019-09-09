@@ -25,7 +25,6 @@ def refresh_browser(timeout=None):
     for i in range(5):
         if timeout:
             time.sleep(timeout)
-        response = {'status_code': None}
         try:
             response = get('http://localhost:8000/health_check')
         except ConnectionError:
