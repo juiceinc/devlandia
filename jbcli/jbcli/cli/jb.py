@@ -137,7 +137,8 @@ def add(applications, add_desktop):
                 try:
                     if not jbapiutil.load_app(app):
                         dockerutil.run(
-                            '/venv/bin/python manage.py loadjuiceboxapp ' + app)
+                            '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
+                                app))
                         echo_success('{} was added successfully.'.format(app))
 
                 except docker.errors.APIError as e:
