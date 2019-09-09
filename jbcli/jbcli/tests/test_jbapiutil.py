@@ -11,7 +11,7 @@ class TestAPIUtil:
             url = "{SERVER}/api/v1/jb/api-token-auth/".format(SERVER=jbapiutil.SERVER)
             m.post(url, json={"token": "foo"})
 
-            val = jbapiutil.get_admin_token()
+            val = jbapiutil.get_admin_token(refresh_token=True)
             assert val == "foo"
 
     def test_get_admin_token_failed(self):
@@ -20,7 +20,7 @@ class TestAPIUtil:
             url = "{SERVER}/api/v1/jb/api-token-auth/".format(SERVER=jbapiutil.SERVER)
             m.post(url, status_code=400)
 
-            val = jbapiutil.get_admin_token()
+            val = jbapiutil.get_admin_token(refresh_token=True)
             assert val is None
 
     @patch("jbcli.utils.jbapiutil.get_admin_token")
