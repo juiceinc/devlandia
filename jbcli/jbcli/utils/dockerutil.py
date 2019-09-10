@@ -45,6 +45,8 @@ class WatchHandler(FileSystemEventHandler):
                 extension = path[-1].split('.')[-1]
                 is_py = extension == 'py'
                 if not is_py:
+                    # Path looks like 
+                    # ['..', '..', 'apps', 'privileging', 'stacks', 'overview', 'templates.html']
                     app = path[3]
                     if not load_app(app):
                         run('/venv/bin/python manage.py loadjuiceboxapp {}'.format(

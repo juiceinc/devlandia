@@ -46,7 +46,7 @@ def echo_result(result):
             lookup_params={'id': 'de726b3b'}
 
     """
-    logs = result.get('details', {}).get('logs', {})
+    logs = result.get('details', {}).get('logs', [])
     for log in logs:
         level = log.pop('level', 'unknown')
         event = log.pop('event', 'unknown')
