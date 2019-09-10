@@ -47,8 +47,7 @@ class WatchHandler(FileSystemEventHandler):
                 if not is_py:
                     app = path[3]
                     if not load_app(app):
-                        dockerutil.run(
-                            '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
+                        run('/venv/bin/python manage.py loadjuiceboxapp {}'.format(
                                 app))
                     echo_success('{} was added successfully.'.format(app))
 
