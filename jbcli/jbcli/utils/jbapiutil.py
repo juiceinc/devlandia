@@ -1,4 +1,4 @@
-from requests import post
+from requests import post, ConnectionError, ConnectTimeout
 import os
 from .storageutil import stash
 from .format import *
@@ -68,7 +68,16 @@ def load_app(app, refresh_token=False):
             "Authorization": "JWT {}".format(admin_token),
             "Content-Type": "application-json",
         }
-        response = post(url, headers=headers)
+        retry_cnt = 0
+        while retry_cnt < 4
+            try:
+                response = post(url, headers=headers)
+            except ConnectionError:
+                retry_cnt += 1
+                echo_warning('Can not connect, retrying')
+                time.sleep(2**retry_cnt)
+                continue
+            break
         if response.status_code == 200:
             result = response.json()
             echo_success("{} was added successfully via API.".format(app))
