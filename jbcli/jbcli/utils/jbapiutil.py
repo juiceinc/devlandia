@@ -1,5 +1,6 @@
 from requests import post, ConnectionError, ConnectTimeout
 import os
+import time
 from .storageutil import stash
 from .format import *
 
@@ -85,6 +86,10 @@ def load_app(app, refresh_token=False):
             echo_success("{} was added successfully via API.".format(app))
             echo_result(result)
             return True
+        if response.status_code == 204:
+           echo_success("{} was added successfully via API.".format(app))
+           echo_success("Wish I could tell you more but you're not running in Juicebox 3.38+!")
+           return True            
         elif response.status_code == 401:
             echo_warning('Token is expired')
             return load_app(app, refresh_token=True)
