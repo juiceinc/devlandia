@@ -8,7 +8,7 @@ import time
 import types
 from operator import itemgetter
 import datetime
-from watchdog.events import FileSystemEventHandler
+from watchdog.events import FileSystemEventHandler, FileModifiedEvent
 from watchdog.observers import Observer
 from tabulate import tabulate
 
@@ -37,25 +37,31 @@ class WatchHandler(FileSystemEventHandler):
             path = re.split(r'[\\/]', event.src_path)
         else:
             path = event.src_path.split('/')
-        click.echo('Change detected in app: {}.'.format(event.src_path))
 
-        if '.git' not in path and 'builds' not in path:
-            file_parts = path[-1].split('.')
-            if len(file_parts) == 2:
-                extension = path[-1].split('.')[-1]
-                is_py = extension == 'py'
-                if not is_py:
-                    app = path[3]
-                    if not load_app(app):
-                        run('/venv/bin/python manage.py loadjuiceboxapp {}'.format(
-                                app))
-                    echo_success('{} was added successfully.'.format(app))
+        # Path looks like 
+        # ['..', '..', 'apps', 'privileging', 'stacks', 'overview', 'templates.html']
+        app = path[3]
+        filename = path[-1]
+        is_python_change = filename.endswith('.py') and isinstance(event, FileModifiedEvent)
 
+        if 'builds' not in path and '.idea' not in path and '.git' not in path:
+            click.echo('Change detected in {}.'.format(app))
+            if is_python_change:
+                # We don't need to reload the app just refresh
+                # the browser after juicebox service restarts
                 if self.should_reload:
-                    timeout = 5 if is_py else None
-                    refresh_browser(timeout)
-        else:
-            click.echo('Change ignored')
+                    refresh_browser(5)
+            else:
+                # Try to load app via api, fall back to calling docker.exec_run
+                if not load_app(app):
+                    run('/venv/bin/python manage.py loadjuiceboxapp {}'.format(
+                                app))
+                echo_success('{} was added successfully.'.format(app))
+                if self.should_reload:
+                    refresh_browser()
+
+        else:            
+            click.echo('Change to {} ignored'.format(event.src_path))
 
         click.echo('Waiting for changes...')
 

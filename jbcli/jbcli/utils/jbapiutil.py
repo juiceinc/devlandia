@@ -1,4 +1,4 @@
-from requests import post
+from requests import post, ConnectionError, ConnectTimeout
 import os
 from .storageutil import stash
 from .format import *
@@ -46,7 +46,7 @@ def echo_result(result):
             lookup_params={'id': 'de726b3b'}
 
     """
-    logs = result.get('details', {}).get('logs', {})
+    logs = result.get('details', {}).get('logs', [])
     for log in logs:
         level = log.pop('level', 'unknown')
         event = log.pop('event', 'unknown')
@@ -68,7 +68,18 @@ def load_app(app, refresh_token=False):
             "Authorization": "JWT {}".format(admin_token),
             "Content-Type": "application-json",
         }
-        response = post(url, headers=headers)
+        retry_cnt = 0
+        while retry_cnt < 5:
+            try:
+                response = post(url, headers=headers)
+            except ConnectionError:
+                echo_warning('Can not connect, retrying')
+                # Retry with backoffs of 1,2,4,8 seconds
+                time.sleep(2**retry_cnt)
+                retry_cnt += 1
+                continue
+            break
+
         if response.status_code == 200:
             result = response.json()
             echo_success("{} was added successfully via API.".format(app))
