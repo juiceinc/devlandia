@@ -379,7 +379,8 @@ def freshstart(ctx, noupdate, noupgrade):
     os.chdir(path)
     click.echo("Welcome to devlandia!")
     env = click.prompt("what environment would you like to start?")
-
+    cwd= os.getcwd()
+    click.echo(cwd)
     if not noupgrade:
         ctx.invoke(upgrade)
         os.chdir("./environments/{}".format(env))
@@ -388,7 +389,7 @@ def freshstart(ctx, noupdate, noupgrade):
 
     cwd = os.getcwd
     click.echo("working directory: {}".format(cwd))
-    
+
     if not dockerutil.is_running():
         try:
             if not noupdate:
