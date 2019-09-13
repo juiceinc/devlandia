@@ -365,6 +365,52 @@ def populate_env_with_secrets():
 
 
 @cli.command()
+@click.option('--noupdate', default=False,
+              help='Do not automatically update Docker image on start',
+              is_flag=True)
+@click.option('--noupgrade', default=False,
+              help='Do not automatically update jb and generators on start',
+              is_flag=True)
+@click.pass_context
+def freshstart(ctx, noupdate, noupgrade):
+    """Configure the environment and start Juicebox
+    """
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    os.chdir(path)
+    click.echo("Welcome to devlandia!")
+    env = click.prompt("what environment would you like to start?")
+
+    if not noupgrade:
+        ctx.invoke(upgrade)
+        os.chdir("./environments/{}".format(env))
+    else:
+        os.chdir("./environments/{}".format(env))
+
+    cwd = os.getcwd
+    click.echo("working directory: {}".format(cwd))
+    
+    if not dockerutil.is_running():
+        try:
+            if not noupdate:
+                dockerutil.pull(tag=None)
+            dockerutil.up(env=populate_env_with_secrets())
+        except botocore.exceptions.ClientError as e:
+            if "Signature expired" in e.message:
+                click.echo(
+                    "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
+                subprocess.check_call(
+                    ['killall', '-HUP' 'com.docker.hyperkit'])
+                time.sleep(30)
+                start(noupdate=noupdate)
+            else:
+                raise
+    else:
+        echo_warning('An instance of Juicebox is already running')
+
+
+
+
+@cli.command()
 @click.pass_context
 def stop(ctx):
     """Stop a running juicebox in this environment
