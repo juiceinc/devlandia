@@ -2,6 +2,8 @@
 outputs.
 """
 from click import secho
+from dateutil.relativedelta import relativedelta
+from datetime import datetime
 
 
 def echo_highlight(message):
@@ -29,3 +31,17 @@ def echo_success(message):
     :type message: str
     """
     return secho(message, fg='green', bold=True)
+
+
+def human_readable_timediff(dt):
+    """ Generate a human readable time difference """
+
+    attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
+    human_readable = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1]) 
+        for attr in attrs if getattr(delta, attr)]
+
+    parts = relativedelta(datetime.now(), dt)
+
+    readable_parts = human_readable(parts)
+    readable_timediff = ', '.join(readable_parts[:2]) + ' ago'
+    return readable_timediff

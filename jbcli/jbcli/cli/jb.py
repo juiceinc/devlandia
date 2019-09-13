@@ -13,7 +13,7 @@ import docker.errors
 from botocore import exceptions
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
-from ..utils.format import echo_highlight, echo_warning, echo_success
+from ..utils.format import echo_highlight, echo_warning, echo_success, human_readable_timediff
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
 from ..utils.reload import create_browser_instance
@@ -378,8 +378,31 @@ def freshstart(ctx, noupdate, noupgrade):
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
     os.chdir(path)
     click.echo("Welcome to devlandia!")
-    env = click.prompt("what environment would you like to start?")
+    click.echo('Gathering data on available environments...\n')
+    stuff = dockerutil.image_list(print_flag=False, semantic=False)
+    interesting_tags = ['develop', 'stable']
 
+    test_tag = stash.get('jb_select')
+    if test_tag:
+        interesting_tags.append(test_tag)
+        
+    # Sort in ascending order of timestamp
+    stuff.sort(key=lambda x: x[2])
+    for prev_row, row in zip(stuff, stuff[1:]):
+        tag = row[0]
+        prevtag = prev_row[0]
+        readable_timediff = human_readable_timediff(row[2])
+        if tag in interesting_tags:
+            if tag == 'stable':
+                click.echo('{} ({}) published {}'.format(tag, prevtag, readable_timediff))
+            elif tag == test_tag:
+                click.echo('{} ({}) published {} (change this with jb select)'.format('test', test_tag, readable_timediff))
+            else:
+                click.echo('{} published {}'.format(tag, readable_timediff))
+                click.echo('{} published {}'.format('core', readable_timediff))
+
+    click.echo()
+    env = click.prompt("what environment would you like to start?")
     if not noupgrade:
         ctx.invoke(upgrade)
         os.chdir("./environments/{}".format(env))

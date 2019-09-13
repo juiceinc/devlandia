@@ -240,16 +240,15 @@ def image_list(showall=False, print_flag=True, semantic=False):
     for image in images['imageDetails']:
         if 'imageTags' in image:
             pushed = datetime.datetime.fromtimestamp(int(image['imagePushedAt']))
-            pushed = pushed + datetime.timedelta(hours=5) # Why do we add 5 hours?
             for tag in image['imageTags']:
                 slang = '{} days ago'.format((now - pushed).days)
                 if not showall and not semantic:
                     if pushed >= now - datetime.timedelta(days=30):
                         imageList.append(
-                            [tag, image['imageDigest'][7:], slang])
+                            [tag, image['imageDigest'][7:], pushed])
                 elif showall and not semantic:
                     imageList.append(
-                        [tag, image['imageDigest'][7:], slang])
+                        [tag, image['imageDigest'][7:], pushed])
                 elif semantic and not showall:
                     if '.' in tag:
                         imageList.append([tag, image['imageDigest'][7:],
