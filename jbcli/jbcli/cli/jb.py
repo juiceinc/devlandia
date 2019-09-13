@@ -379,6 +379,9 @@ def freshstart(ctx, noupdate, noupgrade):
     os.chdir(path)
     click.echo("Welcome to devlandia!")
     env = click.prompt("what environment would you like to start?")
+    available_envs = ['core', 'dev', 'hstm-core', 'hstm-dev', 'hstm-stable', 'hstm-test', 'stable', 'test']
+    if env not in available_envs:
+        return click.echo("Environment must be one of {}".format(available_envs))
     cwd= os.getcwd()
     click.echo(cwd)
     if not noupgrade:
