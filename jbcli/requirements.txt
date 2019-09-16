@@ -33,17 +33,22 @@ jsonschema==2.6.0         # via docker-compose
 odfpy==1.4.0              # via tablib
 openpyxl==2.6.3           # via tablib
 pathtools==0.1.2          # via watchdog
+prompt_toolkit==1.0.14    # via pyinquirer
+pygments==2.4.2           # via pyinquirer
+pyinquirer==1.0.3
 python-dateutil==2.8.0    # via botocore, elasticsearch-dsl
 pyyaml==3.13              # via docker-compose, tablib, watchdog
+regex==2019.8.19          # via pyinquirer
 requests==2.11.1          # via docker, docker-compose
 s3transfer==0.2.1         # via boto3
-six==1.12.0               # via docker, docker-compose, docker-pycreds, dockerpty, elasticsearch-dsl, python-dateutil, websocket-client
+six==1.12.0               # via docker, docker-compose, docker-pycreds, dockerpty, elasticsearch-dsl, prompt-toolkit, python-dateutil, websocket-client
 tablib==0.13.0
 tabulate==0.8.3
 texttable==0.8.8          # via docker-compose
 toml==0.10.0
 urllib3==1.24.3           # via botocore, elasticsearch
 watchdog==0.8.3
+wcwidth==0.1.7            # via prompt-toolkit
 websocket-client==0.56.0  # via docker, docker-compose
 xlrd==1.2.0               # via tablib
 xlwt==1.3.0               # via tablib

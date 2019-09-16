@@ -11,6 +11,7 @@ import botocore
 import click
 import docker.errors
 from botocore import exceptions
+from PyInquirer import prompt, print_json
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success, human_readable_timediff
@@ -380,13 +381,15 @@ def freshstart(ctx, noupdate, noupgrade):
     click.echo("Welcome to devlandia!")
     click.echo('Gathering data on available environments...\n')
     stuff = dockerutil.image_list(print_flag=False, semantic=False)
+
     interesting_tags = ['develop', 'stable']
 
     test_tag = stash.get('jb_select')
-    if test_tag:
+    if test_tag and test_tag not in interesting_tags:
         interesting_tags.append(test_tag)
         
     # Sort in ascending order of timestamp
+    extra_lookup = {}
     stuff.sort(key=lambda x: x[2])
     for prev_row, row in zip(stuff, stuff[1:]):
         tag = row[0]
@@ -394,15 +397,34 @@ def freshstart(ctx, noupdate, noupgrade):
         readable_timediff = human_readable_timediff(row[2])
         if tag in interesting_tags:
             if tag == 'stable':
-                click.echo('{} ({}) published {}'.format(tag, prevtag, readable_timediff))
-            elif tag == test_tag:
-                click.echo('{} ({}) published {} (change this with jb select)'.format('test', test_tag, readable_timediff))
-            else:
-                click.echo('{} published {}'.format(tag, readable_timediff))
-                click.echo('{} published {}'.format('core', readable_timediff))
+                extra_lookup['stable'] = 'stable - ({}) published {}'.format(prevtag, readable_timediff)
+            if tag == test_tag:
+                extra_lookup['test'] = 'test - ({}) published {} (change this with jb select)'.format(test_tag, readable_timediff)
+            if tag == 'develop':
+                extra_lookup['dev'] = 'dev - (develop) published {}'.format(readable_timediff)
+                extra_lookup['core'] = 'core - (develop) published {}'.format(readable_timediff)
+    if 'test' not in extra_lookup:
+        extra_lookup['test'] = 'test - set with `jb select`'
 
     click.echo()
-    env = click.prompt("what environment would you like to start?")
+
+    env_choices = [{'name': extra_lookup.get('stable', 'stable'),'value': 'stable'},
+                   {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
+                   {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
+                   {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
+                   'hstm-stable', 'hstm-dev', 'hstm-core', 'hstm-test']
+    questions = [
+        {
+            'type': 'list',
+            'name': 'Environment',
+            'message': 'what environment would you like to start?',
+            'choices': env_choices
+        }
+    ]
+
+    response = prompt(questions)
+    env = response['Environment']
+    click.echo(response)
 
     if not noupgrade:
         ctx.invoke(upgrade)
