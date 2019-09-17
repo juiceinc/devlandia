@@ -34,7 +34,12 @@ def echo_success(message):
 
 
 def human_readable_timediff(dt):
-    """ Generate a human readable time difference """
+    """ Generate a human readable time difference, Using 2 largest time intervals
+        ex: "1 hour 30 min"
+
+        :param dt: datetime we want to find the difference between current time
+        :type dt: datetime
+    """
 
     attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
     human_readable = lambda delta: ['%d %s' % (getattr(delta, attr), getattr(delta, attr) > 1 and attr or attr[:-1]) 

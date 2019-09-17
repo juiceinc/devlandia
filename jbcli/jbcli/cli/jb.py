@@ -11,7 +11,7 @@ import botocore
 import click
 import docker.errors
 from botocore import exceptions
-from PyInquirer import prompt, print_json
+from PyInquirer import prompt
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success, human_readable_timediff
@@ -380,15 +380,17 @@ def freshstart(ctx, noupdate, noupgrade):
     os.chdir(path)
     click.echo("Welcome to devlandia!")
     click.echo('Gathering data on available environments...\n')
+    # get a list of all the current images
     stuff = dockerutil.image_list(print_flag=False, semantic=False)
-
+    # these are the tags we want to look for in the list of images
     interesting_tags = ['develop', 'stable']
 
     test_tag = stash.get('jb_select')
     if test_tag and test_tag not in interesting_tags:
         interesting_tags.append(test_tag)
         
-    # Sort in ascending order of timestamp
+    # Generate suffixes for each environment that contain information on what image is
+    # associated with a tag, and when those images were published
     extra_lookup = {}
     stuff.sort(key=lambda x: x[2])
     for prev_row, row in zip(stuff, stuff[1:]):
@@ -408,7 +410,7 @@ def freshstart(ctx, noupdate, noupgrade):
 
     click.echo()
 
-    env_choices = [{'name': extra_lookup.get('stable', 'stable'),'value': 'stable'},
+    env_choices = [{'name': extra_lookup.get('stable', 'stable'), 'value': 'stable'},
                    {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
                    {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
                    {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
@@ -432,28 +434,7 @@ def freshstart(ctx, noupdate, noupgrade):
     else:
         os.chdir("./environments/{}".format(env))
 
-    cwd = os.getcwd
-    click.echo("working directory: {}".format(cwd))
-
-    if not dockerutil.is_running():
-        try:
-            if not noupdate:
-                dockerutil.pull(tag=None)
-            dockerutil.up(env=populate_env_with_secrets())
-        except botocore.exceptions.ClientError as e:
-            if "Signature expired" in e.message:
-                click.echo(
-                    "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
-                subprocess.check_call(
-                    ['killall', '-HUP' 'com.docker.hyperkit'])
-                time.sleep(30)
-                start(noupdate=noupdate)
-            else:
-                raise
-    else:
-        echo_warning('An instance of Juicebox is already running')
-
-
+    ctx.forward(start)
 
 
 @cli.command()
