@@ -23,10 +23,10 @@ class Stash(object):
         except IOError:
             return {}
 
-    def get(self, name):
+    def get(self, name, default=None):
         """Get a secret directly from the local file."""
         try:
-            return self.data.get(name)
+            return self.data.get(name, default)
         except IOError:
             pass
 
