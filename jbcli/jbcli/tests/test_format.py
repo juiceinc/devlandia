@@ -37,5 +37,7 @@ class TestTimeDiff:
         assert v == '30 minutes ago'
 
         v = human_readable_timediff(datetime.now() - timedelta(days=2) - timedelta(minutes=30))
-        assert v == '2 days, 30 minutes ago'
+        assert v == '2 days ago'
 
+        v = human_readable_timediff(datetime.now() - timedelta(days=1) - timedelta(minutes=30))
+        assert v == '1 day, 30 minutes ago'

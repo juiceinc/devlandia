@@ -34,11 +34,12 @@ def echo_success(message):
 
 
 def human_readable_timediff(dt):
-    """ Generate a human readable time difference, Using 2 largest time intervals
-        ex: "1 hour 30 min"
+    """ Generate a human readable time difference, use the 2 largest time intervals
+    if the the first part is a one for example: "1 hour, 30 minutes ago", but
+    just use the largest time interval in other cases, for example: "18 hours ago"
 
-        :param dt: datetime we want to find the difference between current time
-        :type dt: datetime
+    :param dt: datetime we want to find the difference between current time
+    :type dt: datetime
     """
 
     attrs = ['years', 'months', 'days', 'hours', 'minutes', 'seconds']
@@ -46,7 +47,12 @@ def human_readable_timediff(dt):
         for attr in attrs if getattr(delta, attr)]
 
     parts = relativedelta(datetime.now(), dt)
-
     readable_parts = human_readable(parts)
-    readable_timediff = ', '.join(readable_parts[:2]) + ' ago'
+
+    # Show more detail when the first part is "1 day" or "1 hour"
+    if readable_parts and readable_parts[0].startswith('1 '):
+        readable_timediff = ', '.join(readable_parts[:2]) + ' ago'
+    else:
+        readable_timediff = ', '.join(readable_parts[:1]) + ' ago'
+
     return readable_timediff
