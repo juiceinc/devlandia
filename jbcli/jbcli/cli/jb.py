@@ -298,9 +298,25 @@ def ls(showall=False, semantic=False):
 def select(tag, env=None, showall=False):
     """Select tagged image to use
     """
+
+    if env is None:
+        questions = [
+            {
+                'type': 'list',
+                'name': 'env',
+                'message': 'What environment would you like to change?',
+                'choices': ['test', 'core', 'hstm-test', 'hstm-core']
+            }
+        ]
+        response = prompt(questions)
+        env = response.get('env')        
+        if env is None:
+            echo_highlight('No environment selected.')
+            return
+
     found = False
-    questions = []
     if tag is None:
+        # Present a scrolling list for the user to pick a tag
         click.echo('Gathering data on available tags...\n')
         tag_choices = []
         prev_priority = None
@@ -314,40 +330,20 @@ def select(tag, env=None, showall=False):
             })
             prev_priority = tag_priority
 
-        questions.append(
+        questions = [
             {
                 'type': 'list',
                 'name': 'tag',
-                'message': 'What tag would you like to select?',
+                'message': 'What tag would you like to use in {}?'.format(env),
                 'choices': tag_choices
             }
-        )
+        ]
+        response = prompt(questions)
+        tag = response.get('tag')
         found = True
-
-    if env is None:
-        questions.append(
-            {
-                'type': 'list',
-                'name': 'env',
-                'message': 'What environment would you like to change?',
-                'choices': ['test', 'core', 'hstm-test', 'hstm-core']
-            }
-        )
-
-
-    response = prompt(questions)
-    tag = response.get('tag', tag)
-    env = response.get('env', env)
-
-    if tag is None:
-        echo_highlight('No tag selected.')
-        return
-
-    if env is None:
-        echo_highlight('No environment selected.')
-        return
-
-    os.chdir("./environments/{}".format(env))
+        if tag is None:
+            echo_highlight('No tag selected.')
+            return
 
     if not found:
         click.echo('Checking this tag is valid...\n')
@@ -355,29 +351,21 @@ def select(tag, env=None, showall=False):
             if tag == img[0]:
                 found = True
                 break
-    
-    if found:
-        jb_select = stash.get('jb_select', {})
-        if not isinstance(jb_select, dict):
-            jb_select = {
-                'test': jb_select
-            }
-        jb_select[env] = tag
-        stash.put('jb_select', jb_select)
-        # dockerutil.pull(tag)
-        with open("./docker-compose.yml", "rt") as dc:
-            with open("out.txt", "wt") as out:
-                for line in dc:
-                    if 'juicebox-devlandia:' in line:
-                        oldTag = line.rpartition(':')[2]
-                        out.write(line.replace(oldTag, tag) + '\"\n')
-                    else:
-                        out.write(line)
-        shutil.move('./out.txt', './docker-compose.yml')
-        echo_success('Environment {} will use {}'.format(env, tag))
 
-    if not found:
-        echo_warning('That tag doesn\'t exist.')
+        echo_warning('The tag \'{}\' doesn\'t exist.'.format(tag))
+        return
+
+    # Store the tag and ensure the environment are using the right tags
+    jb_select = stash.get('jb_select', {})
+    if not isinstance(jb_select, dict):
+        jb_select = {
+            'test': jb_select
+        }
+    jb_select[env] = tag
+    stash.put('jb_select', jb_select)
+    
+    for env, tag in jb_select.items():
+        dockerutil.set_tag(env, tag)
 
 
 @cli.command()
@@ -437,6 +425,11 @@ def populate_env_with_secrets():
 def freshstart(ctx, env, noupdate, noupgrade):
     """Configure the environment and start Juicebox
     """
+    if dockerutil.is_running():
+        echo_warning('An instance of Juicebox is already running')
+        echo_warning('Run `jb stop` to stop this instance.')
+        return
+
     path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
     os.chdir(path)
     if env is None:
@@ -484,7 +477,7 @@ def freshstart(ctx, env, noupdate, noupgrade):
             {'name': extra_lookup.get('hstm-core', 'hstm-core'), 'value': 'hstm-core'},
             {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'}
         ]
-        
+
         questions = [
             {
                 'type': 'list',
@@ -502,7 +495,27 @@ def freshstart(ctx, env, noupdate, noupgrade):
         return
 
     os.chdir("./environments/{}".format(env))
-    ctx.forward(start)
+
+    if not noupgrade:
+        cwd = os.getcwd()
+        os.chdir(os.path.join(cwd, '..', '..'))
+        ctx.invoke(upgrade)
+        os.chdir(cwd)
+
+    try:
+        if not noupdate:
+            dockerutil.pull(tag=None)
+        dockerutil.up(env=populate_env_with_secrets())
+    except botocore.exceptions.ClientError as e:
+        if "Signature expired" in e.message:
+            click.echo(
+                "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
+            subprocess.check_call(
+                ['killall', '-HUP' 'com.docker.hyperkit'])
+            time.sleep(30)
+            start(noupdate=noupdate)
+        else:
+            raise
 
 
 @cli.command()

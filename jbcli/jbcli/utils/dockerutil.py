@@ -15,6 +15,7 @@ from tabulate import tabulate
 import re
 import sys
 import os
+import shutil
 
 import click
 import docker.errors
@@ -287,6 +288,31 @@ def image_list(showall=False, print_flag=True, semantic=False):
         )
 
     return newImageList
+
+
+def set_tag(env, tag):
+    """Set an environment to use a tagged image """
+    ensure_root()
+
+    os.chdir("./environments/{}".format(env))
+    changed = False
+    with open("./docker-compose.yml", "rt") as dc:
+        with open("out.txt", "wt") as out:
+            for line in dc:
+                if 'juicebox-devlandia:' in line:
+                    oldTag = line.rpartition(':')[2]
+                    if oldTag[:-2] != tag:
+                        out.write(line.replace(oldTag, tag) + '\"\n')
+                        changed = True
+                else:
+                    out.write(line)
+    if changed:
+        shutil.move('./out.txt', './docker-compose.yml')
+    else:
+        os.remove('./out.txt')
+
+    echo_success('Environment {} is using {}'.format(env, tag))
+    os.chdir("../..")
 
 
 def get_state(container_name):
