@@ -22,7 +22,7 @@ from .jbapiutil import load_app
 from .subprocess import check_call, check_output
 from .reload import refresh_browser
 
-from .format import echo_warning, echo_success
+from .format import echo_warning, echo_success, human_readable_timediff
 
 client = docker.from_env()
 
@@ -233,32 +233,60 @@ def pull(tag):
 
 def image_list(showall=False, print_flag=True, semantic=False):
     """Lists available tagged images"""
+    semantic_version_tag_pattern = re.compile('^\d+\.\d+\.\d+$')
     imageList = []
+    now = datetime.datetime.now()
     cmd = "aws ecr describe-images --registry-id 423681189101 --repository-name juicebox-devlandia"
     images = json.loads(check_output(cmd.split()))
-    now = datetime.datetime.now()
     for image in images['imageDetails']:
         if 'imageTags' in image:
             pushed = datetime.datetime.fromtimestamp(int(image['imagePushedAt']))
             for tag in image['imageTags']:
-                slang = '{} days ago'.format((now - pushed).days)
-                if not showall and not semantic:
-                    if pushed >= now - datetime.timedelta(days=30):
-                        imageList.append(
-                            [tag, image['imageDigest'][7:], pushed])
-                elif showall and not semantic:
-                    imageList.append(
-                        [tag, image['imageDigest'][7:], pushed])
-                elif semantic and not showall:
-                    if '.' in tag:
-                        imageList.append([tag, image['imageDigest'][7:],
-                                          slang])
+                human_readable = human_readable_timediff(pushed)
+                is_semantic_tag = bool(semantic_version_tag_pattern.match(tag))
+                if tag == 'stable':
+                    tag_priority = 4
+                elif tag == 'develop': 
+                    tag_priority = 3
+                elif is_semantic_tag:
+                    tag_priority = 2
+                else:
+                    tag_priority = 1
+
+                # If semantic, just return semantic tags
+                meets_semantic_criteria = (semantic and is_semantic_tag) or not semantic
+                # Use if showall is true, return all tags, otherwise return just last 30 days
+                meets_time_criteria = showall or (pushed >= now - datetime.timedelta(days=30))
+
+                if meets_semantic_criteria and meets_time_criteria:
+                    row = [tag, pushed, human_readable, tag_priority, is_semantic_tag]
+                    imageList.append(row)
+
+    # Find the semantic version of stable
+    imageList.sort(key=itemgetter(1))
+    newImageList = []
+    for prev_row, row in zip(imageList, imageList[1:]):
+        tag, pushed, human_readable, tag_priority, is_semantic_tag = row
+        prevtag = prev_row[0]
+        if tag == 'stable':
+            row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, prevtag]
+        else:
+            row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, None]
+        newImageList.append(row)
+
+    # Sort in descending order of priority and timestamp
+    def sort_order(row):
+        return (row[3], row[0])
+    newImageList.sort(key=sort_order, reverse=True)
 
     if print_flag:
-        print(tabulate(sorted(imageList, key=itemgetter(0)), headers=['Image Name', 'Digest',
-                                           'Time Tagged']))
+        print(
+            tabulate(newImageList,
+                headers=['Image Name', 'Time Tagged', 'Relative', 'Priority', 'Is Semantic', 'Stable Version']
+            )
+        )
 
-    return imageList
+    return newImageList
 
 
 def get_state(container_name):
