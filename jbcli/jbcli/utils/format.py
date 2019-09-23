@@ -35,12 +35,9 @@ def echo_success(message):
 
 
 def human_readable_timediff(dt):
-    """ Generate a human readable time difference, use the 2 largest time intervals
-    if the the first part is a one for example: "1 hour, 30 minutes ago", but
-    just use the largest time interval in other cases, for example: "18 hours ago"
+    """ Generate a human readable time difference between this time and now
 
     :param dt: datetime we want to find the difference between current time
     :type dt: datetime
     """
-    now = datetime.now()
-    return naturaltime(now - dt)
+    return naturaltime(datetime.now() - dt)
