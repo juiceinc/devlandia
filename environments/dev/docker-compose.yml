@@ -1,7 +1,7 @@
 version: '2'
 services:
   juicebox:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:dev"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:develop"
     command: bash -c "/venv/bin/python docker/entrypoint.py"
     ports:
       - "${DEVLANDIA_PORT}:8000"
