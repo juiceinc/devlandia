@@ -455,8 +455,8 @@ def freshstart(ctx, env, noupdate, noupgrade):
         for row in tags:
             tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
 
-            if tag == 'stable':
-                extra_lookup['stable'] = 'stable - ({}) published {}'.format(stable_version, human_readable)
+            if tag == 'master':
+                extra_lookup['master'] = 'stable/master - ({}) published {}'.format(stable_version, human_readable)
             if tag == 'develop':
                 extra_lookup['dev'] = 'dev - (develop) published {}'.format(human_readable)
                 extra_lookup['core'] = 'core - (develop) published {}'.format(human_readable)
@@ -468,7 +468,7 @@ def freshstart(ctx, env, noupdate, noupgrade):
             extra_lookup['test'] = 'test - set with `jb select`'
 
         env_choices = [
-            {'name': extra_lookup.get('stable', 'stable'), 'value': 'stable'},
+            {'name': extra_lookup.get('master', 'master'), 'value': 'stable'},
             {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
             {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
             {'name': extra_lookup.get('test', 'test'), 'value': 'test'},

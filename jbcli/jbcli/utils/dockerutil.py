@@ -245,7 +245,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
             for tag in image['imageTags']:
                 human_readable = human_readable_timediff(pushed)
                 is_semantic_tag = bool(semantic_version_tag_pattern.match(tag))
-                if tag == 'stable':
+                if tag == 'master':
                     tag_priority = 4
                 elif tag == 'develop': 
                     tag_priority = 3
@@ -269,7 +269,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
     for prev_row, row in zip(imageList, imageList[1:]):
         tag, pushed, human_readable, tag_priority, is_semantic_tag = row
         prevtag = prev_row[0]
-        if tag == 'stable':
+        if tag == 'master':
             row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, prevtag]
         else:
             row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, None]
@@ -283,7 +283,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
     if print_flag:
         print(
             tabulate(newImageList,
-                headers=['Image Name', 'Time Tagged', 'Relative', 'Priority', 'Is Semantic', 'Stable Version']
+                headers=['Image Name', 'Time Tagged', 'Relative', 'Priority', 'Is Semantic', 'Master Version']
             )
         )
 
