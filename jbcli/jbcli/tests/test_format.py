@@ -28,16 +28,3 @@ class TestFormat:
         assert secho_mock.mock_calls == [
             call('COOKIES!', fg='red', bold=True)
         ]
-
-
-class TestTimeDiff:
-
-    def test_human_readable_timediff(self):
-        v = human_readable_timediff(datetime.now() - timedelta(minutes=30))
-        assert v == '30 minutes ago'
-
-        v = human_readable_timediff(datetime.now() - timedelta(days=2) - timedelta(minutes=30))
-        assert v == '2 days ago'
-
-        v = human_readable_timediff(datetime.now() - timedelta(days=1) - timedelta(minutes=30))
-        assert v == '1 day, 30 minutes ago'

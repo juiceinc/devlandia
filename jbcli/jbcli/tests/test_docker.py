@@ -1,6 +1,9 @@
+import json
+import time
 from collections import namedtuple
+from datetime import datetime, timedelta
 
-from mock import call, patch
+from mock import call, patch, ANY
 
 from ..utils import dockerutil
 
@@ -188,14 +191,47 @@ class TestDocker:
             call(tag='latest')
         ]
 
-    @patch('jbcli.utils.dockerutil.json')
+ 
     @patch('jbcli.utils.dockerutil.check_output')
-    def test_image_list(self, check_mock, json_mock):
-        output = dockerutil.image_list(showall=False, print_flag=False)
+    def test_image_list(self, check_mock):        
+        def _make_image_details(tag, td):
+                dt = datetime.now() - td
+                ts = time.mktime(dt.timetuple())
+                return {
+                    "imageSizeInBytes": 1,
+                    "imageDigest": "sha256:abcd",
+                    "imageTags": [
+                        tag
+                    ],
+                    "registryId": "423681189101",
+                    "repositoryName": "juicebox-devlandia",
+                    "imagePushedAt": ts
+                }
 
+        check_mock.return_value = json.dumps({
+            'imageDetails': [
+                _make_image_details('master', timedelta(seconds=30)),
+                _make_image_details('3.22.1', timedelta(days=120)),
+            ]
+        })
+
+        output = dockerutil.image_list(showall=False, print_flag=False)
         assert check_mock.mock_calls == [
             call(
                 "aws ecr describe-images --registry-id 423681189101 --repository-name juicebox-devlandia".split())
         ]
 
-        assert isinstance(output, list)
+        for o in output:
+            o.pop(1)
+        assert output == [
+            [u'master', '30 seconds ago', 4, False, None]
+        ]
+
+        output = dockerutil.image_list(showall=True, print_flag=False)
+
+        for o in output:
+            o.pop(1)
+        assert output == [
+            [u'master', '30 seconds ago', 4, False, u'3.22.1'], 
+            [u'3.22.1', '3 months ago', 2, True, None]
+        ]

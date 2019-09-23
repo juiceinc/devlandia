@@ -265,15 +265,17 @@ def image_list(showall=False, print_flag=True, semantic=False):
 
     # Find the semantic version of stable
     imageList.sort(key=itemgetter(1))
+
     newImageList = []
-    for prev_row, row in zip(imageList, imageList[1:]):
+    prevtag = None
+    for row in imageList:
         tag, pushed, human_readable, tag_priority, is_semantic_tag = row
-        prevtag = prev_row[0]
         if tag == 'master':
             row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, prevtag]
         else:
             row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, None]
         newImageList.append(row)
+        prevtag = tag
 
     # Sort in descending order of priority and timestamp
     def sort_order(row):

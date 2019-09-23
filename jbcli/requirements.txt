@@ -26,6 +26,7 @@ enum34==1.1.6             # via docker-compose
 et-xmlfile==1.0.1         # via openpyxl
 functools32==3.2.3.post2  # via jsonschema
 futures==3.3.0            # via s3transfer
+humanize==0.5.1
 ipaddress==1.0.22         # via docker, docker-compose, elasticsearch-dsl
 jdcal==1.4.1              # via openpyxl
 jmespath==0.9.4           # via boto3, botocore
