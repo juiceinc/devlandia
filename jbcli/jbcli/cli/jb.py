@@ -494,13 +494,11 @@ def freshstart(ctx, env, noupdate, noupgrade):
         echo_highlight('No environment selected.')
         return
 
-    os.chdir("./environments/{}".format(env))
-
     if not noupgrade:
-        cwd = os.getcwd()
-        os.chdir(os.path.join(cwd, '..', '..'))
         ctx.invoke(upgrade)
-        os.chdir(cwd)
+
+    stash.put('current_env', env)
+    os.chdir("./environments/{}".format(env))
 
     try:
         if not noupdate:

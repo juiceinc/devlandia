@@ -153,16 +153,6 @@ def ensure_home(output=True):
     return True
 
 
-def ensure_test_core():
-    """Verifies that we are in the Juicebox test directory
-
-    :rtype: ``bool``
-    """
-    if 'test' in os.getcwd() or 'core' in os.getcwd():
-        return True
-    return False
-
-
 def run(command):
     """Runs a command directly in the docker container.
     """
