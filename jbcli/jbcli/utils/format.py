@@ -2,7 +2,6 @@
 outputs.
 """
 from click import secho
-from dateutil.relativedelta import relativedelta
 from datetime import datetime
 from humanize import naturaltime
 
