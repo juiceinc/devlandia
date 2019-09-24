@@ -235,3 +235,12 @@ class TestDocker:
             [u'master', '30 seconds ago', 4, False, u'3.22.1'], 
             [u'3.22.1', '3 months ago', 2, True, None]
         ]
+
+        # Semantic flag gets only semantic tags
+        output = dockerutil.image_list(showall=True, print_flag=False, semantic=True)
+
+        for o in output:
+            o.pop(1)
+        assert output == [
+            [u'3.22.1', '3 months ago', 2, True, None]
+        ]
