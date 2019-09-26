@@ -11,9 +11,10 @@ import botocore
 import click
 import docker.errors
 from botocore import exceptions
+from PyInquirer import prompt, Separator
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
-from ..utils.format import echo_highlight, echo_warning, echo_success
+from ..utils.format import echo_highlight, echo_warning, echo_success, human_readable_timediff
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_paramstore
 from ..utils.reload import create_browser_instance
@@ -289,34 +290,82 @@ def ls(showall=False, semantic=False):
         echo_warning('You must login to the registry first.')
 
 
-@click.argument('tag', nargs=1, required=True)
+@click.option('--showall', default=False, help='Show all tagged images',
+              is_flag=True)
+@click.option('--env', default=None, help='Select in this environment')
+@click.argument('tag', nargs=1, required=False)
 @cli.command()
-def select(tag):
+def select(tag, env=None, showall=False):
     """Select tagged image to use
     """
+
+    if env is None:
+        questions = [
+            {
+                'type': 'list',
+                'name': 'env',
+                'message': 'What environment would you like to change?',
+                'choices': ['test', 'core', 'hstm-test', 'hstm-core']
+            }
+        ]
+        response = prompt(questions)
+        env = response.get('env')        
+        if env is None:
+            echo_highlight('No environment selected.')
+            return
+
     found = False
-    if dockerutil.ensure_test_core():
-        tags = dockerutil.image_list(print_flag=False, showall=True)
-        for tagset in tags:
-            if tag in tagset[0]:
+    if tag is None:
+        # Present a scrolling list for the user to pick a tag
+        click.echo('Gathering data on available tags...\n')
+        tag_choices = []
+        prev_priority = None
+        for row in dockerutil.image_list(print_flag=False, showall=showall):
+            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+            if prev_priority and prev_priority != tag_priority:
+                tag_choices.append(Separator())
+            tag_choices.append({
+                'name': '{} (published {})'.format(tag, human_readable), 
+                'value': tag
+            })
+            prev_priority = tag_priority
 
+        questions = [
+            {
+                'type': 'list',
+                'name': 'tag',
+                'message': 'What tag would you like to use in {}?'.format(env),
+                'choices': tag_choices
+            }
+        ]
+        response = prompt(questions)
+        tag = response.get('tag')
+        found = True
+        if tag is None:
+            echo_highlight('No tag selected.')
+            return
+
+    if not found:
+        click.echo('Checking this tag is valid...\n')
+        for img in dockerutil.image_list(showall=True, print_flag=False):
+            if tag == img[0]:
                 found = True
-                stash.put('jb_select', tag)
-                dockerutil.pull(tag)
-                with open("./docker-compose.yml", "rt") as dc:
-                    with open("out.txt", "wt") as out:
-                        for line in dc:
-                            if 'juicebox-devlandia:' in line:
-                                oldTag = line.rpartition(':')[2]
-                                out.write(line.replace(oldTag, tag) + '\"\n')
-                            else:
-                                out.write(line)
-                shutil.move('./out.txt', './docker-compose.yml')
+                break
 
-        if not found:
-            echo_warning('That tag doesn\'t exist.')
-    else:
-        echo_warning('This can only be done in the test or core environments.')
+        echo_warning('The tag \'{}\' doesn\'t exist.'.format(tag))
+        return
+
+    # Store the tag and ensure the environment are using the right tags
+    jb_select = stash.get('jb_select', {})
+    if not isinstance(jb_select, dict):
+        jb_select = {
+            'test': jb_select
+        }
+    jb_select[env] = tag
+    stash.put('jb_select', jb_select)
+    
+    for env, tag in jb_select.items():
+        dockerutil.set_tag(env, tag)
 
 
 @cli.command()
@@ -362,6 +411,109 @@ def populate_env_with_secrets():
     env['JB_GOOGLE_CLOUD_PRIVKEY'] = get_paramstore('jbo-google-cloud-privkey')
     env['JB_GITHUB_FETCHAPP_CREDS'] = get_paramstore('opslord-github-credentials')
     return env
+
+
+@cli.command()
+@click.argument('env', nargs=1, required=False)
+@click.option('--noupdate', default=False,
+              help='Do not automatically update Docker image on start',
+              is_flag=True)
+@click.option('--noupgrade', default=False,
+              help='Do not automatically update jb and generators on start',
+              is_flag=True)
+@click.pass_context
+def freshstart(ctx, env, noupdate, noupgrade):
+    """Configure the environment and start Juicebox
+    """
+    if dockerutil.is_running():
+        echo_warning('An instance of Juicebox is already running')
+        echo_warning('Run `jb stop` to stop this instance.')
+        return
+
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    os.chdir(path)
+    if env is None:
+        click.echo("Welcome to devlandia!")
+        click.echo('Gathering data on available environments...\n')
+        # get a list of all the current images
+        tags = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
+        # these are the tags we want to look for in the list of images
+
+        # Generate suffixes for each environment that contain information on what image is
+        # associated with a tag, and when those images were published
+        extra_lookup = {}
+
+        jb_select = stash.get('jb_select', {})
+        if not isinstance(jb_select, dict):
+            jb_select = {
+                'test': jb_select
+            }
+
+        for env, selected_tag in jb_select.items():
+            extra_lookup[env] = selected_tag
+
+        for row in tags:
+            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+
+            if tag == 'master':
+                extra_lookup['master'] = 'stable/master - ({}) published {}'.format(stable_version, human_readable)
+            if tag == 'develop':
+                extra_lookup['dev'] = 'dev - (develop) published {}'.format(human_readable)
+                extra_lookup['core'] = 'core - (develop) published {}'.format(human_readable)
+            for env, selected_tag in jb_select.items():
+                if tag == selected_tag:
+                    extra_lookup[env] = '{} - ({}, set with `jb select`) published {}'.format(env, selected_tag, human_readable)
+
+        if 'test' not in extra_lookup:
+            extra_lookup['test'] = 'test - set with `jb select`'
+
+        env_choices = [
+            {'name': extra_lookup.get('master', 'master'), 'value': 'stable'},
+            {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
+            {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
+            {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
+            {'name': extra_lookup.get('hstm-stable', 'hstm-stable'), 'value': 'hstm-stable'},
+            {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
+            {'name': extra_lookup.get('hstm-core', 'hstm-core'), 'value': 'hstm-core'},
+            {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'}
+        ]
+
+        questions = [
+            {
+                'type': 'list',
+                'name': 'env',
+                'message': 'what environment would you like to start?',
+                'choices': env_choices
+            }
+        ]
+
+        response = prompt(questions)
+        env = response.get('env', None)
+
+    if not env:
+        echo_highlight('No environment selected.')
+        return
+
+    if not noupgrade:
+        ctx.invoke(upgrade)
+
+    stash.put('current_env', env)
+    os.chdir("./environments/{}".format(env))
+
+    try:
+        if not noupdate:
+            dockerutil.pull(tag=None)
+        dockerutil.up(env=populate_env_with_secrets())
+    except botocore.exceptions.ClientError as e:
+        if "Signature expired" in e.message:
+            click.echo(
+                "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
+            subprocess.check_call(
+                ['killall', '-HUP' 'com.docker.hyperkit'])
+            time.sleep(30)
+            start(noupdate=noupdate)
+        else:
+            raise
 
 
 @cli.command()

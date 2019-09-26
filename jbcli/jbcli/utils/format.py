@@ -2,6 +2,8 @@
 outputs.
 """
 from click import secho
+from datetime import datetime
+from humanize import naturaltime
 
 
 def echo_highlight(message):
@@ -29,3 +31,12 @@ def echo_success(message):
     :type message: str
     """
     return secho(message, fg='green', bold=True)
+
+
+def human_readable_timediff(dt):
+    """ Generate a human readable time difference between this time and now
+
+    :param dt: datetime we want to find the difference between current time
+    :type dt: datetime
+    """
+    return naturaltime(datetime.now() - dt)
