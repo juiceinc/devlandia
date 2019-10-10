@@ -234,7 +234,7 @@ def remove(applications, runtime):
                         echo_highlight('Removing {}...'.format(app))
                         shutil.rmtree('apps/{}'.format(app))
                         dockerutil.run(
-                            '/{}}/bin/python manage.py deletejuiceboxapp {}'.format(
+                            '/{}/bin/python manage.py deletejuiceboxapp {}'.format(
                                 runtime, app))
                         echo_success('Successfully deleted {}'.format(app))
                     else:
