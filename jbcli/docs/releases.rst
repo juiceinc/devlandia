@@ -2,6 +2,11 @@
 Releases
 ========
 
+0.15.0
+======
+
+- Improved: Added option on many jbcli functions for passing an override to the runtime environment.  The default is venv and works as normal, passing ``--runtime venv3`` will run the commands with the py3 interpreter, but it is only valid in the new py3 environment.
+
 0.8.0
 =====
 
