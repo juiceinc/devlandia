@@ -600,7 +600,7 @@ def test_app(name, runtime):
             app_dir = 'apps/{}'.format(name)
             dockerutil.run(
                 'sh -c "cd {}; pwd; /{}/bin/python -m unittest discover tests"'.format(
-                    runtime, app_dir))
+                    app_dir, runtime))
     except docker.errors.APIError:
         echo_warning('Could not run tests')
         click.get_current_context().abort()
