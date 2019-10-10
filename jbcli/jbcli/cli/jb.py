@@ -171,7 +171,7 @@ def add(applications, add_desktop, runtime):
               help='Initialize VCS repository')
 @click.option('--track/--no-track', default=True,
               help='Track remote VCS repository')
-@click.option('--runtime', help='Whether or not to install with py3.', default='venv')
+@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3', default='venv')
 def clone(existing_app, new_app, init, track, runtime):
     """ Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
@@ -218,7 +218,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.argument('applications', nargs=-1, required=True)
 @click.confirmation_option('--yes', is_flag=True,
                            prompt='Are you sure you want to delete?')
-@click.option('--runtime', help='Defaults to venv, venv3 is the only other '
+@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3'
                                 'option.', default='venv')
 def remove(applications, runtime):
     """Remove a juicebox app (or list of apps) from your local environment
