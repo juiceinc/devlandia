@@ -45,7 +45,8 @@ def create(*args, **kwargs):
 @cli.command()
 @click.argument('applications', nargs=-1, required=True)
 @click.option('--bucket', help='Pass the necessary S3 bucket', default=None)
-def package(applications, bucket):
+@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3', default='venv')
+def package(applications, bucket, runtime):
     """Package a juicebox app (or list of apps) for deployment
     """
     if dockerutil.is_running() and dockerutil.ensure_home():
@@ -55,12 +56,12 @@ def package(applications, bucket):
                 echo_highlight('Packaging {}...'.format(app))
                 if bucket is not None:
                     dockerutil.run(
-                        '/venv/bin/python manage.py packagejuiceboxapp {} --bucket={}'.format(
-                            app, bucket))
+                        '/{}/bin/python manage.py packagejuiceboxapp {} --bucket={}'.format(
+                            runtime, app, bucket))
                 else:
                     dockerutil.run(
-                        '/venv/bin/python manage.py packagejuiceboxapp {}'.format(
-                            app))
+                        '/{}/bin/python manage.py packagejuiceboxapp {}'.format(
+                            runtime, app))
 
             except docker.errors.APIError:
                 print(docker.errors.APIError.message)
@@ -78,7 +79,8 @@ def package(applications, bucket):
 @cli.command()
 @click.argument('datafile', nargs=1, required=True)
 @click.option('--app', help='The app to upload data to', required=True)
-def upload(datafile, app):
+@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+def upload(datafile, app, runtime):
     """Upload data to a juicebox app 
     """
     if dockerutil.is_running() and dockerutil.ensure_home():
@@ -86,8 +88,8 @@ def upload(datafile, app):
         try:
             echo_highlight('Uploading...'.format(app))
             dockerutil.run(
-                '/venv/bin/python manage.py upload --app={} {}'.format(
-                    app, datafile))
+                '/{}/bin/python manage.py upload --app={} {}'.format(
+                    runtime, app, datafile))
 
         except docker.errors.APIError:
             print(docker.errors.APIError.message)
@@ -102,7 +104,8 @@ def upload(datafile, app):
 @click.argument('applications', nargs=-1, required=True)
 @click.option('--add-desktop/--no-add-desktop', default=False,
               help='Optionally add to Github Desktop')
-def add(applications, add_desktop):
+@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+def add(applications, add_desktop, runtime):
     """Checkout a juicebox app (or list of apps) and load it
     """
     try:
@@ -139,9 +142,9 @@ def add(applications, add_desktop):
                 try:
                     if not jbapiutil.load_app(app):
                         dockerutil.run(
-                            '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
-                                app))
-                    echo_success('{} was added successfully.'.format(app))
+                            '/{}/bin/python manage.py loadjuiceboxapp {}'.format(
+                                runtime, app))
+                        echo_success('{} was added successfully.'.format(app))
 
                 except docker.errors.APIError as e:
                     echo_warning(
@@ -168,7 +171,8 @@ def add(applications, add_desktop):
               help='Initialize VCS repository')
 @click.option('--track/--no-track', default=True,
               help='Track remote VCS repository')
-def clone(existing_app, new_app, init, track):
+@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3', default='venv')
+def clone(existing_app, new_app, init, track, runtime):
     """ Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
     """
@@ -198,8 +202,8 @@ def clone(existing_app, new_app, init, track):
 
             try:
                 dockerutil.run(
-                    '/venv/bin/python manage.py loadjuiceboxapp {}'.format(
-                        new_app))
+                    '/{}/bin/python manage.py loadjuiceboxapp {}'.format(
+                        runtime, new_app))
             except docker.errors.APIError:
                 echo_warning('Failed to load: {}.'.format(new_app))
                 click.get_current_context().abort()
@@ -214,7 +218,9 @@ def clone(existing_app, new_app, init, track):
 @click.argument('applications', nargs=-1, required=True)
 @click.confirmation_option('--yes', is_flag=True,
                            prompt='Are you sure you want to delete?')
-def remove(applications):
+@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3'
+                                'option.', default='venv')
+def remove(applications, runtime):
     """Remove a juicebox app (or list of apps) from your local environment
     """
 
@@ -228,8 +234,8 @@ def remove(applications):
                         echo_highlight('Removing {}...'.format(app))
                         shutil.rmtree('apps/{}'.format(app))
                         dockerutil.run(
-                            '/venv/bin/python manage.py deletejuiceboxapp {}'.format(
-                                app))
+                            '/{}/bin/python manage.py deletejuiceboxapp {}'.format(
+                                runtime, app))
                         echo_success('Successfully deleted {}'.format(app))
                     else:
                         echo_warning('App {} didn\'t exist.'.format(app))
@@ -309,7 +315,7 @@ def select(tag, env=None, showall=False):
             }
         ]
         response = prompt(questions)
-        env = response.get('env')        
+        env = response.get('env')
         if env is None:
             echo_highlight('No environment selected.')
             return
@@ -325,7 +331,7 @@ def select(tag, env=None, showall=False):
             if prev_priority and prev_priority != tag_priority:
                 tag_choices.append(Separator())
             tag_choices.append({
-                'name': '{} (published {})'.format(tag, human_readable), 
+                'name': '{} (published {})'.format(tag, human_readable),
                 'value': tag
             })
             prev_priority = tag_priority
@@ -363,7 +369,7 @@ def select(tag, env=None, showall=False):
         }
     jb_select[env] = tag
     stash.put('jb_select', jb_select)
-    
+
     for env, tag in jb_select.items():
         dockerutil.set_tag(env, tag)
 
@@ -409,7 +415,8 @@ def start(ctx, noupdate, noupgrade):
 def populate_env_with_secrets():
     env = os.environ.copy()
     env['JB_GOOGLE_CLOUD_PRIVKEY'] = get_paramstore('jbo-google-cloud-privkey')
-    env['JB_GITHUB_FETCHAPP_CREDS'] = get_paramstore('opslord-github-credentials')
+    env['JB_GITHUB_FETCHAPP_CREDS'] = get_paramstore(
+        'opslord-github-credentials')
     return env
 
 
@@ -558,7 +565,8 @@ def yo_upgrade():
             print("The `yo` command is available at {}".format(npm_yo_path))
         else:
             if not os.path.exists(yo_symlink_path):
-                print("trying to symlink existing path", npm_yo_path, "to", yo_symlink_path)
+                print("trying to symlink existing path", npm_yo_path, "to",
+                      yo_symlink_path)
                 os.symlink(npm_yo_path, yo_symlink_path)
                 echo_success('Ensured you can run yo juicebox')
     except subprocess.CalledProcessError:
@@ -582,7 +590,8 @@ def upgrade(ctx):
 
 @cli.command()
 @click.argument('name')
-def test_app(name):
+@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+def test_app(name, runtime):
     """ Run gabbi tests against the application. REQUIRES A LOCAL RUNNING COPY
     OF JUICEBOX.
     """
@@ -590,20 +599,21 @@ def test_app(name):
         if dockerutil.is_running():
             app_dir = 'apps/{}'.format(name)
             dockerutil.run(
-                'sh -c "cd {}; pwd; /venv/bin/python -m unittest discover tests"'.format(
-                    app_dir))
+                'sh -c "cd {}; pwd; /{}/bin/python -m unittest discover tests"'.format(
+                    app_dir, runtime))
     except docker.errors.APIError:
         echo_warning('Could not run tests')
         click.get_current_context().abort()
 
 
 @cli.command()
-def clear_cache():
+@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+def clear_cache(runtime):
     """Clears cache"""
     try:
         if dockerutil.is_running():
             dockerutil.run(
-                '/venv/bin/python manage.py clear_cache --settings=fruition.settings.docker')
+                '/{}/bin/python manage.py clear_cache --settings=fruition.settings.docker'.format(runtime))
         else:
             echo_warning('Juicebox not running.  Run jb start')
             click.get_current_context().abort()
@@ -624,11 +634,12 @@ def pull(tag=None):
     ignore_unknown_options=True,
 ))
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
-def manage(args):
+@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+def manage(args, runtime):
     """Allows you to run arbitrary management commands."""
     try:
         if dockerutil.is_running():
-            cmdline = ['/venv/bin/python', 'manage.py'] + list(args)
+            cmdline = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
             click.echo('Invoking inside container: %s' % ' '.join(cmdline))
             dockerutil.run(join(cmdline))
         else:

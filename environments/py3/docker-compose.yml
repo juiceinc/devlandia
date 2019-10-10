@@ -1,0 +1,39 @@
+version: '2'
+services:
+  juicebox:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:develop-py3"
+    command: bash -c "/venv3/bin/python docker/entrypoint.py"
+    ports:
+      - "${DEVLANDIA_PORT}:8000"
+      - "8888:8888"
+      - "2222:22"
+    depends_on:
+      - "redis"
+      - "postgres"
+    volumes:
+      - ../../apps:/code/apps
+      - ~/.boto:/root/.boto:ro
+      - ~/.config/juicebox:/root/.config/juicebox:ro
+    links:
+      - postgres
+      - redis
+    environment:
+      - ENVIRONMENT=docker
+      - DJANGO_SETTINGS_MODULE=fruition.settings.docker
+      - REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+      - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_ACCESS_KEY_ID
+      - AWS_SESSION_TOKEN
+      - AWS_SECURITY_TOKEN
+      - JB_GOOGLE_CLOUD_PRIVKEY
+      - JB_GITHUB_FETCHAPP_CREDS
+  postgres:
+    environment:
+      - POSTGRES_USER=juicebox
+      - POSTGRES_PASSWORD=juicebox
+      - POSTGRES_DB=juicebox
+    image: "postgres:9.3-alpine"
+  redis:
+    image: "redis:4.0-stretch"
