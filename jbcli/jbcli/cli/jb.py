@@ -412,11 +412,26 @@ def start(ctx, noupdate, noupgrade):
         echo_warning('An instance of Juicebox is already running')
 
 
+def _get_paramstore_secret(env, envkey, key, warning_message):
+    """Try to fetch a secret from paramstore and save it in env.
+    Show the warning message if the secret is not available."""
+    try:
+        env[envkey] = get_paramstore(key)
+    except ClientError:
+        echo_warning(warning_message)
+
+
 def populate_env_with_secrets():
     env = os.environ.copy()
-    env['JB_GOOGLE_CLOUD_PRIVKEY'] = get_paramstore('jbo-google-cloud-privkey')
-    env['JB_GITHUB_FETCHAPP_CREDS'] = get_paramstore(
-        'opslord-github-credentials')
+    _get_paramstore_secret(env,
+                           'JB_GOOGLE_CLOUD_PRIVKEY',
+                           'jbo-google-cloud-privkey',
+                           'These credentials do not have access to bigquery')
+    _get_paramstore_secret(env,
+                           'JB_GITHUB_FETCHAPP_CREDS',
+                           'opslord-github-credentials',
+                           'These credentials do not have access to '
+                           'fetch apps on github.')
     return env
 
 
