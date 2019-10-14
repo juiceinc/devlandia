@@ -417,7 +417,7 @@ def _get_paramstore_secret(env, envkey, key, warning_message):
     Show the warning message if the secret is not available."""
     try:
         env[envkey] = get_paramstore(key)
-    except ClientError:
+    except botocore.exceptions.ClientError:
         echo_warning(warning_message)
 
 
