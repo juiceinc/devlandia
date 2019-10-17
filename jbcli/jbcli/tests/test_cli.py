@@ -13,7 +13,7 @@ from ..cli.jb import cli
 from ..utils.dockerutil import WatchHandler
 
 
-@patch('jbcli.cli.jb.get_paramstore', new=lambda x: "FAKE_SECRET")
+@patch('jbcli.cli.jb.get_deployment_secrets', new=lambda: {})
 class TestDocker(object):
     def test_base(self):
         runner = CliRunner()
@@ -1018,6 +1018,7 @@ class TestDocker(object):
         dockerutil_mock.ensure_home.return_value = True
         runner = CliRunner()
         result = runner.invoke(cli, ['start', '--noupgrade'])
+        print(result)
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.ensure_home(),

@@ -412,15 +412,6 @@ def start(ctx, noupdate, noupgrade):
         echo_warning('An instance of Juicebox is already running')
 
 
-def _get_paramstore_secret(env, envkey, key, warning_message):
-    """Try to fetch a secret from paramstore and save it in env.
-    Show the warning message if the secret is not available."""
-    try:
-        env[envkey] = get_paramstore(key)
-    except botocore.exceptions.ClientError:
-        echo_warning(warning_message)
-
-
 def populate_env_with_secrets():
     env = os.environ.copy()
     env.update(get_deployment_secrets())
