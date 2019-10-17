@@ -13,6 +13,7 @@ def get_all_from_path(path):
 
     this returns {'FOO': 'a', 'BAR': 'b'}
     """
+    ssm = boto3.client('ssm')
     try:
         result = ssm.get_parameters_by_path(
             Path=path,
@@ -29,7 +30,6 @@ def get_all_from_path(path):
 
 
 def get_deployment_secrets():
-    ssm = boto3.client('ssm')
     env = get_all_from_path('/jb-deployment-vars/common/')
     env.update(get_all_from_path('/jb-deployment-vars/devlandia/'))
     return env
