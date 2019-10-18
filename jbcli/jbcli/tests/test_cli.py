@@ -1018,7 +1018,6 @@ class TestDocker(object):
         dockerutil_mock.ensure_home.return_value = True
         runner = CliRunner()
         result = runner.invoke(cli, ['start', '--noupgrade'])
-        print(result)
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.ensure_home(),
