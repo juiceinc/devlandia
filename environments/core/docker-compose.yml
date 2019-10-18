@@ -30,6 +30,7 @@ services:
       - JB_DB_HOST=postgres
       - JB_REDIS_LOCATION=redis:6379
       - DJANGO_DEBUG=on
+      - JB_INSECURE_COOKIES=yes
 
       - JB_DEVLANDIA=on
       - JB_LOGS_STDOUT=off
