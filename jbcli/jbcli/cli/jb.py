@@ -16,7 +16,7 @@ from PyInquirer import prompt, Separator
 from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success, human_readable_timediff
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
-from ..utils.secrets import get_paramstore
+from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
 from ..utils.storageutil import stash
 
@@ -412,26 +412,9 @@ def start(ctx, noupdate, noupgrade):
         echo_warning('An instance of Juicebox is already running')
 
 
-def _get_paramstore_secret(env, envkey, key, warning_message):
-    """Try to fetch a secret from paramstore and save it in env.
-    Show the warning message if the secret is not available."""
-    try:
-        env[envkey] = get_paramstore(key)
-    except botocore.exceptions.ClientError:
-        echo_warning(warning_message)
-
-
 def populate_env_with_secrets():
     env = os.environ.copy()
-    _get_paramstore_secret(env,
-                           'JB_GOOGLE_CLOUD_PRIVKEY',
-                           'jbo-google-cloud-privkey',
-                           'These credentials do not have access to bigquery')
-    _get_paramstore_secret(env,
-                           'JB_GITHUB_FETCHAPP_CREDS',
-                           'opslord-github-credentials',
-                           'These credentials do not have access to '
-                           'fetch apps on github.')
+    env.update(get_deployment_secrets())
     return env
 
 

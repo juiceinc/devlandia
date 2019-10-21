@@ -2,7 +2,7 @@ version: '2'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:develop"
-    command: bash -c "/venv/bin/pip install -U -q -r requirements.txt && /venv/bin/python docker/entrypoint.py"
+    command: bash -c "/venv/bin/pip install -U -q -r requirements.txt -r requirements_dev.txt && /venv/bin/python docker/entrypoint.py"
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
@@ -20,16 +20,32 @@ services:
       - redis
     environment:
       - ENVIRONMENT=docker
-      - DJANGO_SETTINGS_MODULE=fruition.settings.docker
+      - DJANGO_SETTINGS_MODULE=fruition.settings.contained
       - REGION=us-east-1
       - AWS_DEFAULT_REGION=us-east-1
+
+      - JB_DB_NAME=juicebox
+      - JB_DB_USERNAME=juicebox
+      - JB_DB_PASSWORD=juicebox
+      - JB_DB_HOST=postgres
+      - JB_REDIS_LOCATION=redis:6379
+      - DJANGO_DEBUG=on
+      - JB_INSECURE_COOKIES=yes
+
+      - JB_DEVLANDIA=on
+      - JB_LOGS_STDOUT=off
+      - JB_DEBUG_LOGGING=on
+      - JB_APPADMIN_SERVICE=https://manage-dev.juiceboxdata.com
+      - JB_ADDITIONAL_ALLOWED_HOSTS=*
+
       - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
       - AWS_SECRET_ACCESS_KEY
       - AWS_ACCESS_KEY_ID
       - AWS_SESSION_TOKEN
       - AWS_SECURITY_TOKEN
-      - JB_GOOGLE_CLOUD_PRIVKEY
+      - JB_GCLOUD_PRIVKEY
       - JB_GITHUB_FETCHAPP_CREDS
+      - JB_REDSHIFT_CONNECTION
   postgres:
     environment:
       - POSTGRES_USER=juicebox
