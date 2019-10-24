@@ -385,8 +385,6 @@ def select(tag, env=None, showall=False):
 def start(ctx, noupdate, noupgrade):
     """Configure the environment and start Juicebox
     """
-    dockerutil.ensure_home()
-
     if not noupgrade:
         cwd = os.getcwd()
         os.chdir(os.path.join(cwd, '..', '..'))
@@ -397,6 +395,7 @@ def start(ctx, noupdate, noupgrade):
         try:
             if not noupdate:
                 dockerutil.pull(tag=None)
+            activate_hstm()
             dockerutil.up(env=populate_env_with_secrets())
         except botocore.exceptions.ClientError as e:
             if "Signature expired" in e.message:
@@ -413,8 +412,8 @@ def start(ctx, noupdate, noupgrade):
 
 
 def populate_env_with_secrets():
-    env = os.environ.copy()
-    env.update(get_deployment_secrets())
+    env = get_deployment_secrets()
+    env.update(os.environ)
     return env
 
 
@@ -741,3 +740,8 @@ def search(username, password, env, data_service_log,
 
     if lookback_window > 90:
         print("There is only 90 days of history retained")
+
+def activate_hstm():
+    # This needs to change to accept the environment name instead of just using os.getcwd()
+    if 'hstm-' in os.getcwd():
+        os.environ['AWS_PROFILE'] = 'hstm'
