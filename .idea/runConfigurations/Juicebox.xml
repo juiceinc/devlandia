@@ -45,6 +45,7 @@
     </PathMappingSettings>
     <option name="launchJavascriptDebuger" value="false" />
     <option name="host" value="" />
+    <option name="additionalOptions" value="runserver 0.0.0.0:8888" />
     <option name="browserUrl" value="http://localhost:8888/" />
     <option name="runTestServer" value="false" />
     <option name="runNoReload" value="false" />
