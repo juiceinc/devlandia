@@ -3,7 +3,6 @@
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
     <envs>
-      <env name="DJANGO_SETTINGS_MODULE" value="fruition.settings.docker" />
       <env name="APP_ID" value="1ec756a5-e04a-4885-87ad-3325bbdd4872" />
       <env name="PYTHONUNBUFFERED" value="1" />
       <env name="ENVIRONMENT" value="docker" />
@@ -46,7 +45,7 @@
     </PathMappingSettings>
     <option name="launchJavascriptDebuger" value="false" />
     <option name="host" value="" />
-    <option name="additionalOptions" value="0.0.0.0:8888 --settings=fruition.settings.docker" />
+    <option name="additionalOptions" value="0.0.0.0:8888" />
     <option name="browserUrl" value="http://localhost:8888/" />
     <option name="runTestServer" value="false" />
     <option name="runNoReload" value="false" />

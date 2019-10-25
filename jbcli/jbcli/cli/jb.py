@@ -385,18 +385,24 @@ def select(tag, env=None, showall=False):
 def start(ctx, noupdate, noupgrade):
     """Configure the environment and start Juicebox
     """
-    dockerutil.ensure_home()
-
+    # TODO: env name should not be based on CWD
+    cwd = os.getcwd()
+    env_name = os.path.basename(cwd)
     if not noupgrade:
-        cwd = os.getcwd()
         os.chdir(os.path.join(cwd, '..', '..'))
         ctx.invoke(upgrade)
         os.chdir(cwd)
 
     if not dockerutil.is_running():
         try:
+            # Legacy hstm-* environments need to pull the docker image from the HSTM account,
+            # new hstm-* environments pull from the fruition legacy account.
+            if env_name.startswith('hstm-') and not env_name.startswith('hstm-new'):
+                activate_hstm()
             if not noupdate:
                 dockerutil.pull(tag=None)
+            if env_name.startswith('hstm-new'):
+                activate_hstm()
             dockerutil.up(env=populate_env_with_secrets())
         except botocore.exceptions.ClientError as e:
             if "Signature expired" in e.message:
@@ -413,8 +419,8 @@ def start(ctx, noupdate, noupgrade):
 
 
 def populate_env_with_secrets():
-    env = os.environ.copy()
-    env.update(get_deployment_secrets())
+    env = get_deployment_secrets()
+    env.update(os.environ)
     return env
 
 
@@ -741,3 +747,6 @@ def search(username, password, env, data_service_log,
 
     if lookback_window > 90:
         print("There is only 90 days of history retained")
+
+def activate_hstm():
+    os.environ['AWS_PROFILE'] = 'hstm'
