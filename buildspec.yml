@@ -7,7 +7,7 @@ phases:
     commands:
       - pip install -qq -U pip wheel
       - pip install -r requirements.txt
-      - pip install -r requirements.txt
+      - pip install -r jbcli/requirements-dev.txt
       - cd jbcli
       - pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli
   build:
