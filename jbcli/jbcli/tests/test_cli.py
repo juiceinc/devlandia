@@ -1,20 +1,16 @@
 from __future__ import print_function
 
-import sys
 from subprocess import CalledProcessError
+from unittest.mock import call, patch, ANY
 
 from click.testing import CliRunner
 from docker.errors import APIError
-from mock import call, patch, Mock, ANY
-from watchdog.events import FileSystemEventHandler
 
-import jbcli
 from ..cli.jb import cli
-from ..utils.dockerutil import WatchHandler
 
 
 @patch('jbcli.cli.jb.get_deployment_secrets', new=lambda: {})
-class TestDocker(object):
+class TestCli(object):
     def test_base(self):
         runner = CliRunner()
         result = runner.invoke(cli)
@@ -328,7 +324,7 @@ class TestDocker(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.ensure_home(),
-            call.ensure_home().__nonzero__(),
+            call.ensure_home().__bool__(),
             call.run('/venv/bin/python manage.py upload --app=foo cookies.csv')
         ]
 
@@ -346,7 +342,7 @@ class TestDocker(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.ensure_home(),
-            call.ensure_home().__nonzero__(),
+            call.ensure_home().__bool__(),
             call.run('/venv3/bin/python manage.py upload --app=foo cookies.csv')
         ]
 
@@ -1311,6 +1307,7 @@ class TestDocker(object):
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
     def test_yo_upgrade(self, os_mock, proc_mock, dockerutil_mock):
+        runner = CliRunner()
         dockerutil_mock.ensure_root.return_value = True
         dockerutil_mock.ensure_virtualenv.return_value = True
         os_mock.environ.return_value = False
@@ -1318,8 +1315,6 @@ class TestDocker(object):
         os_mock.getcwd.return_value = ''
         os_mock.path.exists.return_value = False
         os_mock.symlink.return_value = False
-
-        runner = CliRunner()
         result = runner.invoke(cli, ['yo_upgrade'])
 
         # TODO: Improve these tests

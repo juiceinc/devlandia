@@ -1,4 +1,4 @@
-from mock import call, patch
+from unittest.mock import call, patch
 import requests_mock
 
 from ..utils import jbapiutil

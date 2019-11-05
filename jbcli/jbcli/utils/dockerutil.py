@@ -105,7 +105,6 @@ def is_running():
     containers = client.containers.list(all=True)
     if containers:
         for container in containers:
-
             if 'juicebox' in container.name and get_state(
                     container.name) == 'running':
                 running = True

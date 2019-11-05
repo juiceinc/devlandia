@@ -4,7 +4,6 @@ import os
 import sys
 import shutil
 import time
-from string import join
 from multiprocessing import Process
 
 import botocore
@@ -53,18 +52,16 @@ def package(applications, bucket, runtime):
         failed_apps = []
         for app in applications:
             try:
-                echo_highlight('Packaging {}...'.format(app))
+                echo_highlight(f'Packaging {app}...')
                 if bucket is not None:
                     dockerutil.run(
-                        '/{}/bin/python manage.py packagejuiceboxapp {} --bucket={}'.format(
-                            runtime, app, bucket))
+                        f'/{runtime}/bin/python manage.py packagejuiceboxapp {app} --bucket={bucket}')
                 else:
                     dockerutil.run(
-                        '/{}/bin/python manage.py packagejuiceboxapp {}'.format(
-                            runtime, app))
+                        f'/{runtime}/bin/python manage.py packagejuiceboxapp {app}')
 
-            except docker.errors.APIError:
-                print(docker.errors.APIError.message)
+            except docker.errors.APIError as e:
+                print(e.explanation)
                 failed_apps.append(app)
         if failed_apps:
             echo_warning(
@@ -558,7 +555,7 @@ def yo_upgrade():
         # Ensure the yo-rc.json file exists.
         yo_rc_path = os.path.join(os.getcwd(), '.yo-rc.json')
         if not os.path.exists(yo_rc_path):
-            with open(yo_rc_path, 'wb') as f:
+            with open(yo_rc_path, 'w') as f:
                 f.write('{}')
         echo_success('Ensured .yo-rc.json exists')
 
@@ -643,9 +640,9 @@ def manage(args, runtime):
     """Allows you to run arbitrary management commands."""
     try:
         if dockerutil.is_running():
-            cmdline = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
+            cmdline = [f'/{runtime}/bin/python', 'manage.py'] + list(args)
             click.echo('Invoking inside container: %s' % ' '.join(cmdline))
-            dockerutil.run(join(cmdline))
+            dockerutil.run(str.join(cmdline))
         else:
             echo_warning('Juicebox not running.  Run jb start')
             click.get_current_context().abort()

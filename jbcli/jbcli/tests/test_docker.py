@@ -3,7 +3,7 @@ import time
 from collections import namedtuple
 from datetime import datetime, timedelta
 
-from mock import call, patch, ANY
+from unittest.mock import call, patch, ANY
 
 from ..utils import dockerutil
 
@@ -170,7 +170,6 @@ class TestDocker:
             call(tag='latest')
         ]
 
- 
     @patch('jbcli.utils.dockerutil.check_output')
     def test_image_list(self, check_mock):        
         def _make_image_details(tag, td):
@@ -211,12 +210,13 @@ class TestDocker:
         for o in output:
             o.pop(1)
         assert output == [
-            [u'master', '30 seconds ago', 4, False, u'3.22.1'], 
+            [u'master', '30 seconds ago', 4, False, u'3.22.1'],
             [u'3.22.1', '3 months ago', 2, True, None]
         ]
 
         # Semantic flag gets only semantic tags
-        output = dockerutil.image_list(showall=True, print_flag=False, semantic=True)
+        output = dockerutil.image_list(showall=True, print_flag=False,
+                                       semantic=True)
 
         for o in output:
             o.pop(1)

@@ -1,6 +1,5 @@
-import mock
 import os
-from mock import call, patch
+from unittest.mock import call, patch
 
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 
