@@ -1,0 +1,19 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.7
+  pre_build:
+    commands:
+      - pip install -qq -U pip wheel
+      - pip install -r requirements.txt
+      - pip install -r requirements.txt
+      - cd jbcli
+      - pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli
+  build:
+    commands:
+      - make docs
+      - |
+        if [ "$CLEANED_BRANCH" = "master" ]; then
+            aws s3 sync docs/build/html s3://internal.juiceboxdata.com/projects/infrastructure --acl bucket-owner-full-control --delete
+        fi
