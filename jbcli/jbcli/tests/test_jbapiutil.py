@@ -1,10 +1,11 @@
+from builtins import object
 from unittest.mock import call, patch
 import requests_mock
 
 from ..utils import jbapiutil
 
 
-class TestAPIUtil:
+class TestAPIUtil(object):
     def test_get_admin_token(self):
         """Test a successful login. """
         with requests_mock.Mocker() as m:

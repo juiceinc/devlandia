@@ -1,11 +1,13 @@
 """Handles watcher-related tasks for app reloading
 """
+from __future__ import absolute_import
+from builtins import range
 import time
 import click
 
 from .format import echo_warning, echo_highlight
 from requests import get, ConnectionError
-from subprocess import check_output
+from .subprocess import check_output
 
 
 browser_sync_path = '../../node_modules/.bin/browser-sync'

@@ -1,10 +1,13 @@
 """ An elastic search class that queries juicebox logs """
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import object
 from elasticsearch import Elasticsearch
 from elasticsearch_dsl import Search, Q
 
 try:
-    from urllib import quote_plus
+    from urllib.parse import quote_plus
 except ImportError:
     from urllib.parse import quote_plus
 from os import environ
@@ -85,8 +88,8 @@ class JuiceboxLoggingSearcher(object):
         ]
         if data:
             keys = list(
-                sorted([k for k in data[0].keys() if k not in initial_keys]))
-            initial_keys = [k for k in initial_keys if k in data[0].keys()]
+                sorted([k for k in list(data[0].keys()) if k not in initial_keys]))
+            initial_keys = [k for k in initial_keys if k in list(data[0].keys())]
             dataset.headers = initial_keys + keys
             for row in data:
                 values = [row.get(k) for k in dataset.headers]

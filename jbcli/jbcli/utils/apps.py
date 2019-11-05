@@ -1,5 +1,6 @@
 """Handles commands involving Juicebox packaged applications
 """
+from builtins import str
 import logging
 import os
 import shutil
@@ -155,7 +156,7 @@ def replace_in_yaml(file_path, replacements):
     with open(abs_path, 'w') as new_file:
         with open(file_path) as old_file:
             for line in old_file:
-                for key in replacements.keys():
+                for key in list(replacements.keys()):
                     if key in line:
                         line = u'{} {}\n'.format(key, replacements[key])
                 new_file.write(line)

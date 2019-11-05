@@ -1,10 +1,11 @@
+from builtins import object
 import os
 from unittest.mock import call, patch
 
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 
 
-class TestJuiceboxLoggingSearcher:
+class TestJuiceboxLoggingSearcher(object):
     def test_parse_log_parts(self):
         searcher = JuiceboxLoggingSearcher()
         d = searcher._parse_log_parts('performance', 'a=b c=d')

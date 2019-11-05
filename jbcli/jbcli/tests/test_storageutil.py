@@ -1,9 +1,10 @@
+from builtins import object
 from unittest.mock import call, patch, ANY, mock_open
 
 from ..utils.storageutil import Stash
 
 
-class TestStash:
+class TestStash(object):
 
     @patch('jbcli.utils.storageutil.os')
     def test_init(self, os_mock):

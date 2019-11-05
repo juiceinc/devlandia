@@ -1,3 +1,4 @@
+from builtins import object
 from unittest.mock import call, patch
 
 from ..utils.format import (
@@ -6,7 +7,7 @@ from ..utils.format import (
 from datetime import datetime, timedelta
 
 
-class TestFormat:
+class TestFormat(object):
 
     @patch('jbcli.utils.format.secho')
     def test_echo_highlight(self, secho_mock):

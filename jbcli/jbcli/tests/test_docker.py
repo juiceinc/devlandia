@@ -1,3 +1,4 @@
+from builtins import object
 import json
 import time
 from collections import namedtuple
@@ -8,7 +9,7 @@ from unittest.mock import call, patch, ANY
 from ..utils import dockerutil
 
 
-class TestDocker:
+class TestDocker(object):
     @patch('jbcli.utils.dockerutil.check_call')
     def test_up(self, check_mock):
         dockerutil.up()

@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+from builtins import object
 from subprocess import CalledProcessError
 from unittest.mock import call, patch, ANY
 

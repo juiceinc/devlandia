@@ -1,3 +1,4 @@
+from builtins import object
 import io
 import shutil
 from subprocess import CalledProcessError
@@ -7,7 +8,7 @@ from unittest.mock import call, patch, ANY
 from ..utils import apps
 
 
-class TestApps:
+class TestApps(object):
 
     @patch('jbcli.utils.apps.conf')
     def test_make_github_rep_url(self, conf_mock):

@@ -2,6 +2,7 @@
 """
 from __future__ import print_function
 
+from builtins import zip
 from glob import glob
 import json
 import time
