@@ -12,3 +12,4 @@ elasticsearch-dsl~=6.3.1
 tablib~=0.13.0
 PyInquirer~=1.0.3
 humanize~=0.5.1
+future==0.18.2
