@@ -15,5 +15,5 @@ phases:
       - make docs
       - |
         if [ "$CLEANED_BRANCH" = "master" ]; then
-            aws s3 sync docs/build/html s3://internal.juiceboxdata.com/projects/infrastructure --acl bucket-owner-full-control --delete
+            aws s3 sync docs/_build/html s3://internal.juiceboxdata.com/projects/jbcli --acl bucket-owner-full-control --delete
         fi

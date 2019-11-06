@@ -555,8 +555,13 @@ def yo_upgrade():
         # Ensure the yo-rc.json file exists.
         yo_rc_path = os.path.join(os.getcwd(), '.yo-rc.json')
         if not os.path.exists(yo_rc_path):
-            with open(yo_rc_path, 'w') as f:
-                f.write('{}')
+            try:
+                with open(yo_rc_path, 'w') as f:
+                    f.write('{}')
+            except FileNotFoundError as e:
+                pass
+
+
         echo_success('Ensured .yo-rc.json exists')
 
         # Ensure that the yo command line tool is symlinked
@@ -642,7 +647,7 @@ def manage(args, runtime):
         if dockerutil.is_running():
             cmdline = [f'/{runtime}/bin/python', 'manage.py'] + list(args)
             click.echo('Invoking inside container: %s' % ' '.join(cmdline))
-            dockerutil.run(str.join(cmdline))
+            dockerutil.run(' '.join(cmdline))
         else:
             echo_warning('Juicebox not running.  Run jb start')
             click.get_current_context().abort()
