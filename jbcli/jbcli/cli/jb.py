@@ -555,12 +555,8 @@ def yo_upgrade():
         # Ensure the yo-rc.json file exists.
         yo_rc_path = os.path.join(os.getcwd(), '.yo-rc.json')
         if not os.path.exists(yo_rc_path):
-            try:
-                with open(yo_rc_path, 'w') as f:
-                    f.write('{}')
-            except FileNotFoundError as e:
-                pass
-
+            with open(yo_rc_path, 'w') as f:
+                f.write('{}')
 
         echo_success('Ensured .yo-rc.json exists')
 

@@ -29,7 +29,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     def test_create_full(self, app_mock):
         runner = CliRunner()
-        result = runner.invoke(cli, ['create', 'cookies'], catch_exceptions=False)
+        result = runner.invoke(cli, ['create', 'cookies'],
+                               catch_exceptions=False)
         assert app_mock.mock_calls == []
         assert result.output == 'yo juicebox will take care of all your needs now.\n'
         assert result.exit_code == 0
@@ -39,7 +40,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         runner = CliRunner()
-        result = runner.invoke(cli, ['package', 'cookies'], catch_exceptions=False)
+        result = runner.invoke(cli, ['package', 'cookies'],
+                               catch_exceptions=False)
 
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -54,7 +56,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         runner = CliRunner()
-        result = runner.invoke(cli, ['package', 'cookies', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['package', 'cookies', '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert dockerutil_mock.mock_calls == [
@@ -70,12 +73,14 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         runner = CliRunner()
-        result = runner.invoke(cli, ['package', 'cookies', '--bucket', 'test_bucket'], catch_exceptions=False)
+        result = runner.invoke(cli, ['package', 'cookies', '--bucket',
+                                     'test_bucket'], catch_exceptions=False)
 
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.ensure_home(),
-            call.run('/venv/bin/python manage.py packagejuiceboxapp cookies --bucket=test_bucket')
+            call.run(
+                '/venv/bin/python manage.py packagejuiceboxapp cookies --bucket=test_bucket')
         ]
         assert 'Packaging cookies' in result.output
         assert result.exit_code == 0
@@ -102,7 +107,8 @@ class TestCli(object):
     def test_package_not_running(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         runner = CliRunner()
-        result = runner.invoke(cli, ['package', 'cookies'], catch_exceptions=False)
+        result = runner.invoke(cli, ['package', 'cookies'],
+                               catch_exceptions=False)
         assert result.exit_code == 1
         assert dockerutil_mock.mock_calls == [
             call.is_running()
@@ -114,7 +120,8 @@ class TestCli(object):
     def test_package_not_running_venv3(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         runner = CliRunner()
-        result = runner.invoke(cli, ['package', 'cookies', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['package', 'cookies', '--runtime', 'venv3'],
                                catch_exceptions=False)
         assert result.exit_code == 1
         assert dockerutil_mock.mock_calls == [
@@ -135,7 +142,8 @@ class TestCli(object):
             call.is_running(),
             call.ensure_home(),
             call.run('/venv/bin/python manage.py packagejuiceboxapp cookies'),
-            call.run('/venv/bin/python manage.py packagejuiceboxapp chocolate_chip')
+            call.run(
+                '/venv/bin/python manage.py packagejuiceboxapp chocolate_chip')
         ]
         assert 'Packaging cookies' in result.output
         assert 'Packaging chocolate_chip' in result.output
@@ -186,7 +194,8 @@ class TestCli(object):
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.run.side_effect = APIError('Fail')
         runner = CliRunner()
-        result = runner.invoke(cli, ['package', 'cookies', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['package', 'cookies', '--runtime', 'venv3'],
                                catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -204,7 +213,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_single(self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock):
+    def test_add_single(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
+                        apiutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = 'git cookies'
@@ -232,7 +242,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_single_api(self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock):
+    def test_add_single_api(self, os_mock, proc_mock, apps_mock,
+                            dockerutil_mock, apiutil_mock):
         """Adding an app by calling the jb api """
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
@@ -263,8 +274,9 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_single_venv3(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
-                        apiutil_mock):
+    def test_add_single_venv3(self, os_mock, proc_mock, apps_mock,
+                              dockerutil_mock,
+                              apiutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = 'git cookies'
@@ -294,7 +306,7 @@ class TestCli(object):
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
     def test_add_single_api_venv3(self, os_mock, proc_mock, apps_mock,
-                            dockerutil_mock, apiutil_mock):
+                                  dockerutil_mock, apiutil_mock):
         """Adding an app by calling the jb api """
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
@@ -303,7 +315,7 @@ class TestCli(object):
         apiutil_mock.get_admin_token.return_value = 'foo'
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['add', 'cookies', '--runtime', 'venv3' ],
+        result = runner.invoke(cli, ['add', 'cookies', '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert 'Adding cookies...' in result.output
@@ -347,7 +359,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['upload', '--app=foo', 'cookies.csv', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['upload', '--app=foo', 'cookies.csv',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert 'Uploading...' in result.output
@@ -356,7 +369,8 @@ class TestCli(object):
             call.is_running(),
             call.ensure_home(),
             call.ensure_home().__bool__(),
-            call.run('/venv3/bin/python manage.py upload --app=foo cookies.csv')
+            call.run(
+                '/venv3/bin/python manage.py upload --app=foo cookies.csv')
         ]
 
     @patch('jbcli.cli.jb.jbapiutil')
@@ -382,14 +396,16 @@ class TestCli(object):
     @patch('jbcli.cli.jb.jbapiutil')
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.os')
-    def test_add_app_exists_venv3(self, os_mock, dockerutil_mock, apiutil_mock):
+    def test_add_app_exists_venv3(self, os_mock, dockerutil_mock,
+                                  apiutil_mock):
         os_mock.path.isdir.return_value = True
         dockerutil_mock.is_running.return_value = True
         apiutil_mock.load_app.return_value = False
         apiutil_mock.get_admin_token.return_value = None
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['add', 'cookies', '--runtime', 'venv3'], catch_exceptions=False)
+        result = runner.invoke(cli, ['add', 'cookies', '--runtime', 'venv3'],
+                               catch_exceptions=False)
 
         assert 'App cookies already exists.' in result.output
         assert result.exit_code == 0
@@ -431,7 +447,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_desktop(self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock):
+    def test_add_desktop(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
+                         apiutil_mock):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = 'git cookies'
         dockerutil_mock.is_running.return_value = True
@@ -439,7 +456,8 @@ class TestCli(object):
         apiutil_mock.get_admin_token.return_value = None
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['add', 'cookies', '--add-desktop'], catch_exceptions=False)
+        result = runner.invoke(cli, ['add', 'cookies', '--add-desktop'],
+                               catch_exceptions=False)
 
         assert 'Adding cookies...' in result.output
         assert 'Downloading app cookies from Github.' in result.output
@@ -460,8 +478,9 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_desktop_venv3(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
-                         apiutil_mock):
+    def test_add_desktop_venv3(self, os_mock, proc_mock, apps_mock,
+                               dockerutil_mock,
+                               apiutil_mock):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = 'git cookies'
         dockerutil_mock.is_running.return_value = True
@@ -469,7 +488,9 @@ class TestCli(object):
         apiutil_mock.get_admin_token.return_value = None
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['add', 'cookies', '--add-desktop', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['add', 'cookies', '--add-desktop', '--runtime',
+                                'venv3'],
                                catch_exceptions=False)
 
         assert 'Adding cookies...' in result.output
@@ -491,7 +512,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_multiple(self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock):
+    def test_add_multiple(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
+                          apiutil_mock):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = 'git cookies'
         dockerutil_mock.is_running.return_value = True
@@ -508,7 +530,8 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies'),
-            call.run('/venv/bin/python manage.py loadjuiceboxapp chocolate_chip')
+            call.run(
+                '/venv/bin/python manage.py loadjuiceboxapp chocolate_chip')
         ]
         assert apps_mock.mock_calls == [
             call.make_github_repo_url(u'cookies'),
@@ -520,7 +543,8 @@ class TestCli(object):
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
-            call.check_call(['git', 'clone', 'git cookies', 'apps/chocolate_chip']),
+            call.check_call(
+                ['git', 'clone', 'git cookies', 'apps/chocolate_chip']),
         ]
 
     @patch('jbcli.cli.jb.jbapiutil')
@@ -528,8 +552,9 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
-    def test_add_multiple_venv3(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
-                          apiutil_mock):
+    def test_add_multiple_venv3(self, os_mock, proc_mock, apps_mock,
+                                dockerutil_mock,
+                                apiutil_mock):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = 'git cookies'
         dockerutil_mock.is_running.return_value = True
@@ -537,7 +562,8 @@ class TestCli(object):
         apiutil_mock.get_admin_token.return_value = None
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['add', 'cookies', 'chocolate_chip', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['add', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert 'Adding cookies...' in result.output
@@ -567,7 +593,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess.check_call')
     @patch('jbcli.cli.jb.os')
-    def test_add_clone_fail(self, os_mock, proc_mock, apps_mock, dockerutil_mock):
+    def test_add_clone_fail(self, os_mock, proc_mock, apps_mock,
+                            dockerutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = 'git cookies'
@@ -593,7 +620,7 @@ class TestCli(object):
     @patch('jbcli.cli.jb.subprocess.check_call')
     @patch('jbcli.cli.jb.os')
     def test_add_clone_fail_venv3(self, os_mock, proc_mock, apps_mock,
-                            dockerutil_mock):
+                                  dockerutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = 'git cookies'
@@ -620,7 +647,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess.check_call')
     @patch('jbcli.cli.jb.os')
-    def test_add_run_fail(self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock):
+    def test_add_run_fail(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
+                          apiutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.run.side_effect = APIError('Fail')
         dockerutil_mock.is_running.return_value = True
@@ -650,8 +678,9 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess.check_call')
     @patch('jbcli.cli.jb.os')
-    def test_add_run_fail_venv3(self, os_mock, proc_mock, apps_mock, dockerutil_mock,
-                          apiutil_mock):
+    def test_add_run_fail_venv3(self, os_mock, proc_mock, apps_mock,
+                                dockerutil_mock,
+                                apiutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.run.side_effect = APIError('Fail')
         dockerutil_mock.is_running.return_value = True
@@ -682,7 +711,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.subprocess.check_call')
     @patch('jbcli.cli.jb.os')
-    def test_add_desktop_fail(self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock):
+    def test_add_desktop_fail(self, os_mock, proc_mock, apps_mock,
+                              dockerutil_mock, apiutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = 'git cookies'
@@ -718,7 +748,7 @@ class TestCli(object):
     @patch('jbcli.cli.jb.subprocess.check_call')
     @patch('jbcli.cli.jb.os')
     def test_add_desktop_fail_venv3(self, os_mock, proc_mock, apps_mock,
-                              dockerutil_mock, apiutil_mock):
+                                    dockerutil_mock, apiutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = 'git cookies'
@@ -730,7 +760,9 @@ class TestCli(object):
         ]
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['add', 'cookies', '--add-desktop', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['add', 'cookies', '--add-desktop', '--runtime',
+                                'venv3'],
                                catch_exceptions=False)
         assert 'Adding cookies...' in result.output
         assert result.exit_code == 0
@@ -780,7 +812,8 @@ class TestCli(object):
         dockerutil_mock.ensure_home.return_value = True
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['remove', 'cookies', '--yes', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['remove', 'cookies', '--yes', '--runtime',
+                                     'venv3'],
                                catch_exceptions=False)
 
         assert 'Removing cookies...' in result.output
@@ -814,7 +847,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = False
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['remove', 'cookies', '--yes', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['remove', 'cookies', '--yes', '--runtime',
+                                     'venv3'],
                                catch_exceptions=False)
 
         assert 'Juicebox is not running.  Run jb start.' in result.output
@@ -847,7 +881,8 @@ class TestCli(object):
         dockerutil_mock.ensure_home.return_value = False
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['remove', 'cookies', '--yes', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['remove', 'cookies', '--yes', '--runtime',
+                                     'venv3'],
                                catch_exceptions=False)
 
         assert 'Juicebox is not running.  Run jb start.' in result.output
@@ -893,13 +928,15 @@ class TestCli(object):
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.shutil')
     @patch('jbcli.cli.jb.os')
-    def test_remove_multiple_venv3(self, os_mock, shutil_mock, dockerutil_mock):
+    def test_remove_multiple_venv3(self, os_mock, shutil_mock,
+                                   dockerutil_mock):
         os_mock.path.isdir.return_value = True
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['remove', 'cookies', 'cake', '--yes', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['remove', 'cookies', 'cake', '--yes',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert 'Removing cookies...' in result.output
@@ -934,7 +971,7 @@ class TestCli(object):
 
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': '', "should_reload": False}),
+                'app': '', "should_reload": False}),
             call().start(),
             call().join()
         ]
@@ -944,7 +981,8 @@ class TestCli(object):
     @patch('jbcli.cli.jb.Process')
     @patch('jbcli.cli.jb.time')
     @patch('jbcli.cli.jb.dockerutil')
-    def test_watch_for_specific_app(self, dockerutil_mock, time_mock, process_mock):
+    def test_watch_for_specific_app(self, dockerutil_mock, time_mock,
+                                    process_mock):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         time_mock.sleep.side_effect = KeyboardInterrupt
@@ -954,19 +992,19 @@ class TestCli(object):
 
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': 'test', "should_reload": False}),
+                'app': 'test', "should_reload": False}),
             call().start(),
             call().join()
         ]
 
         assert result.exit_code == 0
 
-
     @patch('jbcli.cli.jb.Process')
     @patch('jbcli.cli.jb.time')
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.create_browser_instance')
-    def test_watch_with_reload(self, browser_mock, dockerutil_mock, time_mock, process_mock):
+    def test_watch_with_reload(self, browser_mock, dockerutil_mock, time_mock,
+                               process_mock):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         time_mock.sleep.side_effect = KeyboardInterrupt
@@ -975,19 +1013,20 @@ class TestCli(object):
                                catch_exceptions=False)
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': '', "should_reload": True}),
+                'app': '', "should_reload": True}),
             call().start(),
             call().join()
         ]
         assert browser_mock.called == True
         assert result.exit_code == 0
 
-
     @patch('jbcli.cli.jb.Process')
     @patch('jbcli.cli.jb.time')
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.create_browser_instance')
-    def test_watch_with_specific_app_and_reload(self, browser_mock, dockerutil_mock, time_mock, process_mock):
+    def test_watch_with_specific_app_and_reload(self, browser_mock,
+                                                dockerutil_mock, time_mock,
+                                                process_mock):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         time_mock.sleep.side_effect = KeyboardInterrupt
@@ -996,13 +1035,12 @@ class TestCli(object):
                                catch_exceptions=False)
         assert process_mock.mock_calls == [
             call(target=dockerutil_mock.jb_watch, kwargs={
-                 'app': 'test', "should_reload": True}),
+                'app': 'test', "should_reload": True}),
             call().start(),
             call().join()
         ]
         assert browser_mock.called == True
         assert result.exit_code == 0
-
 
     @patch('jbcli.cli.jb.Process')
     @patch('jbcli.cli.jb.time')
@@ -1117,7 +1155,8 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.run('/venv/bin/python manage.py loadjuiceboxapp chocolate_chip')
+            call.run(
+                '/venv/bin/python manage.py loadjuiceboxapp chocolate_chip')
         ]
         assert result.exit_code == 0
 
@@ -1219,7 +1258,8 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.run('/venv/bin/python manage.py loadjuiceboxapp chocolate_chip')
+            call.run(
+                '/venv/bin/python manage.py loadjuiceboxapp chocolate_chip')
         ]
         assert 'Cloning from cookies to chocolate_chip' in result.output
 
@@ -1231,7 +1271,8 @@ class TestCli(object):
         apps_mock.clone.return_value = 'git cookies'
         dockerutil_mock.is_running.return_value = True
         runner = CliRunner()
-        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert apps_mock.mock_calls == [
@@ -1254,7 +1295,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = False
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert dockerutil_mock.mock_calls == [call.is_running()]
@@ -1267,7 +1309,8 @@ class TestCli(object):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         runner = CliRunner()
-        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert os_mock.mock_calls == [
@@ -1286,7 +1329,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert os_mock.mock_calls == [
@@ -1308,7 +1352,9 @@ class TestCli(object):
         apps_mock.clone.side_effect = ValueError('Cake Bad')
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip', '--runtime', 'venv3'], catch_exceptions=False)
+        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
+                               catch_exceptions=False)
 
         assert apps_mock.mock_calls == [
             call.clone(u'chocolate_chip', 'apps/cookies',
@@ -1333,7 +1379,8 @@ class TestCli(object):
         os_mock.path.isdir.side_effect = [True, False]
 
         runner = CliRunner()
-        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip', '--runtime', 'venv3'],
+        result = runner.invoke(cli, ['clone', 'cookies', 'chocolate_chip',
+                                     '--runtime', 'venv3'],
                                catch_exceptions=False)
 
         assert apps_mock.mock_calls == [
@@ -1352,7 +1399,7 @@ class TestCli(object):
         assert 'Cloning from cookies to chocolate_chip' in result.output
 
     @patch('jbcli.cli.jb.dockerutil')
-    @patch('jbcli.cli.jb.subprocess.check_call')
+    @patch('jbcli.cli.jb.subprocess')
     @patch('jbcli.cli.jb.os')
     def test_yo_upgrade(self, os_mock, proc_mock, dockerutil_mock):
         runner = CliRunner()
@@ -1364,7 +1411,7 @@ class TestCli(object):
         os_mock.path.exists.return_value = False
         os_mock.symlink.return_value = False
         proc_mock.check_call.return_value = 'foo'
-        result = runner.invoke(cli, ['yo_upgrade'], catch_exceptions=False)
+        result = runner.invoke(cli, ['yo_upgrade'])
 
         # TODO: Improve these tests
         assert proc_mock.mock_calls == [
@@ -1402,7 +1449,8 @@ class TestCli(object):
     def test_test_app_venv3(self, dockerutil_mock):
         runner = CliRunner()
         dockerutil_mock.is_running.return_value = True
-        result = runner.invoke(cli, ['test_app', 'jb3demo', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['test_app', 'jb3demo', '--runtime', 'venv3'],
                                catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [call.is_running(),
                                               call.run(
@@ -1415,7 +1463,8 @@ class TestCli(object):
         runner = CliRunner()
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.run.side_effect = APIError('Fail')
-        result = runner.invoke(cli, ['test_app', 'jb3demo', '--runtime', 'venv3'],
+        result = runner.invoke(cli,
+                               ['test_app', 'jb3demo', '--runtime', 'venv3'],
                                catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [call.is_running(),
                                               call.run(
@@ -1431,8 +1480,9 @@ class TestCli(object):
 
         result = runner.invoke(cli, ['clear_cache'], catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [call.is_running(),
-                                              call.run('/venv/bin/python manage.py clear_cache '
-                                                       '--settings=fruition.settings.docker')]
+                                              call.run(
+                                                  '/venv/bin/python manage.py clear_cache '
+                                                  '--settings=fruition.settings.docker')]
 
         assert result.exit_code == 0
 
@@ -1492,7 +1542,8 @@ class TestCli(object):
         result = runner.invoke(cli, ['clear_cache'], catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.run('/venv/bin/python manage.py clear_cache --settings=fruition.settings.docker')
+            call.run(
+                '/venv/bin/python manage.py clear_cache --settings=fruition.settings.docker')
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
@@ -1534,7 +1585,9 @@ class TestCli(object):
     def test_jb_manage_args(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = True
         runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test', '--failfast', '--keepdb'], catch_exceptions=False)
+        result = runner.invoke(cli,
+                               ['manage', 'test', '--failfast', '--keepdb'],
+                               catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.run('/venv/bin/python manage.py test --failfast --keepdb')
@@ -1588,7 +1641,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
         runner = CliRunner()
         result = runner.invoke(cli,
-                               ['manage', 'test', '--failfast', '--keepdb', '--runtime', 'venv3'],
+                               ['manage', 'test', '--failfast', '--keepdb',
+                                '--runtime', 'venv3'],
                                catch_exceptions=False)
         assert dockerutil_mock.mock_calls == [
             call.is_running(),

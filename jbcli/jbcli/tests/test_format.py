@@ -2,9 +2,8 @@ from builtins import object
 from unittest.mock import call, patch
 
 from ..utils.format import (
-    echo_success, echo_warning, echo_highlight, human_readable_timediff
+    echo_success, echo_warning, echo_highlight
 )
-from datetime import datetime, timedelta
 
 
 class TestFormat(object):
