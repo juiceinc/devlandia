@@ -8,8 +8,14 @@ phases:
       - pip install -qq -U pip wheel
       - pip install -r requirements.txt
       - pip install -r jbcli/requirements-dev.txt
+      - pip install junit2html
+      - mkdir /tmp/artifacts
+      - flake8 --output-file=flake8_errors.txt --exit-zero jbcli '''
+      - mv ./flake8_errors.txt /tmp/artifacts
       - cd jbcli
       - pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli -vvv
+      - junit2html /tmp/artifacts/junit.xml || true
+      - mv junit.xml.html coverage.xml /tmp/artifacts/
   build:
     commands:
       - make docs
