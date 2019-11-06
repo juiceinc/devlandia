@@ -10,7 +10,7 @@ other than Windows 10 Pro, Enterprise, or Education with a minimum build number 
 
 Create a new virtual environment for devlandia by changing to the desired directory and running ``virtualenv devlandia``.
 This can be done in a central place such as ``~/.virtualenvs`` or in your project directory.  Devlandia should 
-be using Python 2.7.12.  If you have multiple versions of Python installed and want to specify the version for 
+be using Python 3.7.x (3.7.1 as of this writing).  If you have multiple versions of Python installed and want to specify the version for 
 your virtual environment, run ``virtualenv -p /path/to/python/install devlandia``.  If you installed your virtual 
 environment to ``~/.virtualenvs/`` you'll need to run ``source ~/.virtualenvs/devlandia/bin/activate`` to activate it.
 Once your environment is setup and activated run ``pip install -r requirements.txt`` from the root directory of devlandia.
