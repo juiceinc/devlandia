@@ -21,7 +21,7 @@ phases:
     commands:
       - make docs
       - |
-        if [ "$CLEANED_BRANCH" = "OPS-1763/jbcli-py3" ]; then
+        if [ "NORMAL_BRANCH" = "OPS-1763/jbcli-py3" ]; then
             aws s3 sync docs/_build/html s3://internal.juiceboxdata.com/projects/jbcli --acl bucket-owner-full-control --delete
         fi
 artifacts:
