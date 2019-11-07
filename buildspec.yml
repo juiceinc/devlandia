@@ -15,7 +15,7 @@ phases:
       - mv ./flake8_errors.txt /tmp/artifacts
       - cd jbcli
       - pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli -vvv
-      - junit2html /tmp/artifacts/junit.xml || true
+      - junit2html junit.xml || true
       - mv junit.xml.html coverage.xml /tmp/artifacts/
   build:
     commands:
