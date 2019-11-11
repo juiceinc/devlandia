@@ -92,3 +92,6 @@ ENV/
 
 # yo juicebox ignore
 .yo-rc.json
+
+# core local fruition symlink
+environments/core/fruition
