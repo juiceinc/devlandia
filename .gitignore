@@ -92,3 +92,7 @@ ENV/
 
 # yo juicebox ignore
 .yo-rc.json
+
+# core local fruition symlink
+environments/core/fruition
+environments/py2core/fruition
