@@ -95,3 +95,4 @@ ENV/
 
 # core local fruition symlink
 environments/core/fruition
+environments/py2core/fruition

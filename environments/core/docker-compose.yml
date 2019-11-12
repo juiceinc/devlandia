@@ -2,7 +2,7 @@ version: '2'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:develop-py3"
-    command: bash -c "/venv3/bin/pip install -U -q -r requirements3.txt -r requirements_dev.txt && /venv/bin/python docker/entrypoint.py"
+    command: bash -c "/venv3/bin/pip install -U -q -r requirements3.txt -r requirements_dev.txt && /venv3/bin/python docker/entrypoint.py"
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
