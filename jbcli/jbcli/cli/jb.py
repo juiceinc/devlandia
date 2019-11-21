@@ -2,16 +2,17 @@
 
 from __future__ import print_function
 
+import atexit
 import errno
 import fcntl
 import os
+import shutil
 import socket
 import struct
 import sys
-import shutil
 import time
-from string import join
 from multiprocessing import Process
+from string import join
 from subprocess import Popen
 
 import botocore
@@ -473,7 +474,6 @@ def activate_ssh(env, environ):
             time.sleep(0.2)
         print("exit status:", process.poll())
 
-    import atexit
     atexit.register(cleanup)
 
     compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
