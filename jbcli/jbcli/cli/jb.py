@@ -3,7 +3,10 @@
 from __future__ import print_function
 
 import errno
+import fcntl
 import os
+import socket
+import struct
 import sys
 import shutil
 import time
@@ -439,6 +442,15 @@ def cleanup_ssh(env):
             raise
 
 
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', ifname[:15])
+    )[20:24])
+
+
 def activate_ssh(env, environ):
     """
     Start the SSH tunnels, and manipulate the environment variables so that
@@ -466,13 +478,18 @@ def activate_ssh(env, environ):
     atexit.register(cleanup)
 
     compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
-    host_ip = '172.17.0.1'
+    try:
+        host_addr = get_ip_address('docker0')
+    except Exception:
+        print("couldn't get docker0 IP address, using host.docker.internal")
+        host_addr = 'host.docker.internal'
+    print("[RADIX] host IP address is", host_addr)
     content = {
         'version': '2',
         'services': {
             'juicebox': {
                 'extra_hosts': [
-                    '{}:{}'.format(legacy_redshift, host_ip),
+                    '{}:{}'.format(legacy_redshift, host_addr),
                 ]
             }
         }
