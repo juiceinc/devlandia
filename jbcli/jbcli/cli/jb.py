@@ -1,28 +1,34 @@
+"""This is the code for the jb cli command."""
+
 from __future__ import print_function
 
+import errno
 import os
 import sys
 import shutil
 import time
 from string import join
 from multiprocessing import Process
+from subprocess import Popen
 
 import botocore
 import click
 import docker.errors
-from botocore import exceptions
 from PyInquirer import prompt, Separator
+from six.moves.urllib.parse import urlparse
+import yaml
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
-from ..utils.format import echo_highlight, echo_warning, echo_success, human_readable_timediff
+from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
 from ..utils.storageutil import stash
 
-"""
-This is the code for the jb cli command.
-"""
+
+MY_DIR = os.path.abspath(os.path.dirname(__file__))
+DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
+JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, 'jbcli'))
 
 
 @click.group()
@@ -424,6 +430,57 @@ def populate_env_with_secrets():
     return env
 
 
+def cleanup_ssh(env):
+    compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
+    try:
+        os.remove(compose_fn)
+    except OSError as e:
+        if e.errno != errno.ENOENT:
+            raise
+
+
+def activate_ssh(env, environ):
+    """
+    Start the SSH tunnels, and manipulate the environment variables so that
+    they are pointing at the right ports.
+    """
+    legacy_redshift = environ['JB_REDSHIFT_CONNECTION']
+    legacy_redshift = urlparse(legacy_redshift).hostname
+    command = [
+        "ssh", "-T", "-N",
+        "-o", "ServerAliveInterval 30", "-o", "ServerAliveCountMax 3",
+        "-L", "0.0.0.0:5439:{legacy_redshift}:5439".format(legacy_redshift=legacy_redshift),
+        "vpn2.juiceboxdata.com",
+    ]
+    print("[RADIX] running", command)
+    process = Popen(command)
+
+    def cleanup():
+        process.kill()
+        print("waiting for SSH tunnels to stop...")
+        while process.poll() is None:
+            time.sleep(0.2)
+        print("exit status:", process.poll())
+
+    import atexit
+    atexit.register(cleanup)
+
+    compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
+    host_ip = '172.17.0.1'
+    content = {
+        'version': '2',
+        'services': {
+            'juicebox': {
+                'extra_hosts': [
+                    '{}:{}'.format(legacy_redshift, host_ip),
+                ]
+            }
+        }
+    }
+    with open(compose_fn, 'w') as compose_file:
+        compose_file.write(yaml.safe_dump(content))
+
+
 @cli.command()
 @click.argument('env', nargs=1, required=False)
 @click.option('--noupdate', default=False,
@@ -432,8 +489,10 @@ def populate_env_with_secrets():
 @click.option('--noupgrade', default=False,
               help='Do not automatically update jb and generators on start',
               is_flag=True)
+@click.option('--ssh', default=False, is_flag=True,
+              help='run an SSH tunnel for redshift')
 @click.pass_context
-def freshstart(ctx, env, noupdate, noupgrade):
+def freshstart(ctx, env, noupdate, noupgrade, ssh):
     """Configure the environment and start Juicebox
     """
     if dockerutil.is_running():
@@ -514,7 +573,11 @@ def freshstart(ctx, env, noupdate, noupgrade):
     try:
         if not noupdate:
             dockerutil.pull(tag=None)
-        dockerutil.up(env=populate_env_with_secrets())
+        environ = populate_env_with_secrets()
+        cleanup_ssh(env)
+        if ssh:
+            activate_ssh(env, environ)
+        dockerutil.up(env=environ)
     except botocore.exceptions.ClientError as e:
         if "Signature expired" in e.message:
             click.echo(
@@ -522,7 +585,7 @@ def freshstart(ctx, env, noupdate, noupgrade):
             subprocess.check_call(
                 ['killall', '-HUP' 'com.docker.hyperkit'])
             time.sleep(30)
-            start(noupdate=noupdate)
+            start(noupdate=noupdate, ssh=ssh)
         else:
             raise
 
