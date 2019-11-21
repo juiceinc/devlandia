@@ -464,7 +464,6 @@ def activate_ssh(env, environ):
         "-L", "0.0.0.0:5439:{legacy_redshift}:5439".format(legacy_redshift=legacy_redshift),
         "vpn2.juiceboxdata.com",
     ]
-    print("[RADIX] running", command)
     process = Popen(command)
 
     def cleanup():
@@ -483,7 +482,6 @@ def activate_ssh(env, environ):
     except Exception:
         print("couldn't get docker0 IP address, using host.docker.internal")
         host_addr = 'host.docker.internal'
-    print("[RADIX] host IP address is", host_addr)
     content = {
         'version': '2',
         'services': {
