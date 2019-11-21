@@ -58,4 +58,4 @@ services:
       - POSTGRES_DB=juicebox
     image: "postgres:9.3-alpine"
   redis:
-    image: "redis:2.8.6"
+    image: "redis:4.0.14"
