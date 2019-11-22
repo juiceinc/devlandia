@@ -443,13 +443,23 @@ def cleanup_ssh(env):
             raise
 
 
-def get_ip_address(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(
-        s.fileno(),
-        0x8915,  # SIOCGIFADDR
-        struct.pack('256s', ifname[:15])
-    )[20:24])
+def get_host_ip():
+    # On linux, `host.docker.internal` doesn't work,
+    # but we have a nice way to find the address w/ the docker0 interface.
+    try:
+        ifname = 'docker0'
+        SIOCGIFADDR = 0x8915
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        interface = struct.pack('256s', ifname[:15])
+        addr = fcntl.ioctl(s.fileno(), SIOCGIFADDR, interface)[20:24]
+        return socket.inet_ntoa(addr)
+    except Exception as e:
+        print("[get_host_ip] Couldn't get docker0 address, falling back to slow method", e)
+        out = dockerutil.client.containers.run('ubuntu', 'getent hosts host.docker.internal')
+        # returns output like:
+        #   192.168.1.1    host.docker.internal
+        #   192.168.1.2    host.docker.internal
+        return out.splitlines()[0].split()[0]
 
 
 def activate_ssh(env, environ):
@@ -478,11 +488,7 @@ def activate_ssh(env, environ):
     atexit.register(cleanup)
 
     compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
-    try:
-        host_addr = get_ip_address('docker0')
-    except Exception:
-        print("couldn't get docker0 IP address, using host.docker.internal")
-        host_addr = 'host.docker.internal'
+    host_addr = get_host_ip()
     content = {
         'version': '2',
         'services': {
