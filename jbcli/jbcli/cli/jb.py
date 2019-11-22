@@ -455,7 +455,8 @@ def get_host_ip():
         return socket.inet_ntoa(addr)
     except Exception as e:
         print("[get_host_ip] Couldn't get docker0 address, falling back to slow method", e)
-        out = dockerutil.client.containers.run('ubuntu', 'getent hosts host.docker.internal')
+        out = dockerutil.client.containers.run(
+            'ubuntu:18.04', 'getent hosts host.docker.internal')
         # returns output like:
         #   192.168.1.1    host.docker.internal
         #   192.168.1.2    host.docker.internal
