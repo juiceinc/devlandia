@@ -473,6 +473,7 @@ def activate_ssh(env, environ):
         while process.poll() is None:
             time.sleep(0.2)
         print("exit status:", process.poll())
+        cleanup_ssh(env)
 
     atexit.register(cleanup)
 
