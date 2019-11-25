@@ -51,9 +51,9 @@ def echo_result(result):
     for log in logs:
         level = log.pop('level', 'unknown')
         event = log.pop('event', 'unknown')
-        content = '{:10s}{}\n\n'.format('[' + level + ']', event)
+        content = u'{:10s}{}\n\n'.format('[' + level + ']', event)
         for k in sorted(log.keys()):
-            content += '{:>20}: {}\n'.format(k, log[k])
+            content += u'{:>20}: {}\n'.format(k, log[k])
         if level in ('error', 'warning'):
             echo_warning(content)
         else:
