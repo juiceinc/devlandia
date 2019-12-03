@@ -725,9 +725,12 @@ def pull(tag=None):
 ))
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 @click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
-def manage(args, runtime):
+@click.option('--env', help='Which environment to use')
+def manage(args, runtime, env):
     """Allows you to run arbitrary management commands."""
     cmd = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
+    if env is not None:
+        os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
     try:
         dockerutil.run_jb(cmd, env=populate_env_with_secrets())
     except subprocess.CalledProcessError as e:
