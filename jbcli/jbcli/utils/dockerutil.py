@@ -39,7 +39,7 @@ class WatchHandler(FileSystemEventHandler):
         else:
             path = event.src_path.split('/')
 
-        # Path looks like 
+        # Path looks like
         # ['..', '..', 'apps', 'privileging', 'stacks', 'overview', 'templates.html']
         app = path[3]
         filename = path[-1]
@@ -61,7 +61,7 @@ class WatchHandler(FileSystemEventHandler):
                 if self.should_reload:
                     refresh_browser()
 
-        else:            
+        else:
             click.echo('Change to {} ignored'.format(event.src_path))
 
         click.echo('Waiting for changes...')
@@ -71,10 +71,10 @@ def _intersperse(el, l):
     return [y for x in zip([el]*len(l), l) for y in x]
 
 
-def docker_compose(arg, env=None):
+def docker_compose(args, env=None):
     file_args = _intersperse('-f', glob('docker-compose-*.yml'))
     cmd = (
-        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + [arg]
+        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + args
     )
     return check_call(cmd, env=env)
 
@@ -82,17 +82,21 @@ def docker_compose(arg, env=None):
 def up(env=None):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml """
-    docker_compose('up', env=env)
+    docker_compose(['up'], env=env)
+
+
+def run_jb(cmd, env=None):
+    docker_compose(['run', 'juicebox'] + cmd, env=env)
 
 
 def destroy():
     """Removes all containers and networks defined in docker-compose.yml"""
-    docker_compose('down')
+    docker_compose(['down'])
 
 
 def halt():
     """Halts all containers defined in docker-compose file."""
-    docker_compose('stop')
+    docker_compose(['stop'])
 
 
 def is_running():
@@ -235,7 +239,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
                 is_semantic_tag = bool(semantic_version_tag_pattern.match(tag))
                 if tag == 'master':
                     tag_priority = 4
-                elif tag == 'develop': 
+                elif tag == 'develop':
                     tag_priority = 3
                 elif is_semantic_tag:
                     tag_priority = 2

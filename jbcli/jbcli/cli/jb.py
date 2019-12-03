@@ -608,7 +608,7 @@ def freshstart(ctx, env, noupdate, noupgrade, ssh):
             subprocess.check_call(
                 ['killall', '-HUP' 'com.docker.hyperkit'])
             time.sleep(30)
-            start(noupdate=noupdate, ssh=ssh)
+            freshstart(env, noupdate=noupdate, noupgrade=noupgrade, ssh=ssh)
         else:
             raise
 
@@ -727,17 +727,7 @@ def pull(tag=None):
 @click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
 def manage(args, runtime):
     """Allows you to run arbitrary management commands."""
-    try:
-        if dockerutil.is_running():
-            cmdline = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
-            click.echo('Invoking inside container: %s' % ' '.join(cmdline))
-            dockerutil.run(join(cmdline))
-        else:
-            echo_warning('Juicebox not running.  Run jb start')
-            click.get_current_context().abort()
-    except docker.errors.APIError:
-        echo_warning('Could not clear cache')
-        click.get_current_context().abort()
+    dockerutil.run_jb(['/{}/bin/python'.format(runtime), 'manage.py'] + list(args))
 
 
 @cli.command()
