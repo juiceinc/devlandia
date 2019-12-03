@@ -727,7 +727,8 @@ def pull(tag=None):
 @click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
 def manage(args, runtime):
     """Allows you to run arbitrary management commands."""
-    dockerutil.run_jb(['/{}/bin/python'.format(runtime), 'manage.py'] + list(args))
+    cmd = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
+    dockerutil.run_jb(cmd, env=populate_env_with_secrets())
 
 
 @cli.command()
