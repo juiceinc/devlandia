@@ -728,7 +728,11 @@ def pull(tag=None):
 def manage(args, runtime):
     """Allows you to run arbitrary management commands."""
     cmd = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
-    dockerutil.run_jb(cmd, env=populate_env_with_secrets())
+    try:
+        dockerutil.run_jb(cmd, env=populate_env_with_secrets())
+    except subprocess.CalledProcessError as e:
+        echo_warning("manage.py exited with {}".format(e.returncode))
+        click.get_current_context().abort()
 
 
 @cli.command()
