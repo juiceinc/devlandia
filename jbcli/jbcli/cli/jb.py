@@ -731,6 +731,7 @@ def manage(args, runtime, env):
     cmd = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
     if env is not None:
         os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+    dockerutil.pull(None)
     try:
         dockerutil.run_jb(cmd, env=populate_env_with_secrets())
     except subprocess.CalledProcessError as e:
