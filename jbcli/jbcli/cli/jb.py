@@ -724,15 +724,27 @@ def pull(tag=None):
     ignore_unknown_options=True,
 ))
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
-@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
 @click.option('--env', help='Which environment to use')
-def manage(args, runtime, env):
+def manage(args, env):
     """Allows you to run arbitrary management commands."""
-    cmd = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
-    if env is not None:
-        os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+    cmd = ['/venv/bin/python', 'manage.py'] + list(args)
+    if env is None:
+        env = dockerutil.check_home()
+
+    container = dockerutil.is_running()
     try:
-        dockerutil.run_jb(cmd, env=populate_env_with_secrets())
+        if container and (env is None or container.name.startswith(env)):
+            click.echo("running manage in {}".format(container.name))
+            # we don't use docker-py for this because it doesn't support the equivalent of
+            # "--interactive --tty"
+            subprocess.check_call(['docker', 'exec', '-it', container.name] + cmd)
+        elif env is not None:
+            click.echo("starting new {}".format(env))
+            os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+            dockerutil.run_jb(cmd, env=populate_env_with_secrets())
+        else:
+            echo_warning("please pass --env, or start juicebox in the background first")
+            click.get_current_context().abort()
     except subprocess.CalledProcessError as e:
         echo_warning("manage.py exited with {}".format(e.returncode))
         click.get_current_context().abort()

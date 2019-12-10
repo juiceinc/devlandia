@@ -104,16 +104,11 @@ def is_running():
 
     :rtype: ``bool``
     """
-    running = False
     click.echo('Checking to see if Juicebox is running...')
-    containers = client.containers.list(all=True)
-    if containers:
-        for container in containers:
-
-            if 'juicebox' in container.name and get_state(
-                    container.name) == 'running':
-                running = True
-    return running
+    containers = client.containers.list()
+    for container in containers:
+        if 'juicebox' in container.name:
+            return container
 
 
 def ensure_root():
@@ -146,13 +141,18 @@ def ensure_home():
 
     :rtype: ``bool``
     """
-    if not os.path.isfile('docker-compose.yml') or not os.path.isdir('../../apps'):
+    if check_home() is None:
         # We're not in the environment home
         echo_warning(
             'Please run this command from inside the desired environment in '
             'Devlandia.')
         click.get_current_context().abort()
     return True
+
+
+def check_home():
+    if os.path.isfile('docker-compose.yml') and os.path.isdir('../../apps'):
+        return os.path.dirname(os.path.abspath(os.path.curdir))
 
 
 def run(command):
