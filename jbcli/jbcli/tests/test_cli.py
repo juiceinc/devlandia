@@ -1,20 +1,20 @@
 from __future__ import print_function
 
-import sys
 from subprocess import CalledProcessError
+from collections import namedtuple
 
 from click.testing import CliRunner
 from docker.errors import APIError
-from mock import call, patch, Mock, ANY
-from watchdog.events import FileSystemEventHandler
+from mock import call, patch, ANY
 
-import jbcli
 from ..cli.jb import cli
-from ..utils.dockerutil import WatchHandler
 
 
-@patch('jbcli.cli.jb.get_deployment_secrets', new=lambda: {})
-class TestDocker(object):
+Container = namedtuple('Container', ['name'])
+
+
+@patch('jbcli.cli.jb.get_deployment_secrets', new=lambda: {'test_secret': 'true'})
+class TestCli(object):
     def test_base(self):
         runner = CliRunner()
         result = runner.invoke(cli)
@@ -1470,106 +1470,65 @@ class TestDocker(object):
         assert 'Could not clear cache' in result.output
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_single(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
+    @patch('jbcli.cli.jb.subprocess')
+    def test_jb_manage_running_no_env(self, subprocess_mock, dockerutil_mock):
+        """When a container is running and no --env is given,
+        we run the command in the existing container.
+        """
+        dockerutil_mock.is_running.return_value = Container(name='stable_juicebox_1')
+        dockerutil_mock.check_home.return_value = None
+        subprocess_mock.check_call.return_value = None
+        runner = CliRunner()
+        result = runner.invoke(cli, ['manage', 'test',  '--failfast', '--keepdb'])
+        assert subprocess_mock.mock_calls == [
+            call.check_call([
+                'docker', 'exec', '-it', 'stable_juicebox_1',
+                '/venv/bin/python', 'manage.py', 'test', '--failfast', '--keepdb'])
+        ]
+        assert result.exit_code == 0
+
+    @patch('jbcli.cli.jb.click')
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_jb_manage_not_running_no_env(self, dockerutil_mock, click_mock):
+        """When no container is running, and no --env is given, we give up."""
+        dockerutil_mock.is_running.return_value = False
+        dockerutil_mock.check_home.return_value = None
         runner = CliRunner()
         result = runner.invoke(cli, ['manage', 'test'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run('/venv/bin/python manage.py test')
+        assert 'Juicebox not running and no --env given' in result.output
+
+    @patch('jbcli.cli.jb.dockerutil')
+    @patch('jbcli.cli.jb.subprocess')
+    def test_jb_manage_running_matching_env(self, subprocess_mock, dockerutil_mock):
+        """When an --env is given, and it matches a running JB container,
+        we use the running container.
+        """
+        dockerutil_mock.is_running.return_value = Container(name='core_juicebox_1')
+        dockerutil_mock.check_home.return_value = None
+        subprocess_mock.check_call.return_value = None
+
+        result = CliRunner().invoke(cli, ['manage', '--env', 'core', 'test'])
+        assert subprocess_mock.mock_calls == [
+            call.check_call([
+                'docker', 'exec', '-it', 'core_juicebox_1',
+                '/venv/bin/python', 'manage.py', 'test'])
         ]
         assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_args(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test', '--failfast', '--keepdb'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run('/venv/bin/python manage.py test --failfast --keepdb')
+    @patch('jbcli.cli.jb.subprocess')
+    def test_jb_manage_running_not_matching_env(self, subprocess_mock, dockerutil_mock):
+        """When an --env is given, and there is no matching container, we run a new one.
+        """
+        dockerutil_mock.is_running.return_value = Container(name='core_juicebox_1')
+        dockerutil_mock.check_home.return_value = None
+        subprocess_mock.check_call.side_effect = Exception("don't run this!")
+        dockerutil_mock.run_jb.return_value = None
+
+        result = CliRunner().invoke(cli, ['manage', '--env', 'stable', 'test'])
+        assert dockerutil_mock.run_jb.mock_calls == [
+            call(['/venv/bin/python', 'manage.py', 'test'], env=ANY)
         ]
+        name, args, kwargs = dockerutil_mock.run_jb.mock_calls[0]
+        assert kwargs['env']['test_secret'] == 'true'
         assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.click')
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_not_running(self, dockerutil_mock, click_mock):
-        dockerutil_mock.is_running.return_value = False
-        runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running()
-        ]
-        assert click_mock.mock_calls == [
-            call.get_current_context(),
-            call.get_current_context().abort()
-        ]
-        assert 'Juicebox not running.  Run jb start' in result.output
-
-    @patch('jbcli.cli.jb.click')
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_api_exception(self, dockerutil_mock, click_mock):
-        dockerutil_mock.is_running.return_value = False
-        dockerutil_mock.run.side_effect = APIError('Fail')
-        runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running()
-        ]
-        assert click_mock.mock_calls == [
-            call.get_current_context(),
-            call.get_current_context().abort()
-        ]
-
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_single_venv3(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run('/venv3/bin/python manage.py test')
-        ]
-        assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_args_venv3(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli,
-                               ['manage', 'test', '--failfast', '--keepdb', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run('/venv3/bin/python manage.py test --failfast --keepdb')
-        ]
-        assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.click')
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_not_running_venv3(self, dockerutil_mock, click_mock):
-        dockerutil_mock.is_running.return_value = False
-        runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running()
-        ]
-        assert click_mock.mock_calls == [
-            call.get_current_context(),
-            call.get_current_context().abort()
-        ]
-        assert 'Juicebox not running.  Run jb start' in result.output
-
-    @patch('jbcli.cli.jb.click')
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_jb_manage_api_exception_venv3(self, dockerutil_mock, click_mock):
-        dockerutil_mock.is_running.return_value = False
-        dockerutil_mock.run.side_effect = APIError('Fail')
-        runner = CliRunner()
-        result = runner.invoke(cli, ['manage', 'test', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running()
-        ]
-        assert click_mock.mock_calls == [
-            call.get_current_context(),
-            call.get_current_context().abort()
-        ]

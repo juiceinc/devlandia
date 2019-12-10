@@ -743,7 +743,9 @@ def manage(args, env):
             os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
             dockerutil.run_jb(cmd, env=populate_env_with_secrets())
         else:
-            echo_warning("please pass --env, or start juicebox in the background first")
+            echo_warning(
+                "Juicebox not running and no --env given. "
+                "Please pass --env, or start juicebox in the background first.")
             click.get_current_context().abort()
     except subprocess.CalledProcessError as e:
         echo_warning("manage.py exited with {}".format(e.returncode))
