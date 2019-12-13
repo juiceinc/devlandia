@@ -608,7 +608,7 @@ def freshstart(ctx, env, noupdate, noupgrade, ssh):
             subprocess.check_call(
                 ['killall', '-HUP' 'com.docker.hyperkit'])
             time.sleep(30)
-            start(noupdate=noupdate, ssh=ssh)
+            freshstart(env, noupdate=noupdate, noupgrade=noupgrade, ssh=ssh)
         else:
             raise
 
@@ -724,19 +724,31 @@ def pull(tag=None):
     ignore_unknown_options=True,
 ))
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
-@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
-def manage(args, runtime):
+@click.option('--env', help='Which environment to use')
+def manage(args, env):
     """Allows you to run arbitrary management commands."""
+    cmd = ['/venv/bin/python', 'manage.py'] + list(args)
+    if env is None:
+        env = dockerutil.check_home()
+
+    container = dockerutil.is_running()
     try:
-        if dockerutil.is_running():
-            cmdline = ['/{}/bin/python'.format(runtime), 'manage.py'] + list(args)
-            click.echo('Invoking inside container: %s' % ' '.join(cmdline))
-            dockerutil.run(join(cmdline))
+        if container and (env is None or container.name.startswith(env)):
+            click.echo("running manage in {}".format(container.name))
+            # we don't use docker-py for this because it doesn't support the equivalent of
+            # "--interactive --tty"
+            subprocess.check_call(['docker', 'exec', '-it', container.name] + cmd)
+        elif env is not None:
+            click.echo("starting new {}".format(env))
+            os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+            dockerutil.run_jb(cmd, env=populate_env_with_secrets())
         else:
-            echo_warning('Juicebox not running.  Run jb start')
+            echo_warning(
+                "Juicebox not running and no --env given. "
+                "Please pass --env, or start juicebox in the background first.")
             click.get_current_context().abort()
-    except docker.errors.APIError:
-        echo_warning('Could not clear cache')
+    except subprocess.CalledProcessError as e:
+        echo_warning("manage.py exited with {}".format(e.returncode))
         click.get_current_context().abort()
 
 

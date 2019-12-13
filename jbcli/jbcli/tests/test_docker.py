@@ -1,3 +1,4 @@
+import os
 import json
 import time
 from collections import namedtuple
@@ -6,6 +7,7 @@ from datetime import datetime, timedelta
 from mock import call, patch, ANY
 
 from ..utils import dockerutil
+from ..cli.jb import DEVLANDIA_DIR
 
 
 class TestDocker:
@@ -69,15 +71,10 @@ class TestDocker:
         assert 'exited' in result
 
     @patch('jbcli.utils.dockerutil.click')
-    @patch('jbcli.utils.dockerutil.os')
-    def test_ensure_home(self, os_mock, click_mock):
-        os_mock.path.isfile.return_value = True
-        os_mock.path.isdir.return_value = True
-        dockerutil.ensure_home()
-        assert os_mock.mock_calls == [
-            call.path.isfile('docker-compose.yml'),
-            call.path.isdir('../../apps'),
-        ]
+    def test_ensure_home(self, click_mock, monkeypatch):
+        for env in ['core', 'test', 'hstm-core']:
+            monkeypatch.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+            dockerutil.ensure_home()
 
     @patch('jbcli.utils.dockerutil.click')
     @patch('jbcli.utils.dockerutil.os')
@@ -114,36 +111,25 @@ class TestDocker:
             call('COOKIES!')
         ]
 
-    @patch('jbcli.utils.dockerutil.get_state')
     @patch('jbcli.utils.dockerutil.client')
-    def test_is_running_up(self, dockerutil_mock, state_mock):
-        state_mock.return_value = 'running'
+    def test_is_running_up(self, dockerutil_mock):
         Container = namedtuple('Container', ['name'])
         dockerutil_mock.containers.list.return_value = [
             Container(name='cookie'), Container(name='stable_juicebox_1')]
         result = dockerutil.is_running()
-        assert result is True
+        assert result == Container(name='stable_juicebox_1')
 
-    @patch('jbcli.utils.dockerutil.get_state')
     @patch('jbcli.utils.dockerutil.client')
-    def test_is_running_down(self, dockerutil_mock, state_mock):
-        state_mock.return_value = 'exited'
+    def test_is_running_down(self, dockerutil_mock):
         Container = namedtuple('Container', ['name'])
-        dockerutil_mock.containers.list.return_value = [
-            Container(name='cookie'), Container(name='stable_juicebox_1')]
+        dockerutil_mock.containers.list.return_value = [Container(name='cookie')]
         result = dockerutil.is_running()
-        assert result is False
+        assert result is None
 
-    @patch('jbcli.utils.dockerutil.os')
-    @patch('jbcli.utils.dockerutil.parse_dc_file')
     @patch('jbcli.utils.dockerutil.check_call')
     @patch('jbcli.utils.dockerutil.check_output')
-    def test_pull(self, check_output_mock, check_mock, parse_mock, os_mock):
-        parse_mock.return_value = '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-dev:stable'
-        os_mock.path.abspath.return_value = '/path/'
-        os_mock.path.isfile.return_value = True
-        os_mock.path.isdir.return_value = True
-        os_mock.getcwd.return_value = '/path'
+    def test_pull(self, check_output_mock, check_mock, monkeypatch):
+        monkeypatch.chdir(os.path.join(DEVLANDIA_DIR, 'environments', 'core'))
 
         def check_output(args):
             assert args == [
@@ -152,25 +138,15 @@ class TestDocker:
             return "do a thing!"
 
         check_output_mock.side_effect = check_output
+
         dockerutil.pull('latest')
+
         assert check_mock.mock_calls == [
             call(["do", "a", "thing!"]),
             call(['docker', 'pull',
-                  '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-dev:stable'])
-        ]
-        assert os_mock.mock_calls == [
-            call.path.isfile('docker-compose.yml'),
-            call.path.isdir('../../apps'),
-            call.getcwd(),
-            call.path.abspath(os_mock.getcwd.return_value),
-            call.chdir('../..'),
-            call.chdir(os_mock.path.abspath.return_value)
-        ]
-        assert parse_mock.mock_calls == [
-            call(tag='latest')
+                  '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:latest'])
         ]
 
- 
     @patch('jbcli.utils.dockerutil.check_output')
     def test_image_list(self, check_mock):        
         def _make_image_details(tag, td):
