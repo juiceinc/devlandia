@@ -12,10 +12,9 @@ import struct
 import sys
 import time
 from multiprocessing import Process
-from string import join
 from subprocess import Popen
 
-import botocore
+import botocore.exceptions
 import click
 import docker.errors
 from PyInquirer import prompt, Separator
@@ -384,56 +383,6 @@ def select(tag, env=None, showall=False):
         dockerutil.set_tag(env, tag)
 
 
-@cli.command()
-@click.option('--noupdate', default=False,
-              help='Do not automatically update Docker image on start',
-              is_flag=True)
-@click.option('--noupgrade', default=False,
-              help='Do not automatically update jb and generators on start',
-              is_flag=True)
-@click.pass_context
-def start(ctx, noupdate, noupgrade):
-    """Configure the environment and start Juicebox
-    """
-    # TODO: env name should not be based on CWD
-    cwd = os.getcwd()
-    env_name = os.path.basename(cwd)
-    if not noupgrade:
-        os.chdir(os.path.join(cwd, '..', '..'))
-        ctx.invoke(upgrade)
-        os.chdir(cwd)
-
-    if not dockerutil.is_running():
-        try:
-            # Legacy hstm-* environments need to pull the docker image from the HSTM account,
-            # new hstm-* environments pull from the fruition legacy account.
-            if env_name.startswith('hstm-') and not env_name.startswith('hstm-new'):
-                activate_hstm()
-            if not noupdate:
-                dockerutil.pull(tag=None)
-            if env_name.startswith('hstm-new'):
-                activate_hstm()
-            dockerutil.up(env=populate_env_with_secrets())
-        except botocore.exceptions.ClientError as e:
-            if "Signature expired" in e.message:
-                click.echo(
-                    "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
-                subprocess.check_call(
-                    ['killall', '-HUP' 'com.docker.hyperkit'])
-                time.sleep(30)
-                start(noupdate=noupdate)
-            else:
-                raise
-    else:
-        echo_warning('An instance of Juicebox is already running')
-
-
-def populate_env_with_secrets():
-    env = get_deployment_secrets()
-    env.update(os.environ)
-    return env
-
-
 def cleanup_ssh(env):
     compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
     try:
@@ -515,73 +464,17 @@ def activate_ssh(env, environ):
 @click.option('--ssh', default=False, is_flag=True,
               help='run an SSH tunnel for redshift')
 @click.pass_context
-def freshstart(ctx, env, noupdate, noupgrade, ssh):
-    """Configure the environment and start Juicebox
-    """
+def start(ctx, env, noupdate, noupgrade, ssh):
+    """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
         echo_warning('Run `jb stop` to stop this instance.')
         return
 
-    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-    os.chdir(path)
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+    os.chdir(repo_root)
     if env is None:
-        click.echo("Welcome to devlandia!")
-        click.echo('Gathering data on available environments...\n')
-        # get a list of all the current images
-        tags = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
-        # these are the tags we want to look for in the list of images
-
-        # Generate suffixes for each environment that contain information on what image is
-        # associated with a tag, and when those images were published
-        extra_lookup = {}
-
-        jb_select = stash.get('jb_select', {})
-        if not isinstance(jb_select, dict):
-            jb_select = {
-                'test': jb_select
-            }
-
-        for env, selected_tag in jb_select.items():
-            extra_lookup[env] = selected_tag
-
-        for row in tags:
-            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
-
-            if tag == 'master':
-                extra_lookup['master'] = 'stable/master - ({}) published {}'.format(stable_version, human_readable)
-            if tag == 'develop':
-                extra_lookup['dev'] = 'dev - (develop) published {}'.format(human_readable)
-                extra_lookup['core'] = 'core - (develop) published {}'.format(human_readable)
-            for env, selected_tag in jb_select.items():
-                if tag == selected_tag:
-                    extra_lookup[env] = '{} - ({}, set with `jb select`) published {}'.format(env, selected_tag, human_readable)
-
-        if 'test' not in extra_lookup:
-            extra_lookup['test'] = 'test - set with `jb select`'
-
-        env_choices = [
-            {'name': extra_lookup.get('master', 'master'), 'value': 'stable'},
-            {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
-            {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
-            {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
-            {'name': extra_lookup.get('hstm-stable', 'hstm-stable'), 'value': 'hstm-stable'},
-            {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
-            {'name': extra_lookup.get('hstm-core', 'hstm-core'), 'value': 'hstm-core'},
-            {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'}
-        ]
-
-        questions = [
-            {
-                'type': 'list',
-                'name': 'env',
-                'message': 'what environment would you like to start?',
-                'choices': env_choices
-            }
-        ]
-
-        response = prompt(questions)
-        env = response.get('env', None)
+        env = get_environment_interactively()
 
     if not env:
         echo_highlight('No environment selected.')
@@ -592,25 +485,76 @@ def freshstart(ctx, env, noupdate, noupgrade, ssh):
 
     stash.put('current_env', env)
     os.chdir("./environments/{}".format(env))
+    if env.startswith('hstm-') and not env.startswith('hstm-new'):
+        activate_hstm()
 
-    try:
-        if not noupdate:
-            dockerutil.pull(tag=None)
-        environ = populate_env_with_secrets()
-        cleanup_ssh(env)
-        if ssh:
-            activate_ssh(env, environ)
-        dockerutil.up(env=environ)
-    except botocore.exceptions.ClientError as e:
-        if "Signature expired" in e.message:
-            click.echo(
-                "Encountered Signature expired exception.  Attempting to restart Docker, please wait...")
-            subprocess.check_call(
-                ['killall', '-HUP' 'com.docker.hyperkit'])
-            time.sleep(30)
-            freshstart(env, noupdate=noupdate, noupgrade=noupgrade, ssh=ssh)
-        else:
-            raise
+    if not noupdate:
+        dockerutil.pull(tag=None)
+    if env.startswith('hstm-new'):
+        activate_hstm()
+    cleanup_ssh(env)
+    if ssh:
+        activate_ssh(env, get_deployment_secrets())
+    dockerutil.up()
+
+
+def get_environment_interactively():
+    click.echo("Welcome to devlandia!")
+    click.echo('Gathering data on available environments...\n')
+    # get a list of all the current images
+    tags = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
+    # these are the tags we want to look for in the list of images
+
+    # Generate suffixes for each environment that contain information on what image is
+    # associated with a tag, and when those images were published
+    extra_lookup = {}
+
+    jb_select = stash.get('jb_select', {})
+    if not isinstance(jb_select, dict):
+        jb_select = {
+            'test': jb_select
+        }
+
+    for env, selected_tag in jb_select.items():
+        extra_lookup[env] = selected_tag
+
+    for row in tags:
+        tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+
+        if tag == 'master':
+            extra_lookup['master'] = 'stable/master - ({}) published {}'.format(stable_version, human_readable)
+        if tag == 'develop':
+            extra_lookup['dev'] = 'dev - (develop) published {}'.format(human_readable)
+            extra_lookup['core'] = 'core - (develop) published {}'.format(human_readable)
+        for env, selected_tag in jb_select.items():
+            if tag == selected_tag:
+                extra_lookup[env] = '{} - ({}, set with `jb select`) published {}'.format(env, selected_tag, human_readable)
+
+    if 'test' not in extra_lookup:
+        extra_lookup['test'] = 'test - set with `jb select`'
+
+    env_choices = [
+        {'name': extra_lookup.get('master', 'master'), 'value': 'stable'},
+        {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
+        {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
+        {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
+        {'name': extra_lookup.get('hstm-stable', 'hstm-stable'), 'value': 'hstm-stable'},
+        {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
+        {'name': extra_lookup.get('hstm-core', 'hstm-core'), 'value': 'hstm-core'},
+        {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'}
+    ]
+
+    questions = [
+        {
+            'type': 'list',
+            'name': 'env',
+            'message': 'what environment would you like to start?',
+            'choices': env_choices
+        }
+    ]
+
+    response = prompt(questions)
+    return response.get('env', None)
 
 
 @cli.command()
@@ -741,7 +685,7 @@ def manage(args, env):
         elif env is not None:
             click.echo("starting new {}".format(env))
             os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
-            dockerutil.run_jb(cmd, env=populate_env_with_secrets())
+            dockerutil.run_jb(cmd)
         else:
             echo_warning(
                 "Juicebox not running and no --env given. "
@@ -845,6 +789,7 @@ def search(username, password, env, data_service_log,
 
     if lookback_window > 90:
         print("There is only 90 days of history retained")
+
 
 def activate_hstm():
     os.environ['AWS_PROFILE'] = 'hstm'
