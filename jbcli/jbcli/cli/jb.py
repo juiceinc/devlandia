@@ -503,9 +503,10 @@ def start(ctx, env, noupdate, noupgrade, ssh):
     if env.startswith('hstm-new'):
         activate_hstm()
     cleanup_ssh(env)
+    environ = populate_env_with_secrets()
     if ssh:
-        activate_ssh(env, get_deployment_secrets())
-    dockerutil.up()
+        activate_ssh(env, environ)
+    dockerutil.up(env=environ)
 
 
 def get_environment_interactively():
