@@ -14,7 +14,6 @@ import time
 from multiprocessing import Process
 from subprocess import Popen
 
-import botocore.exceptions
 import click
 import docker.errors
 from PyInquirer import prompt, Separator
@@ -471,8 +470,12 @@ def start(ctx, env, noupdate, noupgrade, ssh):
         echo_warning('Run `jb stop` to stop this instance.')
         return
 
-    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
-    os.chdir(repo_root)
+    if env is None:
+        # If we're already in an environment directory, use it
+        abs_cwd = os.path.abspath('.')
+        if os.path.basename(os.path.dirname(abs_cwd)) == 'environments':
+            env = os.path.basename(abs_cwd)
+    os.chdir(DEVLANDIA_DIR)
     if env is None:
         env = get_environment_interactively()
 
