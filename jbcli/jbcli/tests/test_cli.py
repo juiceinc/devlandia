@@ -1013,57 +1013,6 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = False
-        dockerutil_mock.ensure_home.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli, ['start', '--noupgrade'])
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.pull(tag=None),
-            call.up(env=ANY)
-        ]
-
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupgrade(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = False
-        dockerutil_mock.ensure_home.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli, ['start', '--noupgrade'])
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.pull(tag=None),
-            call.up(env=ANY)
-        ]
-
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupdate(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = False
-        dockerutil_mock.ensure_home.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli, ['start', '--noupdate', '--noupgrade'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.up(env=ANY)
-        ]
-        assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_start_already_running(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-        dockerutil_mock.ensure_home.return_value = True
-        runner = CliRunner()
-        result = runner.invoke(cli, ['start', '--noupgrade'])
-
-        assert 'An instance of Juicebox is already running' in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running()
-        ]
-
-    @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.apps')
     @patch('jbcli.cli.jb.os')
     def test_clone(self, os_mock, apps_mock, dockerutil_mock):
