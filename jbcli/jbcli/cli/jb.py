@@ -382,6 +382,12 @@ def select(tag, env=None, showall=False):
         dockerutil.set_tag(env, tag)
 
 
+def populate_env_with_secrets():
+    env = get_deployment_secrets()
+    env.update(os.environ)
+    return env
+
+
 def cleanup_ssh(env):
     compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
     try:
@@ -689,7 +695,7 @@ def manage(args, env):
         elif env is not None:
             click.echo("starting new {}".format(env))
             os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
-            dockerutil.run_jb(cmd)
+            dockerutil.run_jb(cmd, env=populate_env_with_secrets())
         else:
             echo_warning(
                 "Juicebox not running and no --env given. "
