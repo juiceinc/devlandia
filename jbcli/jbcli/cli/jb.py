@@ -89,7 +89,7 @@ def package(applications, bucket, runtime):
 @click.option('--app', help='The app to upload data to', required=True)
 @click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
 def upload(datafile, app, runtime):
-    """Upload data to a juicebox app 
+    """Upload data to a juicebox app
     """
     if dockerutil.is_running() and dockerutil.ensure_home():
         failed_apps = []
@@ -475,6 +475,7 @@ def start(ctx, env, noupdate, noupgrade, ssh):
         abs_cwd = os.path.abspath('.')
         if os.path.basename(os.path.dirname(abs_cwd)) == 'environments':
             env = os.path.basename(abs_cwd)
+
     os.chdir(DEVLANDIA_DIR)
     if env is None:
         env = get_environment_interactively()
