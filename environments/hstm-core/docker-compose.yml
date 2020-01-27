@@ -1,43 +1,18 @@
-version: '2'
+version: '3.2'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/controlcenter-dev:dev-JB-1196_dockerize"
     command: bash -c "/venv/bin/pip install -U -q -r requirements.txt && /venv/bin/python docker/entrypoint.py"
-    ports:
-      - "${DEVLANDIA_PORT}:8000"
-      - "8888:8888"
-      - "2222:22"
-    depends_on:
-      - "redis"
-      - "postgres"
     volumes:
       - ./hstm-juicebox:/code
       - ../../apps:/code/apps
       - ~/.aws:/root/.aws:ro
       - ~/.config/juicebox:/root/.config/juicebox:ro
     links:
-      - postgres
-      - redis
       - loginproxy
     environment:
-      - ENVIRONMENT=docker
       - DJANGO_SETTINGS_MODULE=fruition.settings.docker
-      - REGION=us-east-1
-      - AWS_DEFAULT_REGION=us-east-1
-      - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
       - AWS_PROFILE=hstm
-      - AWS_SECRET_ACCESS_KEY
-      - AWS_ACCESS_KEY_ID
-      - AWS_SESSION_TOKEN
-      - AWS_SECURITY_TOKEN
-  postgres:
-    environment:
-      - POSTGRES_USER=juicebox
-      - POSTGRES_PASSWORD=juicebox
-      - POSTGRES_DB=juicebox
-    image: "postgres:9.3-alpine"
-  redis:
-    image: "redis:2.8.6"
   loginproxy:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/hstm-loginproxy-devlandia:1.0"
     ports:
