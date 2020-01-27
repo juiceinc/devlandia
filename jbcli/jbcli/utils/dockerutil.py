@@ -72,12 +72,10 @@ def _intersperse(el, l):
 
 
 def docker_compose(args, env=None):
-    compose_files = glob('docker-compose-*.yml')
-    compose_files.insert(0, '../docker-compose.common.yml')
+    compose_files = ['../docker-compose.common.yml', 'docker-compose.yml']
+    compose_files.extend(glob('docker-compose-*.yml'))
     file_args = _intersperse('-f', compose_files)
-    cmd = (
-        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + args
-    )
+    cmd = (['docker-compose'] + file_args + args)
     return check_call(cmd, env=env)
 
 

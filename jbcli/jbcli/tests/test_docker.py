@@ -15,7 +15,8 @@ class TestDocker:
     def test_up(self, check_mock):
         dockerutil.up()
         assert check_mock.mock_calls == [
-            call(['docker-compose', '-f', 'docker-compose.yml',
+            call(['docker-compose',
+                  '-f', '../docker-compose.common.yml', '-f', 'docker-compose.yml',
                   'up'], env=None)
         ]
 
@@ -23,7 +24,8 @@ class TestDocker:
     def test_destroy(self, check_mock):
         dockerutil.destroy()
         assert check_mock.mock_calls == [
-            call(['docker-compose', '-f', 'docker-compose.yml',
+            call(['docker-compose',
+                  '-f', '../docker-compose.common.yml', '-f', 'docker-compose.yml',
                   'down'], env=None)
         ]
 
@@ -31,7 +33,8 @@ class TestDocker:
     def test_halt(self, check_mock):
         dockerutil.halt()
         assert check_mock.mock_calls == [
-            call(['docker-compose', '-f', 'docker-compose.yml',
+            call(['docker-compose',
+                  '-f', '../docker-compose.common.yml', '-f', 'docker-compose.yml',
                   'stop'], env=None)
         ]
 
@@ -47,6 +50,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
+                '-f', '../docker-compose.common.yml',
                 '-f', 'docker-compose.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
