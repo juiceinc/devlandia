@@ -1,14 +1,17 @@
 from __future__ import print_function
 
-from subprocess import CalledProcessError
 from collections import namedtuple
+import os
+from subprocess import CalledProcessError
 
 from click.testing import CliRunner
 from docker.errors import APIError
 from mock import call, patch, ANY
 
-from ..cli.jb import cli
+from ..cli.jb import DEVLANDIA_DIR, cli
 
+
+CORE_DIR = os.path.join(DEVLANDIA_DIR, 'environments/core')
 
 Container = namedtuple('Container', ['name'])
 
@@ -965,8 +968,9 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start(self, dockerutil_mock):
+    def test_start(self, dockerutil_mock, monkeypatch):
         """Starting brings docker-compose up in the environment of the cwd."""
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         result = invoke(['start', '--noupgrade'], catch_exceptions=False)
@@ -978,7 +982,8 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupgrade(self, dockerutil_mock):
+    def test_start_noupgrade(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         result = invoke(['start', '--noupgrade'])
@@ -990,7 +995,8 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupdate(self, dockerutil_mock):
+    def test_start_noupdate(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         result = invoke(['start', '--noupdate', '--noupgrade'])
