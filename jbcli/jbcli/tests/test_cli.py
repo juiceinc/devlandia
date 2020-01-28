@@ -361,7 +361,7 @@ class TestCli(object):
         apiutil_mock.load_app.return_value = False
         apiutil_mock.get_admin_token.return_value = None
 
-        result = runner.invoke(cli, ['add', 'cookies', '--runtime', 'venv3'])
+        result = invoke(['add', 'cookies', '--runtime', 'venv3'])
 
         assert 'App cookies already exists.' in result.output
         assert result.exit_code == 0
@@ -1253,7 +1253,7 @@ class TestCli(object):
         os_mock.environ.return_value = False
         os_mock.path.join.return_value = ''
         os_mock.getcwd.return_value = ''
-        os_mock.path.exists.return_value = False
+        os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
 
         result = invoke(['yo_upgrade'])
