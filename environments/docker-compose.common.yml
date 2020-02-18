@@ -26,6 +26,7 @@ services:
       - JB_INSECURE_COOKIES=yes
 
       - JB_DEVLANDIA=on
+      - JB_UPLOAD_WITH_DJANGO=on
       - JB_LOGS_STDOUT=off
       - JB_DEBUG_LOGGING=on
       - JB_APPADMIN_SERVICE=https://manage-dev.juiceboxdata.com
