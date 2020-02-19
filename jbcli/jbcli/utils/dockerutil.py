@@ -72,17 +72,23 @@ def _intersperse(el, l):
 
 
 def docker_compose(args, env=None):
-    file_args = _intersperse('-f', glob('docker-compose-*.yml'))
-    cmd = (
-        ['docker-compose', '-f', 'docker-compose.yml'] + file_args + args
-    )
-    return check_call(cmd, env=env)
+    # Since our docker-compose.common.yml file is the first one we pass, and it is not inside
+    # the environment directories, we need to pass `--project-name` and `--project-directory`.
+    compose_files = ['../docker-compose.common.yml', 'docker-compose.yml']
+    compose_files.extend(glob('docker-compose-*.yml'))
+    file_args = _intersperse('-f', compose_files)
+    env_name = os.path.basename(os.path.abspath('.'))
+    cmd = [
+        'docker-compose', '--project-directory', '.',
+        '--project-name', env_name
+    ]
+    return check_call(cmd + file_args + args, env=env)
 
 
 def up(env=None):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml """
-    docker_compose(['up'], env=env)
+    docker_compose(['up', '--abort-on-container-exit'], env=env)
 
 
 def run_jb(cmd, env=None):

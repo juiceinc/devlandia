@@ -445,7 +445,7 @@ def activate_ssh(env, environ):
     compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
     host_addr = get_host_ip()
     content = {
-        'version': '2',
+        'version': '3.2',
         'services': {
             'juicebox': {
                 'extra_hosts': [
@@ -495,6 +495,7 @@ def start(ctx, env, noupdate, noupgrade, ssh):
 
     stash.put('current_env', env)
     os.chdir("./environments/{}".format(env))
+    environ = populate_env_with_secrets()
     if env.startswith('hstm-') and not env.startswith('hstm-new'):
         activate_hstm()
 
@@ -503,7 +504,6 @@ def start(ctx, env, noupdate, noupgrade, ssh):
     if env.startswith('hstm-new'):
         activate_hstm()
     cleanup_ssh(env)
-    environ = populate_env_with_secrets()
     if ssh:
         activate_ssh(env, environ)
     dockerutil.up(env=environ)
