@@ -583,14 +583,13 @@ def stop(ctx, clean, env):
     os.chdir("./environments/{}".format(env))
     dockerutil.ensure_home()
 
-    if not dockerutil.is_running():
-        echo_highlight('Juicebox is not running')
-    else:
-        if clean:
-            dockerutil.destroy()
-        else:
-            dockerutil.halt()
+    if clean:
+        dockerutil.destroy()
+    elif dockerutil.is_running():
+        dockerutil.halt()
         echo_highlight('Juicebox is no longer running.')
+    else:
+        echo_highlight('Juicebox is not running')
 
 
 @cli.command()
