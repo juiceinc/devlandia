@@ -955,7 +955,8 @@ class TestCli(object):
         assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_stop(self, dockerutil_mock):
+    def test_stop(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.halt.return_value = None
