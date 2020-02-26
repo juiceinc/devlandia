@@ -969,6 +969,20 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
+    def test_stop_clean(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
+        dockerutil_mock.is_running.return_value = True
+        dockerutil_mock.ensure_home.return_value = True
+        dockerutil_mock.destroy.return_value = None
+        result = invoke(['stop', '--clean'])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.ensure_home(),
+            call.is_running(),
+            call.destroy()
+        ]
+
+    @patch('jbcli.cli.jb.dockerutil')
     def test_start(self, dockerutil_mock, monkeypatch):
         """Starting brings docker-compose up in the environment of the cwd."""
         monkeypatch.chdir(CORE_DIR)
