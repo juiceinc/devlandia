@@ -476,19 +476,7 @@ def start(ctx, env, noupdate, noupgrade, ssh):
         echo_warning('Run `jb stop` to stop this instance.')
         return
 
-    if env is None:
-        # If we're already in an environment directory, use it
-        abs_cwd = os.path.abspath('.')
-        if os.path.basename(os.path.dirname(abs_cwd)) == 'environments':
-            env = os.path.basename(abs_cwd)
-
-    os.chdir(DEVLANDIA_DIR)
-    if env is None:
-        env = get_environment_interactively()
-
-    if not env:
-        echo_highlight('No environment selected.')
-        return
+    env = get_environment_interactively(env)
 
     if not noupgrade:
         ctx.invoke(upgrade)
@@ -509,7 +497,17 @@ def start(ctx, env, noupdate, noupgrade, ssh):
     dockerutil.up(env=environ)
 
 
-def get_environment_interactively():
+def get_environment_interactively(env):
+    if env is None:
+        # If we're already in an environment directory, use it
+        abs_cwd = os.path.abspath('.')
+        if os.path.basename(os.path.dirname(abs_cwd)) == 'environments':
+            env = os.path.basename(abs_cwd)
+
+    os.chdir(DEVLANDIA_DIR)
+    if env:
+        return env
+
     click.echo("Welcome to devlandia!")
     click.echo('Gathering data on available environments...\n')
     # get a list of all the current images
@@ -559,27 +557,39 @@ def get_environment_interactively():
         {
             'type': 'list',
             'name': 'env',
-            'message': 'what environment would you like to start?',
+            'message': 'what environment would you like to use?',
             'choices': env_choices
         }
     ]
 
-    response = prompt(questions)
-    return response.get('env', None)
+    env = prompt(questions).get('env')
+
+    if not env:
+        echo_highlight('No environment selected.')
+        click.get_current_context().abort()
+
+    return env
 
 
 @cli.command()
+@click.option('--clean', default=False, help='clean up docker containers (using docker-compose down)',
+              is_flag=True)
+@click.option('--env', help='Which environment to use')
 @click.pass_context
-def stop(ctx):
+def stop(ctx, clean, env):
     """Stop a running juicebox in this environment
     """
+    env = get_environment_interactively(env)
+    os.chdir("./environments/{}".format(env))
     dockerutil.ensure_home()
 
-    if not dockerutil.is_running():
-        echo_highlight('Juicebox is not running')
-    else:
+    if clean:
+        dockerutil.destroy()
+    elif dockerutil.is_running():
         dockerutil.halt()
         echo_highlight('Juicebox is no longer running.')
+    else:
+        echo_highlight('Juicebox is not running')
 
 
 @cli.command()

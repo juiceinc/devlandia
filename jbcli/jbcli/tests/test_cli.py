@@ -955,7 +955,8 @@ class TestCli(object):
         assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_stop(self, dockerutil_mock):
+    def test_stop(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.halt.return_value = None
@@ -965,6 +966,19 @@ class TestCli(object):
             call.ensure_home(),
             call.is_running(),
             call.halt()
+        ]
+
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_stop_clean(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
+        dockerutil_mock.is_running.return_value = True
+        dockerutil_mock.ensure_home.return_value = True
+        dockerutil_mock.destroy.return_value = None
+        result = invoke(['stop', '--clean'])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.ensure_home(),
+            call.destroy()
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
