@@ -978,7 +978,6 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.ensure_home(),
-            call.is_running(),
             call.destroy()
         ]
 
