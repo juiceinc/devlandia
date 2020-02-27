@@ -691,15 +691,30 @@ def pull(tag=None):
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 @click.option('--env', help='Which environment to use')
 def manage(args, env):
-    """Allows you to run arbitrary management commands."""
+    """Run an arbitrary manage.py command in the JB container"""
     cmd = ['/venv/bin/python', 'manage.py'] + list(args)
+    return _run(cmd, env)
+
+
+@cli.command(context_settings=dict(
+    ignore_unknown_options=True,
+))
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
+@click.option('--env', help='Which environment to use')
+def run(args, env):
+    """Run an arbitrary command in the JB container"""
+    return _run(args, env)
+
+
+def _run(args, env):
+    cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
 
     container = dockerutil.is_running()
     try:
         if container and (env is None or container.name.startswith(env)):
-            click.echo("running manage in {}".format(container.name))
+            click.echo("running command in {}".format(container.name))
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
             subprocess.check_call(['docker', 'exec', '-it', container.name] + cmd)
@@ -713,7 +728,7 @@ def manage(args, env):
                 "Please pass --env, or start juicebox in the background first.")
             click.get_current_context().abort()
     except subprocess.CalledProcessError as e:
-        echo_warning("manage.py exited with {}".format(e.returncode))
+        echo_warning("command exited with {}".format(e.returncode))
         click.get_current_context().abort()
 
 
