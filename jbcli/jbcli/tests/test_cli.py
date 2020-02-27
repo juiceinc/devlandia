@@ -1416,18 +1416,18 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.subprocess')
-    def test_jb_manage_running_no_env(self, subprocess_mock, dockerutil_mock):
+    def test_jb_run_running_no_env(self, subprocess_mock, dockerutil_mock):
         """When a container is running and no --env is given,
         we run the command in the existing container.
         """
         dockerutil_mock.is_running.return_value = Container(name='stable_juicebox_1')
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
-        result = invoke(['manage', 'test',  '--failfast', '--keepdb'])
+        result = invoke(['run', 'foo', 'bar'])
         assert subprocess_mock.mock_calls == [
             call.check_call([
-                'docker', 'exec', '-it', 'stable_juicebox_1',
-                '/venv/bin/python', 'manage.py', 'test', '--failfast', '--keepdb'])
+                'docker', 'exec', '-it', 'stable_juicebox_1', 'foo', 'bar'
+            ])
         ]
         assert result.exit_code == 0
 
