@@ -14,7 +14,7 @@ phases:
       - flake8 --output-file=flake8_errors.txt --exit-zero jbcli
       - mv ./flake8_errors.txt /tmp/artifacts
       - cd jbcli
-      - pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli -vvv
+      - pytest --junit-xml=`pwd`/junit.xml --cov-branch --cov-report=xml:`pwd`/coverage.xml --cov=jbcli/cli -vvv
       - junit2html junit.xml || true
       - mv junit.xml.html coverage.xml /tmp/artifacts/
   build:
