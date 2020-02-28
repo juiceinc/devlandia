@@ -35,7 +35,7 @@ class TestStash:
         os_mock.path.dirname.return_value = 'foo'
         os_mock.path.abspath.return_value = 'moo'
 
-        with patch('__builtin__.open', mock_open(read_data='hi = "there"')) as m:            
+        with patch('six.moves.builtins.open', mock_open(read_data='hi = "there"')) as m:            
             s = Stash()
             assert s.data == {'hi': 'there'}
 

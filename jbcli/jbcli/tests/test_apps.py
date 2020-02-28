@@ -222,7 +222,7 @@ class TestApps:
     @patch('jbcli.utils.apps.tempfile')
     @patch('jbcli.utils.apps.shutil.move')
     @patch('jbcli.utils.apps.os')
-    @patch('__builtin__.open')
+    @patch('six.moves.builtins.open')
     def test_replace_in_yaml(self, open_mock, os_mock, sh_mock, temp_mock):
         replacements = {'slug:': 'cookies', 'label:': 'cookies',
                         'id:': 'aedc2134'}
