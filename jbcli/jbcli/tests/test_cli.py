@@ -7,6 +7,7 @@ from subprocess import CalledProcessError
 from click.testing import CliRunner
 from docker.errors import APIError
 from mock import call, patch, ANY
+import six
 
 from ..cli.jb import DEVLANDIA_DIR, cli
 
@@ -315,7 +316,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.ensure_home(),
-            call.ensure_home().__nonzero__(),
+            call.ensure_home().__bool__() if six.PY3 else call.ensure_home().__nonzero__(),
             call.run('/venv/bin/python manage.py upload --app=foo cookies.csv')
         ]
 
@@ -332,7 +333,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.ensure_home(),
-            call.ensure_home().__nonzero__(),
+            call.ensure_home().__bool__() if six.PY3 else call.ensure_home().__nonzero__(),
             call.run('/venv3/bin/python manage.py upload --app=foo cookies.csv')
         ]
 
@@ -759,7 +760,7 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_running(self, dockerutil_mock):
+    def test_remove_not_running_venv3(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes', '--runtime', 'venv3'])
@@ -987,7 +988,7 @@ class TestCli(object):
         monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupgrade'], catch_exceptions=False)
+        result = invoke(['start', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -1275,13 +1276,13 @@ class TestCli(object):
         os_mock.getcwd.return_value = ''
         os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
+        proc_mock.check_call.return_value = 'foo'
 
         result = invoke(['yo_upgrade'])
 
         # TODO: Improve these tests
         assert proc_mock.mock_calls == [
             call.check_call(['npm', 'install', '--package-lock=false', 'generator-juicebox']),
-            call.check_call().__unicode__()
         ]
         # assert result.exit_code == 0
 
