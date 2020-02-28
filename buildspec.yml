@@ -1,0 +1,29 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      python: 3.7
+  pre_build:
+    commands:
+      - export NORMAL_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed 's/branch\///' | sed 's/pr\///')
+      - pip install -qq -U pip wheel
+      - pip install -r requirements.txt
+      - pip install -r jbcli/requirements-dev.txt
+      - pip install junit2html
+      - mkdir /tmp/artifacts
+      - flake8 --output-file=flake8_errors.txt --exit-zero jbcli
+      - mv ./flake8_errors.txt /tmp/artifacts
+      - cd jbcli
+      - pytest --junit-xml=junit.xml --cov-branch --cov-report=xml --cov=jbcli/cli -vvv
+      - junit2html junit.xml || true
+      - mv junit.xml.html coverage.xml /tmp/artifacts/
+  build:
+    commands:
+      - make docs
+      - |
+        if [ "$NORMAL_BRANCH" = "master" ]; then
+            aws s3 sync docs/_build/html s3://internal.juiceboxdata.com/projects/jbcli --acl bucket-owner-full-control --delete
+        fi
+artifacts:
+  files:
+    - /tmp/artifacts/* 
