@@ -401,7 +401,7 @@ def get_host_ip():
     # On linux, `host.docker.internal` doesn't work,
     # but we have a nice way to find the address w/ the docker0 interface.
     try:
-        ifname = 'docker0'
+        ifname = b'docker0'
         SIOCGIFADDR = 0x8915
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         interface = struct.pack('256s', ifname[:15])
@@ -414,7 +414,7 @@ def get_host_ip():
         # returns output like:
         #   192.168.1.1    host.docker.internal
         #   192.168.1.2    host.docker.internal
-        return out.splitlines()[0].split()[0]
+        return out.splitlines()[0].split()[0].decode('ascii')
 
 
 def activate_ssh(env, environ):
