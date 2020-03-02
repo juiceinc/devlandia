@@ -22,9 +22,8 @@ def get_all_from_path(path):
     except Exception as e:
         print("[WARNING] couldn't fetch parameters under path", path, e)
         return {}
-    # These ENCODE calls probably need to change for python 3 support
     return {
-        param['Name'].rsplit('/', 1)[-1].encode('ascii'): param['Value'].encode('ascii')
+        param['Name'].rsplit('/', 1)[-1]: param['Value']
         for param in result['Parameters']
     }
 
