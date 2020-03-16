@@ -1336,8 +1336,7 @@ class TestCli(object):
 
         result = invoke(['clear_cache'])
         assert dockerutil_mock.mock_calls == [call.is_running(),
-                                              call.run('/venv/bin/python manage.py clear_cache '
-                                                       '--settings=fruition.settings.docker')]
+                                              call.run('/venv/bin/python manage.py clear_cache')]
 
         assert result.exit_code == 0
 
@@ -1358,8 +1357,7 @@ class TestCli(object):
         result = invoke(['clear_cache', '--runtime', 'venv3'])
         assert dockerutil_mock.mock_calls == [call.is_running(),
                                               call.run(
-                                                  '/venv3/bin/python manage.py clear_cache '
-                                                  '--settings=fruition.settings.docker')]
+                                                  '/venv3/bin/python manage.py clear_cache')]
 
         assert result.exit_code == 0
 
@@ -1389,7 +1387,7 @@ class TestCli(object):
         result = invoke(['clear_cache'])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.run('/venv/bin/python manage.py clear_cache --settings=fruition.settings.docker')
+            call.run('/venv/bin/python manage.py clear_cache')
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
@@ -1406,7 +1404,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.run(
-                '/venv3/bin/python manage.py clear_cache --settings=fruition.settings.docker')
+                '/venv3/bin/python manage.py clear_cache')
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),

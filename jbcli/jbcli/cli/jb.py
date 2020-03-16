@@ -668,7 +668,7 @@ def clear_cache(runtime):
     try:
         if dockerutil.is_running():
             dockerutil.run(
-                '/{}/bin/python manage.py clear_cache --settings=fruition.settings.docker'.format(runtime))
+                '/{}/bin/python manage.py clear_cache'.format(runtime))
         else:
             echo_warning('Juicebox not running.  Run jb start')
             click.get_current_context().abort()
