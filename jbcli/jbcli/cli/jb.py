@@ -121,7 +121,7 @@ def add(applications, add_desktop, runtime):
             failed_apps = []
 
             for app in applications:
-                app_dir = 'apps/{}'.format(app)
+                app_dir = os.path.join(DEVLANDIA_DIR, 'apps', app)
                 if os.path.isdir(app_dir):
                     # App already exists, update it.
                     echo_highlight('App {} already exists.'.format(app))
