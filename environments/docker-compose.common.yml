@@ -16,6 +16,7 @@ services:
       - DJANGO_SETTINGS_MODULE=fruition.settings.contained
       - REGION=us-east-1
       - AWS_DEFAULT_REGION=us-east-1
+      - FONTAWESOME_NPM_AUTH_TOKEN
 
       - JB_DB_NAME=juicebox
       - JB_DB_USERNAME=juicebox
