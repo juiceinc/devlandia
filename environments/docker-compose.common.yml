@@ -4,6 +4,7 @@ services:
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
+      - "9001:9001"
       - "2222:22"
     depends_on:
       - "redis"
