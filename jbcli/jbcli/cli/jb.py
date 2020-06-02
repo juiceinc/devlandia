@@ -703,7 +703,7 @@ def manage(args, env):
 ))
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 @click.option('--env', help='Which environment to use')
-@click.option('--service', help='Which service to run the command in')
+@click.option('--service', help='Which service to run the command in', default='juicebox')
 def run(args, env, service):
     """Run an arbitrary command in the JB container"""
     return _run(args, env, service)
