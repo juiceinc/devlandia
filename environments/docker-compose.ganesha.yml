@@ -1,0 +1,20 @@
+# This is a "mixin" file that enables a local ganesha server
+# Whatever environment you apply this to has to have a symlink to a local ganesha checkout
+version: '3.2'
+services:
+  juicebox:
+    environment:
+      - JB_GANESHA_API=http://ganesha:3000
+      - JB_GANESHA_SIGNING_KEY=whatever
+      - JB_APPADMIN_SERVICE=http://localhost:3000
+  ganesha:
+    image: "976661725066.dkr.ecr.us-east-1.amazonaws.com/ganesha-dev:latest"
+    command: "npm run start:dev"
+    volumes:
+      - ./ganesha:/ganesha
+    ports:
+      - "5050:5050"
+      - "3000:3000"
+    environment:
+      - ENVIRONMENT=local
+      - JB_GANESHA_SIGNING_KEY_DOCKER=whatever
