@@ -738,13 +738,14 @@ def _run(args, env, service='juicebox'):
 @cli.command()
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to run docker-compose for")
-def dc(args, env):
+@click.option("--ganesha", default=False, is_flag=True, help="Enable ganesha")
+def dc(args, env, ganesha):
     """Run docker-compose in a particular environment"""
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
     os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
-    dockerutil.docker_compose(cmd)
+    dockerutil.docker_compose(cmd, ganesha=ganesha)
 
 
 @cli.command()
