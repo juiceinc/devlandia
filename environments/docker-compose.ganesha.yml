@@ -17,4 +17,4 @@ services:
       - "3000:3000"
     environment:
       - ENVIRONMENT=local
-      - JB_GANESHA_SIGNING_KEY_DOCKER=whatever
+      - JB_GANESHA_SIGNING_KEY=whatever
