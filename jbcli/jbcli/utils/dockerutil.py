@@ -71,11 +71,13 @@ def _intersperse(el, l):
     return [y for x in zip([el]*len(l), l) for y in x]
 
 
-def docker_compose(args, env=None):
+def docker_compose(args, env=None, ganesha=False):
     # Since our docker-compose.common.yml file is the first one we pass, and it is not inside
     # the environment directories, we need to pass `--project-name` and `--project-directory`.
     compose_files = ['../docker-compose.common.yml', 'docker-compose.yml']
     compose_files.extend(glob('docker-compose-*.yml'))
+    if ganesha:
+        compose_files.append('../docker-compose.ganesha.yml')
     file_args = _intersperse('-f', compose_files)
     env_name = os.path.basename(os.path.abspath('.'))
     cmd = [
@@ -85,14 +87,14 @@ def docker_compose(args, env=None):
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None):
+def up(env=None, ganesha=False):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml """
-    docker_compose(['up', '--abort-on-container-exit'], env=env)
+    docker_compose(['up', '--abort-on-container-exit'], env=env, ganesha=ganesha)
 
 
-def run_jb(cmd, env=None):
-    docker_compose(['run', 'juicebox'] + cmd, env=env)
+def run_jb(cmd, env=None, service='juicebox'):
+    docker_compose(['run', service] + cmd, env=env)
 
 
 def destroy():
@@ -105,7 +107,7 @@ def halt():
     docker_compose(['stop'])
 
 
-def is_running():
+def is_running(service='juicebox'):
     """Checks whether or not a Juicebox container is currently running.
 
     :rtype: ``bool``
@@ -113,7 +115,7 @@ def is_running():
     click.echo('Checking to see if Juicebox is running...')
     containers = client.containers.list()
     for container in containers:
-        if 'juicebox' in container.name:
+        if service in container.name:
             return container
 
 

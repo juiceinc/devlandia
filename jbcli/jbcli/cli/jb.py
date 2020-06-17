@@ -468,8 +468,10 @@ def activate_ssh(env, environ):
               is_flag=True)
 @click.option('--ssh', default=False, is_flag=True,
               help='run an SSH tunnel for redshift')
+@click.option("--ganesha", default=False, is_flag=True,
+              help="Enable ganesha")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
     """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
@@ -494,7 +496,7 @@ def start(ctx, env, noupdate, noupgrade, ssh):
     cleanup_ssh(env)
     if ssh:
         activate_ssh(env, environ)
-    dockerutil.up(env=environ)
+    dockerutil.up(env=environ, ganesha=ganesha)
 
 
 def get_environment_interactively(env):
@@ -701,17 +703,18 @@ def manage(args, env):
 ))
 @click.argument('args', nargs=-1, type=click.UNPROCESSED)
 @click.option('--env', help='Which environment to use')
-def run(args, env):
+@click.option('--service', help='Which service to run the command in', default='juicebox')
+def run(args, env, service):
     """Run an arbitrary command in the JB container"""
-    return _run(args, env)
+    return _run(args, env, service)
 
 
-def _run(args, env):
+def _run(args, env, service='juicebox'):
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
 
-    container = dockerutil.is_running()
+    container = dockerutil.is_running(service=service)
     try:
         if container and (env is None or container.name.startswith(env)):
             click.echo("running command in {}".format(container.name))
@@ -721,7 +724,7 @@ def _run(args, env):
         elif env is not None:
             click.echo("starting new {}".format(env))
             os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
-            dockerutil.run_jb(cmd, env=populate_env_with_secrets())
+            dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
         else:
             echo_warning(
                 "Juicebox not running and no --env given. "
@@ -730,6 +733,19 @@ def _run(args, env):
     except subprocess.CalledProcessError as e:
         echo_warning("command exited with {}".format(e.returncode))
         click.get_current_context().abort()
+
+
+@cli.command()
+@click.argument('args', nargs=-1, type=click.UNPROCESSED)
+@click.option("--env", help="Which environment to run docker-compose for")
+@click.option("--ganesha", default=False, is_flag=True, help="Enable ganesha")
+def dc(args, env, ganesha):
+    """Run docker-compose in a particular environment"""
+    cmd = list(args)
+    if env is None:
+        env = dockerutil.check_home()
+    os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+    dockerutil.docker_compose(cmd, ganesha=ganesha)
 
 
 @cli.command()

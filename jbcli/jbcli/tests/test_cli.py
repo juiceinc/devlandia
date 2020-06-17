@@ -993,7 +993,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag=None),
-            call.up(env=ANY)
+            call.up(env=ANY, ganesha=False)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -1006,7 +1006,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag=None),
-            call.up(env=ANY)
+            call.up(env=ANY, ganesha=False)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -1017,7 +1017,7 @@ class TestCli(object):
         result = invoke(['start', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.up(env=ANY)
+            call.up(env=ANY, ganesha=False)
         ]
         assert result.exit_code == 0
 
@@ -1468,7 +1468,7 @@ class TestCli(object):
 
         result = invoke(['manage', '--env', 'stable', 'test'])
         assert dockerutil_mock.run_jb.mock_calls == [
-            call(['/venv/bin/python', 'manage.py', 'test'], env=ANY)
+            call(['/venv/bin/python', 'manage.py', 'test'], env=ANY, service='juicebox')
         ]
         name, args, kwargs = dockerutil_mock.run_jb.mock_calls[0]
         assert kwargs['env']['test_secret'] == 'true'
