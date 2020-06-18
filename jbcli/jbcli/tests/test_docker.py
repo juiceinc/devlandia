@@ -145,7 +145,7 @@ class TestDocker:
         def check_output(args):
             assert args == [
                 'aws', 'ecr', 'get-login',
-                '--registry-ids', '423681189101', '112459596016',
+                '--registry-ids', '423681189101', '976661725066',
                 '--no-include-email']
             return b"do a thing!"
 
