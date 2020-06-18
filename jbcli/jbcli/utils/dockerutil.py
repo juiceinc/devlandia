@@ -224,10 +224,13 @@ def pull(tag):
         abs_path = os.path.abspath(os.getcwd())
         os.chdir('../..')
         docker_login = check_output([
-            'aws', 'ecr', 'get-login', '--registry-ids', '423681189101',
+            'aws', 'ecr', 'get-login',
+            '--registry-ids', '423681189101', '112459596016',
             '--no-include-email'])
-        docker_login = docker_login.split()
-        check_call(docker_login)
+        docker_logins = docker_login.split(b'\n')
+        for docker_login in docker_logins:
+            if docker_login:
+                check_call(docker_login.split())
         check_call(['docker', 'pull', full_path])
         os.chdir(abs_path)
 
