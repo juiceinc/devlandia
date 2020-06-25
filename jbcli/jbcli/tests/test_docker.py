@@ -144,22 +144,23 @@ class TestDocker:
 
         def check_output(args):
             assert args == [
-                'aws', 'ecr', 'get-login', '--registry-ids', '423681189101',
+                'aws', 'ecr', 'get-login',
+                '--registry-ids', '423681189101', '976661725066',
                 '--no-include-email']
-            return "do a thing!"
+            return b"do a thing!"
 
         check_output_mock.side_effect = check_output
 
         dockerutil.pull('latest')
 
         assert check_mock.mock_calls == [
-            call(["do", "a", "thing!"]),
+            call([b"do", b"a", b"thing!"]),
             call(['docker', 'pull',
                   '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:latest'])
         ]
 
     @patch('jbcli.utils.dockerutil.check_output')
-    def test_image_list(self, check_mock):        
+    def test_image_list(self, check_mock):
         def _make_image_details(tag, td):
                 dt = datetime.now() - td
                 ts = time.mktime(dt.timetuple())
