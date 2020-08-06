@@ -15,6 +15,7 @@ services:
     ports:
       - "5050:5050"
       - "3000:3000"
+      - "6006:6006"
     environment:
       - ENVIRONMENT=local
       - JB_GANESHA_SIGNING_KEY=whatever
