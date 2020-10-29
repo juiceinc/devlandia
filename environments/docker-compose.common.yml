@@ -50,6 +50,8 @@ services:
       - JB_LAERDAL_CONNECTION
       - JB_PREVERITY_REDSHIFT_CONNECTION
       - JB_REDSHIFT_CONNECTION
+      - JB_HSTM
+      - AWS_PROFILE
   postgres:
     environment:
       - POSTGRES_USER=juicebox
