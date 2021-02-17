@@ -9,8 +9,6 @@ requirements = [
     'watchdog',
     'tabulate',
     'certifi',
-    'elasticsearch',
-    'elasticsearch-dsl',
     'tablib',
 ]
 

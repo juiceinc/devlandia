@@ -347,43 +347,6 @@ Example::
     $ jb stop
 
 
-search
-------
-
-This command will search juicebox elasticsearch logs. To use this you will need
-a username and password to either the core juicebox elasticsearch logging cluster
-or to a client juicebox logging cluster.
-
-To use, set the following environment variables:
-
-* LP_USERNAME (for legacy-staging, legacy-prod, staging, prod)
-* LP_PASSWORD
-* HSL_USERNAME (for hstm-qa and hstm-prod)
-* HSL_PASSWORD
-
-Options
-~~~~~~~
-
-.. csv-table::
-   :header: "Option", "Description"
-   :widths: 15, 30
-
-   "--username","Elasticsearch username if environment variables are not set"
-   "--password","Elasticsearch password if environment variables are not set"
-   "--env","Which environment to target"
-   "--data_service_log","Log type, one of performance, params, recipe"
-   "--env","Which environment to target"
-   "--lookback_window","Number of days to look at, only 90 days of history are retained"
-   "--limit","Number of records to return"
-   "--service_pattern","A regular expression that the service must match"
-   "--user_pattern","A regular expression that the user must match"
-   "--output","A filename to write the output to, if empty, will write to screen"
-
-Example::
-
-    $ jb search
-    [fill out the prompts]
-
 Built-in Help
 =============
 
