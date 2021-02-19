@@ -1,3 +1,4 @@
 awscli~=1.11.113
+-r jbcli/requirements.txt
 -r jbcli/requirements-win32.txt
 -e ./jbcli
