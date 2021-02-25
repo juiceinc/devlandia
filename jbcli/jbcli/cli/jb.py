@@ -41,14 +41,6 @@ def cli():
     """
     pass
 
-
-@click.argument('args', nargs=-1, type=click.UNPROCESSED)
-@cli.command()
-def create(*args, **kwargs):
-    """ Replaced by yo juicebox
-    """
-    echo_warning('yo juicebox will take care of all your needs now.')
-
 @cli.command()
 @click.argument('applications', nargs=-1, required=True)
 @click.option('--add-desktop/--no-add-desktop', default=False,
