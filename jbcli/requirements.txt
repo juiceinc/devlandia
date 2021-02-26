@@ -8,9 +8,9 @@ argh==0.26.2
     # via watchdog
 backports.csv==1.0.7
     # via tablib
-boto3==1.9.212
+boto3==1.17.17
     # via -r requirements.in
-botocore==1.12.212
+botocore==1.20.17
     # via
     #   -r requirements.in
     #   boto3
@@ -37,8 +37,6 @@ dockerpty==0.4.1
     # via docker-compose
 docopt==0.6.2
     # via docker-compose
-docutils==0.15.2
-    # via botocore
 et-xmlfile==1.0.1
     # via openpyxl
 humanize==0.5.1
@@ -76,7 +74,7 @@ requests==2.11.1
     # via
     #   docker
     #   docker-compose
-s3transfer==0.2.1
+s3transfer==0.3.4
     # via boto3
 six==1.14.0
     # via
@@ -96,7 +94,7 @@ texttable==0.8.8
     # via docker-compose
 toml==0.10.0
     # via -r requirements.in
-urllib3==1.24.3
+urllib3==1.26.3
     # via botocore
 watchdog==0.8.3
     # via -r requirements.in
