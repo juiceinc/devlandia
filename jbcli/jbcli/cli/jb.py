@@ -32,8 +32,10 @@ MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
 JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, 'jbcli'))
 
+def normalize(name):
+    return name.replace("_","-")
 
-@click.group()
+@click.group(context_settings={"token_normalize_func": normalize})
 @click.version_option()
 def cli():
     """
@@ -664,3 +666,4 @@ def dc(args, env, ganesha):
 
 def activate_hstm():
     os.environ['AWS_PROFILE'] = 'hstm'
+

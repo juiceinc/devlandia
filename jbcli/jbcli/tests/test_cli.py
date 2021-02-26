@@ -32,7 +32,7 @@ class TestCli(object):
     def test_bad_command(self):
         result = invoke(['cookies'])
         assert result.exit_code == 2
-        assert 'No such command "cookies"' in result.output
+        assert "No such command 'cookies'" in result.output
 
     @patch('jbcli.cli.jb.jbapiutil')
     @patch('jbcli.cli.jb.dockerutil')
