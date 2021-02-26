@@ -22,7 +22,6 @@ import yaml
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
-from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
 from ..utils.storageutil import stash
