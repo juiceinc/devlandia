@@ -8,7 +8,7 @@ watcher.
 Installing
 ----------
 
-The Juicebox CLI can be installed by installing devlandia's requirements.txt.
+The Juicebox CLI can be installed by installing devlandia's requirements.txt. Python 3.7 is recommended.
 
     $ pip install -r requirements.txt
 
