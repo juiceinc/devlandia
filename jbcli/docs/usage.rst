@@ -15,78 +15,6 @@ These include day-to-day actions like creating a new apps, adding existing
 apps, packaging apps for deployment, and removing apps from your local
 Juicebox environment.
 
-create
-------
-
-The create command is used to create a new Juicebox application from a
-template. The only required parameter is the name of the application. This
-will create a repo using our default template.
-
-This will create the initial application from our default template, initialize
-it as a Git repo, connect it to a remote Github repo, and push the initial
-commit.
-
-Often you'll want to follow this command with the ``add`` command.
-
-Options
-~~~~~~~
-
-.. csv-table::
-   :header: "Option", "Description"
-   :widths: 15, 30
-
-   "--dest","The directory in which to create the application."
-   "--template","The template to use. An alternative template is jbclwd."
-   "--template-branch", "A specific branch to use."
-   "--no-init", "Skip creating a local git repo and remote setup."
-   "--no-track", "Skip pointing and pushing to a remote Github repo."
-   "--no-checkrepo","Skip asking if the remote repo has already been created using oplord."
-
-
-Example::
-
-    $ jb create cookies
-    Have you created the repo by running the following in Slack?
-
-    /opslord create_imp_repo cookies
-
-    Type Yes or No: yes
-    ...
-    app_id [d6e492a2]:
-    app_slug [cookies]:
-    juicebox [cookies]:
-    project_name [cookies]:
-    version [0.1.0]:
-
-    ----------------------------------------
-
-    Juicebox app cookies has been created at apps/cookies.
-
-An example of creating a jbclwd app::
-
-    $ jb create jbclwd_cookies --template=jbclwd --template-branch=cookiecutter
-    Have you created the repo by running the following in Slack?
-
-    /opslord create_imp_repo jbclwd_cookies
-
-    Type Yes or No: yes
-    Creating Juicebox app jbclwd_cookies in apps/
-    You've cloned /Users/chrisgemignani/.cookiecutters/jbclwd before. Is it okay to delete and re-clone it? [yes]: yes
-    ...
-    Switched to a new branch 'cookiecutter'
-    name [Foo]:
-    description [JBCLWD starter kit]:
-    app_id [ddaa891b]:
-    app_slug [jbclwd_cookies]:
-    stack_label [Report]:
-    app_header_title [What is getting built in Nashville?]:
-    app_sub_title [Approved building permits for a city can uncover many things about how and where communities are changing.]:
-    primary_color [###### Hex color]: ff6600
-    accent_color [###### Hex color]: 009944
-
-    ----------------------------------------
-
-    Juicebox app jbclwd_cookies has been created at apps/jbclwd_cookies.
 
 add
 ---
@@ -164,27 +92,6 @@ Example::
     $ jb remove sugar_cookies --yes
 
 
-package
-------
-
-The package command packages an application from Juicebox for deployment and
-allows you to optionally specify a destination S3 bucket. The command can take
-one or more application names separated by spaces.
-
-Options
-~~~~~~~
-
-.. csv-table::
-   :header: "Option", "Description"
-   :widths: 15, 30
-
-   "--bucket","Specify destination S3 bucket."
-
-
-Example::
-
-    $ jb package sugar_cookies --bucket=jb_uploads_dev
-
 
 clear_cache
 -----------
@@ -209,15 +116,6 @@ Example::
 
     $ jb pull stable
 
-
-test_app
---------
-
-The test_app command allows you to run Gabbi tests of your app in the container.
-
-Example::
-
-    $ jb test_app blueprint
 
 
 manage
@@ -347,42 +245,6 @@ Example::
     $ jb stop
 
 
-search
-------
-
-This command will search juicebox elasticsearch logs. To use this you will need
-a username and password to either the core juicebox elasticsearch logging cluster
-or to a client juicebox logging cluster.
-
-To use, set the following environment variables:
-
-* LP_USERNAME (for legacy-staging, legacy-prod, staging, prod)
-* LP_PASSWORD
-* HSL_USERNAME (for hstm-qa and hstm-prod)
-* HSL_PASSWORD
-
-Options
-~~~~~~~
-
-.. csv-table::
-   :header: "Option", "Description"
-   :widths: 15, 30
-
-   "--username","Elasticsearch username if environment variables are not set"
-   "--password","Elasticsearch password if environment variables are not set"
-   "--env","Which environment to target"
-   "--data_service_log","Log type, one of performance, params, recipe"
-   "--env","Which environment to target"
-   "--lookback_window","Number of days to look at, only 90 days of history are retained"
-   "--limit","Number of records to return"
-   "--service_pattern","A regular expression that the service must match"
-   "--user_pattern","A regular expression that the user must match"
-   "--output","A filename to write the output to, if empty, will write to screen"
-
-Example::
-
-    $ jb search
-    [fill out the prompts]
 
 Built-in Help
 =============

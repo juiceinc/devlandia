@@ -22,7 +22,6 @@ import yaml
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
-from ..utils.juice_log_searcher import JuiceboxLoggingSearcher
 from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
 from ..utils.storageutil import stash
@@ -32,81 +31,16 @@ MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
 JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, 'jbcli'))
 
+def normalize(name):
+    return name.replace("_","-")
 
-@click.group()
+@click.group(context_settings={"token_normalize_func": normalize})
 @click.version_option()
 def cli():
     """
     Juicebox CLI app
     """
     pass
-
-
-@click.argument('args', nargs=-1, type=click.UNPROCESSED)
-@cli.command()
-def create(*args, **kwargs):
-    """ Replaced by yo juicebox
-    """
-    echo_warning('yo juicebox will take care of all your needs now.')
-
-
-@cli.command()
-@click.argument('applications', nargs=-1, required=True)
-@click.option('--bucket', help='Pass the necessary S3 bucket', default=None)
-@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3', default='venv')
-def package(applications, bucket, runtime):
-    """Package a juicebox app (or list of apps) for deployment
-    """
-    if dockerutil.is_running() and dockerutil.ensure_home():
-        failed_apps = []
-        for app in applications:
-            try:
-                echo_highlight('Packaging {}...'.format(app))
-                if bucket is not None:
-                    dockerutil.run(
-                        '/{}/bin/python manage.py packagejuiceboxapp {} --bucket={}'.format(
-                            runtime, app, bucket))
-                else:
-                    dockerutil.run(
-                        '/{}/bin/python manage.py packagejuiceboxapp {}'.format(
-                            runtime, app))
-
-            except docker.errors.APIError as e:
-                print(e)
-                failed_apps.append(app)
-        if failed_apps:
-            echo_warning(
-                'Failed to package: {}.'.format(', '.join(failed_apps)))
-            click.get_current_context().abort()
-    else:
-        echo_warning(
-            'Juicebox is not running or you\'re not in a home directory.')
-        click.get_current_context().abort()
-
-
-@cli.command()
-@click.argument('datafile', nargs=1, required=True)
-@click.option('--app', help='The app to upload data to', required=True)
-@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
-def upload(datafile, app, runtime):
-    """Upload data to a juicebox app
-    """
-    if dockerutil.is_running() and dockerutil.ensure_home():
-        failed_apps = []
-        try:
-            echo_highlight('Uploading...'.format(app))
-            dockerutil.run(
-                '/{}/bin/python manage.py upload --app={} {}'.format(
-                    runtime, app, datafile))
-
-        except docker.errors.APIError:
-            print(docker.errors.APIError.message)
-            failed_apps.append(app)
-    else:
-        echo_warning(
-            'Juicebox is not running or you\'re not in a home directory.')
-        click.get_current_context().abort()
-
 
 @cli.command()
 @click.argument('applications', nargs=-1, required=True)
@@ -646,24 +580,6 @@ def upgrade(ctx):
 
 
 @cli.command()
-@click.argument('name')
-@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
-def test_app(name, runtime):
-    """ Run gabbi tests against the application. REQUIRES A LOCAL RUNNING COPY
-    OF JUICEBOX.
-    """
-    try:
-        if dockerutil.is_running():
-            app_dir = 'apps/{}'.format(name)
-            dockerutil.run(
-                'sh -c "cd {}; pwd; /{}/bin/python -m unittest discover tests"'.format(
-                    app_dir, runtime))
-    except docker.errors.APIError:
-        echo_warning('Could not run tests')
-        click.get_current_context().abort()
-
-
-@cli.command()
 @click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
 def clear_cache(runtime):
     """Clears cache"""
@@ -747,101 +663,6 @@ def dc(args, env, ganesha):
     os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
     dockerutil.docker_compose(cmd, ganesha=ganesha)
 
-
-@cli.command()
-@click.option(
-    '--username',
-    required=True,
-    envvar='LP_USERNAME',
-    help=
-    'Username for lp.juiceboxdata.com, must be passed or defined in '
-    'environment variable LP_USERNAME for core environments and '
-    'HSL_USERNAME for hstm environments'
-)
-@click.option(
-    '--password',
-    required=True,
-    envvar='LP_PASSWORD',
-    help=
-    'Password for lp.juiceboxdata.com, must be passed or defined in '
-    'environment variable LP_PASSWORD for core environments and '
-    'HSL_PASSWORD for hstm environments'
-)
-@click.option(
-    '--env',
-    prompt='Environment',
-    default='legacy-prod',
-    type=click.Choice(
-        ['legacy-staging', 'legacy-prod', 'prod', 'hstm-qa', 'hstm-prod']),
-    help='Environment to search, one of dev, staging, prod')
-@click.option(
-    '--data_service_log',
-    prompt='Log type',
-    type=click.Choice(['performance', 'params', 'recipe']),
-    default='performance',
-    help='Data service log type, one of performance, params, recipe')
-@click.option(
-    '--lookback_window',
-    prompt='Number of days',
-    default=10,
-    help='Number of days to look at')
-@click.option(
-    '--limit', prompt='Limit', default=100, help='Number of records to return')
-@click.option(
-    '--service_pattern',
-    prompt='Service pattern regular expression',
-    default='.*',
-    help='Data service regex to filter on')
-@click.option(
-    '--user_pattern',
-    prompt='User regular expression',
-    default='.*',
-    help='User regex to filter on')
-@click.option(
-    '--output',
-    prompt='A filename to write the output to',
-    default='',
-    help='A filename to write the output to')
-def search(username, password, env, data_service_log,
-           lookback_window, limit, service_pattern, user_pattern,
-           output):
-    """Query elasticsearch and show results
-
-    Environment variables LP_USERNAME and LP_PASSWORD must be set.
-    For healthstream account HSL_USERNAME and HSL_PASSWORD must be set.
-    """
-    if not username or not password:
-        print("Logging proxy username and password must be defined")
-
-    params = {
-        'username': username,
-        'password': password,
-        'env': env,
-        'data_service_log': data_service_log,
-        'lookback_window': lookback_window,
-        'limit': limit,
-        'service_pattern': service_pattern,
-        'user_pattern': user_pattern
-    }
-    dataset = JuiceboxLoggingSearcher().dataset(**params)
-
-    print(
-        'Running\njb search --env {env} --data_service_log {data_service_log} '
-        '--lookback_window {lookback_window} --limit {limit} '
-        '--service_pattern "{service_pattern}" '
-        '--user_pattern "{user_pattern}" --output "{output}"\n\n'
-            .format(output=output, **params))
-
-    if output:
-        print('Writing {}'.format(output))
-        with open(output, 'w') as outf:
-            outf.write(dataset.tsv)
-    else:
-        print(dataset.tsv)
-
-    if lookback_window > 90:
-        print("There is only 90 days of history retained")
-
-
 def activate_hstm():
     os.environ['AWS_PROFILE'] = 'hstm'
+
