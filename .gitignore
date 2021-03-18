@@ -98,6 +98,6 @@ environments/core/fruition
 environments/py2core/fruition
 environments/hstm-core/hstm-juicebox
 environments/hstm-newcore/fruition
-
+environments/apps
 
 docker-compose-ssh.yml
