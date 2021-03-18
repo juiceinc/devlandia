@@ -356,13 +356,15 @@ def activate_ssh(env, environ):
     Start the SSH tunnels, and manipulate the environment variables so that
     they are pointing at the right ports.
     """
-    legacy_redshift = environ['JB_HSTM_REDSHIFT_CONNECTION']
+    legacy_redshift = environ['JB_REDSHIFT_CONNECTION']
     legacy_redshift = urlparse(legacy_redshift).hostname
-
+    hstm_redshift = environ['JB_HSTM_REDSHIFT_CONNECTION']
+    hstm_redshift = urlparse(hstm_redshift).hostname
     command = [
         "ssh", "-T", "-N",
         "-o", "ServerAliveInterval 30", "-o", "ServerAliveCountMax 3",
         "-L", "0.0.0.0:5439:{legacy_redshift}:5439".format(legacy_redshift=legacy_redshift),
+        "-L", f"0.0.0.0:5438:{hstm_redshift}:5439",
         "vpn2.juiceboxdata.com",
     ]
     process = Popen(command)
