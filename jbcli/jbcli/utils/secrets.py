@@ -1,7 +1,5 @@
-from __future__ import print_function
-
 import boto3
-import six
+
 
 def get_all_from_path(path):
     """
@@ -41,8 +39,6 @@ def get_all_from_path(path):
 
 
 def get_deployment_secrets():
-    env = get_all_from_path('/jb-deployment-vars/common/')
-    env.update(get_all_from_path('/jb-deployment-vars/devlandia/'))
-    print("[RADIX] all secrets:", env.keys())
+    env = get_all_from_path("/jb-deployment-vars/common/")
+    env.update(get_all_from_path("/jb-deployment-vars/devlandia/"))
     return env
-
