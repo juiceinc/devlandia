@@ -17,7 +17,7 @@ from subprocess import Popen
 import click
 import docker.errors
 from PyInquirer import prompt, Separator
-from six.moves.urllib.parse import urlparse
+from six.moves.urllib.parse import urlparse, urlunparse
 import yaml
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess
@@ -356,13 +356,37 @@ def activate_ssh(env, environ):
     Start the SSH tunnels, and manipulate the environment variables so that
     they are pointing at the right ports.
     """
-    legacy_redshift = environ['JB_REDSHIFT_CONNECTION']
-    legacy_redshift = urlparse(legacy_redshift).hostname
+
+    redshifts = {}
+    # these local ports are arbitrary
+    for envvar, localport in [
+        ("JB_REDSHIFT_CONNECTION", 5439),
+        ("JB_HSTM_REDSHIFT_CONNECTION", 5438),
+        ("JB_MANAGED_REDSHIFT_CONNECTION", 5437),
+        ("JB_PREVERITY_REDSHIFT_CONNECTION", 5436)
+    ]:
+        if envvar not in environ:
+            continue
+        # python's urlparse makes it difficult to just change the port, but
+        # that's what we're doing here:
+        url = urlparse(environ[envvar])
+        old_netloc = url.netloc
+        old_netloc_without_port = old_netloc.rsplit(":", 1)[0]
+        new_netloc = f"{old_netloc_without_port}:{localport}"
+        new_conn_string = urlunparse(url._replace(netloc=new_netloc))
+        redshifts[envvar] = (url, localport, new_conn_string)
+
+    ssh_links = [
+        ["-L", f"0.0.0.0:{port}:{url.hostname}:5439"]
+        for (url, port, _) in redshifts.values()
+    ]
+    ssh_links = [leaf for tree in ssh_links for leaf in tree]  # flatten
+
     command = [
         "ssh", "-T", "-N",
         "-o", "ServerAliveInterval 30", "-o", "ServerAliveCountMax 3",
-        "-L", "0.0.0.0:5439:{legacy_redshift}:5439".format(legacy_redshift=legacy_redshift),
-        "vpn2.juiceboxdata.com",
+        *ssh_links,
+        "vpn2.juiceboxdata.com"
     ]
     process = Popen(command)
 
@@ -383,13 +407,24 @@ def activate_ssh(env, environ):
         'services': {
             'juicebox': {
                 'extra_hosts': [
-                    '{}:{}'.format(legacy_redshift, host_addr),
-                ]
+                    f"{url.hostname}:{host_addr}"
+                    for (url, _, _) in redshifts.values()
+                ],
+                # We want to make sure that the environment variables we're going to set
+                # will be passed through to the container.
+                "environment": list(redshifts.keys()),
             }
         }
     }
     with open(compose_fn, 'w') as compose_file:
         compose_file.write(yaml.safe_dump(content))
+    # We *could* just write the new connection strings into the YAML content above,
+    # but that would mean leaving secrets around on disk, so we'll just put them into
+    # the environment instead:
+    return {
+        envvar: new_conn_string
+        for (envvar, (_, _, new_conn_string)) in redshifts.items()
+    }
 
 
 @cli.command()
@@ -429,7 +464,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
         activate_hstm()
     cleanup_ssh(env)
     if ssh:
-        activate_ssh(env, environ)
+        environ.update(activate_ssh(env, environ))
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
@@ -486,7 +521,8 @@ def get_environment_interactively(env):
         {'name': extra_lookup.get('hstm-stable', 'hstm-stable'), 'value': 'hstm-stable'},
         {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
         {'name': extra_lookup.get('hstm-core', 'hstm-core'), 'value': 'hstm-core'},
-        {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'}
+        {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'},
+        {'name': extra_lookup.get('hstm-newcore', 'hstm-newcore'), 'value': 'hstm-newcore'}
     ]
 
     questions = [
