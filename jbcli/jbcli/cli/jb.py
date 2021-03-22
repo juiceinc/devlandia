@@ -518,10 +518,6 @@ def get_environment_interactively(env):
         {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
         {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
         {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
-        {'name': extra_lookup.get('hstm-stable', 'hstm-stable'), 'value': 'hstm-stable'},
-        {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
-        {'name': extra_lookup.get('hstm-core', 'hstm-core'), 'value': 'hstm-core'},
-        {'name': extra_lookup.get('hstm-test', 'hstm-test'), 'value': 'hstm-test'},
         {'name': extra_lookup.get('hstm-newcore', 'hstm-newcore'), 'value': 'hstm-newcore'}
     ]
 
