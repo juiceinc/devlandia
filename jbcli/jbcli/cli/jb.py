@@ -384,7 +384,7 @@ def activate_ssh(env, environ):
 
     command = [
         "ssh", "-T", "-N",
-        "-o", "ServerAliveInterval 30", "-o", "ServerAliveCountMax 3",
+        "-o", "ServerAliveInterval 30", "-o", "ServerAliveCountMax 3", "-o", "StrictHostKeyChecking=accept-new",
         *ssh_links,
         "vpn2.juiceboxdata.com"
     ]
