@@ -23,7 +23,7 @@ if [ ! -e ~/.ssh/insecure_key ]; then
 fi
 
 echo "creating virtualenv \"devlandia\"..."
-mkvirtualenv devlandia -p python2.7
+mkvirtualenv devlandia -p python3.7
 echo "cd $PWD" >> ~/.virtualenvs/devlandia/bin/postactivate
 
 echo "activating virtualenv \"devlandia\""
