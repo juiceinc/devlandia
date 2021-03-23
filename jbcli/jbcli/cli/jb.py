@@ -455,12 +455,10 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
     stash.put('current_env', env)
     os.chdir("./environments/{}".format(env))
     environ = populate_env_with_secrets()
-    if env.startswith('hstm-') and not env.startswith('hstm-new'):
-        activate_hstm()
 
     if not noupdate:
         dockerutil.pull(tag=None)
-    if env.startswith('hstm-new'):
+    if env.startswith("hstm-"):
         activate_hstm()
     cleanup_ssh(env)
     if ssh:
