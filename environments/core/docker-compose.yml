@@ -8,3 +8,5 @@ services:
       - ../../apps:/code/apps
       - ~/.boto:/root/.boto:ro
       - ~/.config/juicebox:/root/.config/juicebox:ro
+    environment:
+      - JB_HSTM=on
