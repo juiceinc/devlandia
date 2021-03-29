@@ -57,7 +57,7 @@ pathtools==0.1.2
     # via watchdog
 prompt_toolkit==1.0.14
     # via pyinquirer
-pygments==2.4.2
+pygments==2.7.4
     # via pyinquirer
 pyinquirer==1.0.3
     # via -r requirements.in
