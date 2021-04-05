@@ -446,19 +446,41 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
         echo_warning('An instance of Juicebox is already running')
         echo_warning('Run `jb stop` to stop this instance.')
         return
-
     env = get_environment_interactively(env)
+    tag_replacements = {
+        "hstm-dev": "hstm-qa",
+        "hstm-newcore": "develop-py3",
+        "core": "develop-py3",
+        "dev": "develop-py3",
+        "stable": "master-py3"
+    }
+    if env in tag_replacements.keys():
+        tag = tag_replacements[env]
+    else:
+        tag = env
 
     if not noupgrade:
         ctx.invoke(upgrade)
 
-    stash.put('current_env', env)
-    os.chdir("./environments/{}".format(env))
+    stash.put('current_env', tag)
+    core_path = "readme"
+    core_end = "unused"
+    if "core" in env:
+        if os.path.exists("fruition"):
+            core_path = "fruition"
+            core_end = "code"
+        else:
+            print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
+            sys.exit()
+    env_dot = open(".env", "w")
+    env_dot.write(f"DEVLANDIA_PORT=8000\nENV={tag}\nFRUITION={core_path}\nFILE={core_end}")
+    env_dot.close()
+    print(tag)
     environ = populate_env_with_secrets()
 
     if not noupdate:
-        dockerutil.pull(tag=None)
-    if env.startswith("hstm-"):
+        dockerutil.pull(tag=tag)
+    if tag.startswith("hstm-"):
         activate_hstm()
     cleanup_ssh(env)
     if ssh:
@@ -467,11 +489,6 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
 
 
 def get_environment_interactively(env):
-    if env is None:
-        # If we're already in an environment directory, use it
-        abs_cwd = os.path.abspath('.')
-        if os.path.basename(os.path.dirname(abs_cwd)) == 'environments':
-            env = os.path.basename(abs_cwd)
 
     os.chdir(DEVLANDIA_DIR)
     if env:
@@ -546,8 +563,8 @@ def get_environment_interactively(env):
 def stop(ctx, clean, env):
     """Stop a running juicebox in this environment
     """
-    env = get_environment_interactively(env)
-    os.chdir("./environments/{}".format(env))
+    # env = get_environment_interactively(env)
+    # os.chdir("./environments/{}".format(env))
     dockerutil.ensure_home()
 
     if clean:
@@ -670,7 +687,7 @@ def _run(args, env, service='juicebox'):
             subprocess.check_call(['docker', 'exec', '-it', container.name] + cmd)
         elif env is not None:
             click.echo("starting new {}".format(env))
-            os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+            os.chdir(DEVLANDIA_DIR)
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
         else:
             echo_warning(
@@ -696,4 +713,6 @@ def dc(args, env, ganesha):
 
 def activate_hstm():
     os.environ['AWS_PROFILE'] = 'hstm'
-
+    env_dot = open(".env", "a")
+    env_dot.write(f"\nJB_HSTM=on")
+    env_dot.close()

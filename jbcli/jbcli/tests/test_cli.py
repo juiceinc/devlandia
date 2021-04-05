@@ -12,7 +12,7 @@ import six
 from ..cli.jb import DEVLANDIA_DIR, cli
 
 
-CORE_DIR = os.path.join(DEVLANDIA_DIR, 'environments/core')
+CORE_DIR = DEVLANDIA_DIR
 
 Container = namedtuple('Container', ['name'])
 
@@ -796,38 +796,35 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start(self, dockerutil_mock, monkeypatch):
+    def test_start(self, dockerutil_mock):
         """Starting brings docker-compose up in the environment of the cwd."""
-        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupgrade'])
+        result = invoke(['start', 'core', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag=None),
+            call.pull(tag="develop-py3"),
             call.up(env=ANY, ganesha=False)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupgrade(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+    def test_start_noupgrade(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupgrade'])
+        result = invoke(['start', 'core', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag=None),
+            call.pull(tag="develop-py3"),
             call.up(env=ANY, ganesha=False)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_start_noupdate(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupdate', '--noupgrade'])
+        result = invoke(['start', 'core', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.up(env=ANY, ganesha=False)
