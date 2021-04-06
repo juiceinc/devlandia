@@ -55,7 +55,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -85,7 +87,9 @@ class TestCli(object):
             call.load_app(u'cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -113,7 +117,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -144,7 +150,9 @@ class TestCli(object):
             call.load_app(u'cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -167,7 +175,9 @@ class TestCli(object):
             call.is_running(),
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.jbapiutil')
     @patch('jbcli.cli.jb.dockerutil')
@@ -186,14 +196,16 @@ class TestCli(object):
             call.is_running(),
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_add_not_running(self, dockerutil_mock):
+    def test_add_not_running(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['add', 'cookies'])
-
         assert dockerutil_mock.mock_calls == [
             call.is_running()
         ]
@@ -201,7 +213,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_add_not_running_venv3(self, dockerutil_mock):
+    def test_add_not_running_venv3(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['add', 'cookies', '--runtime', 'venv3'])
@@ -234,7 +247,10 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        print(os_mock.mock_calls)
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call.check_call(['github', 'apps/cookies'])
@@ -263,7 +279,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call.check_call(['github', 'apps/cookies'])
@@ -296,6 +314,8 @@ class TestCli(object):
             call.make_github_repo_url(u'chocolate_chip')
         ]
         assert os_mock.mock_calls == [
+            call.path.exists('apps'),
+            call.path.exists().__bool__(),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/chocolate_chip')
         ]
@@ -333,6 +353,8 @@ class TestCli(object):
             call.make_github_repo_url(u'chocolate_chip')
         ]
         assert os_mock.mock_calls == [
+            call.path.exists('apps'),
+            call.path.exists().__bool__(),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/chocolate_chip')
         ]
@@ -361,7 +383,9 @@ class TestCli(object):
             call.is_running()
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -386,7 +410,9 @@ class TestCli(object):
             call.is_running()
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -415,7 +441,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -445,7 +473,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -474,7 +504,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call(['github', 'apps/cookies'])
@@ -508,7 +540,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call(['github', 'apps/cookies'])
@@ -536,7 +570,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py deletejuiceboxapp cookies')
         ]
         assert shutil_mock.mock_calls == [call.rmtree('apps/cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.shutil')
@@ -557,10 +593,13 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py deletejuiceboxapp cookies')
         ]
         assert shutil_mock.mock_calls == [call.rmtree('apps/cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_running(self, dockerutil_mock):
+    def test_remove_not_running(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes'])
@@ -573,7 +612,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_running_venv3(self, dockerutil_mock):
+    def test_remove_not_running_venv3(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes', '--runtime', 'venv3'])
@@ -586,7 +626,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_home(self, dockerutil_mock):
+    def test_remove_not_home(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = False
 
@@ -601,7 +642,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_home_venv3(self, dockerutil_mock):
+    def test_remove_not_home_venv3(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = False
 
@@ -641,6 +683,8 @@ class TestCli(object):
             call.rmtree('apps/cake')
         ]
         assert os_mock.mock_calls == [
+            call.path.exists('apps'),
+            call.path.exists().__bool__(),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/cake')
         ]
@@ -671,6 +715,8 @@ class TestCli(object):
             call.rmtree('apps/cake')
         ]
         assert os_mock.mock_calls == [
+            call.path.exists('apps'),
+            call.path.exists().__bool__(),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/cake')
         ]

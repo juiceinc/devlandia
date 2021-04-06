@@ -50,6 +50,9 @@ def cli():
 def add(applications, add_desktop, runtime):
     """Checkout a juicebox app (or list of apps) and load it
     """
+    if not os.path.exists("apps"):
+        print("Please run `jb add` from the root devlandia directory.")
+        return
     try:
         if dockerutil.is_running():
             failed_apps = []
@@ -165,7 +168,9 @@ def clone(existing_app, new_app, init, track, runtime):
 def remove(applications, runtime):
     """Remove a juicebox app (or list of apps) from your local environment
     """
-
+    if not os.path.exists("apps"):
+        print("Please run `jb add` from the root devlandia directory.")
+        return
     try:
         if dockerutil.is_running() and dockerutil.ensure_home():
             failed_apps = []
@@ -323,7 +328,7 @@ def populate_env_with_secrets():
 
 
 def cleanup_ssh(env):
-    compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
+    compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
     try:
         os.remove(compose_fn)
     except OSError as e:
@@ -473,7 +478,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
 
     stash.put('current_env', tag)
     env_dot = open(".env", "w")
-    env_dot.write(f"DEVLANDIA_PORT=8000\nENV={tag}\nFRUITION={core_path}\nFILE={core_end}")
+    env_dot.write(f"DEVLANDIA_PORT=8000\nTAG={tag}\nFRUITION={core_path}\nFILE={core_end}")
     env_dot.close()
 
     environ = populate_env_with_secrets()
