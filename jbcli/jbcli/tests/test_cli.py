@@ -800,7 +800,7 @@ class TestCli(object):
         """Starting brings docker-compose up in the environment of the cwd."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', 'core', '--noupgrade'])
+        result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -812,7 +812,7 @@ class TestCli(object):
     def test_start_noupgrade(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', 'core', '--noupgrade'])
+        result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -824,7 +824,7 @@ class TestCli(object):
     def test_start_noupdate(self, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', 'core', '--noupdate', '--noupgrade'])
+        result = invoke(['start', 'develop-py3', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.up(env=ANY, ganesha=False)
