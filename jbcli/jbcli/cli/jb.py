@@ -400,7 +400,7 @@ def activate_ssh(env, environ):
 
     atexit.register(cleanup)
 
-    compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
+    compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
     host_addr = get_host_ip()
     content = {
         'version': '3.2',
@@ -447,6 +447,15 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
         echo_warning('Run `jb stop` to stop this instance.')
         return
     env = get_environment_interactively(env)
+    core_path = "readme"
+    core_end = "unused"
+    if "core" in env:
+        if os.path.exists("fruition"):
+            core_path = "fruition"
+            core_end = "code"
+        else:
+            print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
+            sys.exit()
     tag_replacements = {
         "hstm-dev": "hstm-qa",
         "hstm-newcore": "develop-py3",
@@ -463,25 +472,17 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
         ctx.invoke(upgrade)
 
     stash.put('current_env', tag)
-    core_path = "readme"
-    core_end = "unused"
-    if "core" in env:
-        if os.path.exists("fruition"):
-            core_path = "fruition"
-            core_end = "code"
-        else:
-            print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
-            sys.exit()
     env_dot = open(".env", "w")
     env_dot.write(f"DEVLANDIA_PORT=8000\nENV={tag}\nFRUITION={core_path}\nFILE={core_end}")
     env_dot.close()
-    print(tag)
+
     environ = populate_env_with_secrets()
 
     if not noupdate:
         dockerutil.pull(tag=tag)
-    if tag.startswith("hstm-"):
+    if env.startswith("hstm-"):
         activate_hstm()
+        print("Activating HSTM")
     cleanup_ssh(env)
     if ssh:
         environ.update(activate_ssh(env, environ))
