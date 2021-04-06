@@ -242,85 +242,6 @@ def ls(showall=False, semantic=False):
     except subprocess.CalledProcessError:
         echo_warning('You must login to the registry first.')
 
-
-@click.option('--showall', default=False, help='Show all tagged images',
-              is_flag=True)
-@click.option('--env', default=None, help='Select in this environment')
-@click.argument('tag', nargs=1, required=False)
-@cli.command()
-def select(tag, env=None, showall=False):
-    """Select tagged image to use
-    """
-
-    if env is None:
-        questions = [
-            {
-                'type': 'list',
-                'name': 'env',
-                'message': 'What environment would you like to change?',
-                'choices': ['test', 'core', 'hstm-test', 'hstm-core']
-            }
-        ]
-        response = prompt(questions)
-        env = response.get('env')
-        if env is None:
-            echo_highlight('No environment selected.')
-            return
-
-    found = False
-    if tag is None:
-        # Present a scrolling list for the user to pick a tag
-        click.echo('Gathering data on available tags...\n')
-        tag_choices = []
-        prev_priority = None
-        for row in dockerutil.image_list(print_flag=False, showall=showall):
-            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
-            if prev_priority and prev_priority != tag_priority:
-                tag_choices.append(Separator())
-            tag_choices.append({
-                'name': '{} (published {})'.format(tag, human_readable),
-                'value': tag
-            })
-            prev_priority = tag_priority
-
-        questions = [
-            {
-                'type': 'list',
-                'name': 'tag',
-                'message': 'What tag would you like to use in {}?'.format(env),
-                'choices': tag_choices
-            }
-        ]
-        response = prompt(questions)
-        tag = response.get('tag')
-        found = True
-        if tag is None:
-            echo_highlight('No tag selected.')
-            return
-
-    if not found:
-        click.echo('Checking this tag is valid...\n')
-        for img in dockerutil.image_list(showall=True, print_flag=False):
-            if tag == img[0]:
-                found = True
-                break
-
-        echo_warning('The tag \'{}\' doesn\'t exist.'.format(tag))
-        return
-
-    # Store the tag and ensure the environment are using the right tags
-    jb_select = stash.get('jb_select', {})
-    if not isinstance(jb_select, dict):
-        jb_select = {
-            'test': jb_select
-        }
-    jb_select[env] = tag
-    stash.put('jb_select', jb_select)
-
-    for env, tag in jb_select.items():
-        dockerutil.set_tag(env, tag)
-
-
 def populate_env_with_secrets():
     env = get_deployment_secrets()
     env.update(os.environ)
@@ -501,7 +422,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, core):
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
-def get_environment_interactively(env, jb_select):
+def get_environment_interactively(env, tag_lookup):
 
     os.chdir(DEVLANDIA_DIR)
     if env:
@@ -522,7 +443,7 @@ def get_environment_interactively(env, jb_select):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = []
-    for k, v in jb_select.items():
+    for k, v in tag_lookup.items():
         env_choices.append({'name': k + " - " + tag_dict[v], 'value': k})
 
     questions = [
