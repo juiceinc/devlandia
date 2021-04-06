@@ -451,7 +451,17 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
         echo_warning('An instance of Juicebox is already running')
         echo_warning('Run `jb stop` to stop this instance.')
         return
-    env = get_environment_interactively(env)
+
+    # A dictionary of environment names and tags to use
+    tag_replacements = {
+        "hstm-dev": "hstm-qa",
+        "hstm-newcore": "develop-py3",
+        "core": "develop-py3",
+        "dev": "develop-py3",
+        "stable": "master-py3"
+    }
+
+    env = get_environment_interactively(env, tag_replacements)
     core_path = "readme"
     core_end = "unused"
     if "core" in env:
@@ -461,13 +471,6 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
         else:
             print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
             sys.exit()
-    tag_replacements = {
-        "hstm-dev": "hstm-qa",
-        "hstm-newcore": "develop-py3",
-        "core": "develop-py3",
-        "dev": "develop-py3",
-        "stable": "master-py3"
-    }
     if env in tag_replacements.keys():
         tag = tag_replacements[env]
     else:
@@ -494,7 +497,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
-def get_environment_interactively(env):
+def get_environment_interactively(env, jb_select):
 
     os.chdir(DEVLANDIA_DIR)
     if env:
@@ -508,46 +511,21 @@ def get_environment_interactively(env):
 
     # Generate suffixes for each environment that contain information on what image is
     # associated with a tag, and when those images were published
-    extra_lookup = {}
 
-    jb_select = stash.get('jb_select', {})
-    if not isinstance(jb_select, dict):
-        jb_select = {
-            'test': jb_select
-        }
-
-    for env, selected_tag in jb_select.items():
-        extra_lookup[env] = selected_tag
-
+    tag_dict = {}
     for row in tags:
         tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+        tag_dict[tag] = f"({tag}) published {human_readable}"
 
-        if tag == 'master':
-            extra_lookup['master'] = 'stable/master - ({}) published {}'.format(stable_version, human_readable)
-        if tag == 'develop':
-            extra_lookup['dev'] = 'dev - (develop) published {}'.format(human_readable)
-            extra_lookup['core'] = 'core - (develop) published {}'.format(human_readable)
-        for env, selected_tag in jb_select.items():
-            if tag == selected_tag:
-                extra_lookup[env] = '{} - ({}, set with `jb select`) published {}'.format(env, selected_tag, human_readable)
-
-    if 'test' not in extra_lookup:
-        extra_lookup['test'] = 'test - set with `jb select`'
-
-    env_choices = [
-        {'name': extra_lookup.get('master', 'master'), 'value': 'stable'},
-        {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
-        {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
-        {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
-        {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
-        {'name': extra_lookup.get('hstm-newcore', 'hstm-newcore'), 'value': 'hstm-newcore'}
-    ]
+    env_choices = []
+    for k, v in jb_select.items():
+        env_choices.append({'name': k + " - " + tag_dict[v], 'value': k})
 
     questions = [
         {
             'type': 'list',
             'name': 'env',
-            'message': 'what environment would you like to use?',
+            'message': 'What environment would you like to use?',
             'choices': env_choices
         }
     ]
@@ -586,6 +564,7 @@ def stop(ctx, clean, env):
 def yo_upgrade():
     """ Attempt to upgrade yo juicebox to the current version
     """
+    return
     dockerutil.ensure_root()
     dockerutil.ensure_virtualenv()
 
@@ -627,7 +606,7 @@ def upgrade(ctx):
 
     try:
         subprocess.check_call(['git', 'pull'])
-        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt'])
+        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt', '-q'])
     except subprocess.CalledProcessError:
         echo_warning('Failed to `git pull`')
         click.get_current_context().abort()
