@@ -444,8 +444,10 @@ def activate_ssh(env, environ):
               help='run an SSH tunnel for redshift')
 @click.option("--ganesha", default=False, is_flag=True,
               help="Enable ganesha")
+@click.option("--core", default=False, is_flag=True,
+              help="Use local Fruition checkout with this image")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha, core):
     """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
@@ -464,7 +466,9 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
     env = get_environment_interactively(env, tag_replacements)
     core_path = "readme"
     core_end = "unused"
-    if "core" in env:
+
+
+    if "core" in env or core:
         if os.path.exists("fruition"):
             core_path = "fruition"
             core_end = "code"

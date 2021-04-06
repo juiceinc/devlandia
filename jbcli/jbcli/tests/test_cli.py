@@ -1137,9 +1137,7 @@ class TestCli(object):
         result = invoke(['yo_upgrade'])
 
         # TODO: Improve these tests
-        assert proc_mock.mock_calls == [
-            call.check_call(['npm', 'install', '--package-lock=false', 'generator-juicebox']),
-        ]
+        assert proc_mock.mock_calls == []
         # assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')
