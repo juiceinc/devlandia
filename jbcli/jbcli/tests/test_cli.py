@@ -12,8 +12,6 @@ import six
 from ..cli.jb import DEVLANDIA_DIR, cli
 
 
-CORE_DIR = DEVLANDIA_DIR
-
 Container = namedtuple('Container', ['name'])
 
 
@@ -202,7 +200,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_add_not_running(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['add', 'cookies'])
@@ -214,7 +212,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_add_not_running_venv3(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['add', 'cookies', '--runtime', 'venv3'])
@@ -599,7 +597,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_remove_not_running(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes'])
@@ -613,7 +611,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_remove_not_running_venv3(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes', '--runtime', 'venv3'])
@@ -627,7 +625,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_remove_not_home(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = False
 
@@ -643,7 +641,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_remove_not_home_venv3(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = False
 
@@ -816,7 +814,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_stop(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.halt.return_value = None
@@ -830,7 +828,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_stop_clean(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.destroy.return_value = None
