@@ -484,44 +484,6 @@ def stop(ctx, clean, env):
 
 
 @cli.command()
-def yo_upgrade():
-    """ Attempt to upgrade yo juicebox to the current version
-    """
-    return
-    dockerutil.ensure_root()
-    dockerutil.ensure_virtualenv()
-
-    try:
-        # Get the latest generator-juicebox
-        output = subprocess.check_call(
-            ['npm', 'install', '--package-lock=false', 'generator-juicebox'])
-        click.echo(output)
-        echo_success('Updated yo juicebox successfully')
-
-        # Ensure the yo-rc.json file exists.
-        yo_rc_path = os.path.join(os.getcwd(), '.yo-rc.json')
-        if not os.path.exists(yo_rc_path):
-            with open(yo_rc_path, 'w') as f:
-                f.write('{}')
-        echo_success('Ensured .yo-rc.json exists')
-
-        # Ensure that the yo command line tool is symlinked
-        yo_symlink_path = os.path.join(os.environ['VIRTUAL_ENV'], 'bin', 'yo')
-        npm_yo_path = os.path.join(os.getcwd(), 'node_modules', '.bin', 'yo')
-        if sys.platform == 'win32':
-            print("The `yo` command is available at {}".format(npm_yo_path))
-        else:
-            if not os.path.exists(yo_symlink_path):
-                print("trying to symlink existing path", npm_yo_path, "to",
-                      yo_symlink_path)
-                os.symlink(npm_yo_path, yo_symlink_path)
-                echo_success('Ensured you can run yo juicebox')
-    except subprocess.CalledProcessError:
-        echo_warning('Failed to upgrade yo')
-        click.get_current_context().abort()
-
-
-@cli.command()
 @click.pass_context
 def upgrade(ctx):
     """ Attempt to upgrade jb command line """
