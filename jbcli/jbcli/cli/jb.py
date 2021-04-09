@@ -50,7 +50,7 @@ def cli():
 def add(applications, add_desktop, runtime):
     """Checkout a juicebox app (or list of apps) and load it
     """
-    os.chdir(os.path.join(DEVLANDIA_DIR))
+    os.chdir(DEVLANDIA_DIR)
     try:
         if dockerutil.is_running():
             failed_apps = []
@@ -166,7 +166,7 @@ def clone(existing_app, new_app, init, track, runtime):
 def remove(applications, runtime):
     """Remove a juicebox app (or list of apps) from your local environment
     """
-    os.chdir(os.path.join(DEVLANDIA_DIR))
+    os.chdir(DEVLANDIA_DIR)
     try:
         if dockerutil.is_running() and dockerutil.ensure_home():
             failed_apps = []

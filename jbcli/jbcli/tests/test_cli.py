@@ -54,11 +54,14 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
+        # call.path.join('/Users/david.paul/Desktop/devlandia'),
+        #  call.chdir(<MagicMock name='os.path.join()' id='4513544464'>),
+        #  call.path.isdir('apps/cookies')
         assert 'Adding cookies' in result.output
 
     @patch('jbcli.cli.jb.jbapiutil')
@@ -86,7 +89,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -116,7 +119,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -149,7 +152,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -174,7 +177,7 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
 
     @patch('jbcli.cli.jb.jbapiutil')
@@ -195,7 +198,7 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -247,7 +250,7 @@ class TestCli(object):
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         print(os_mock.mock_calls)
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
@@ -278,7 +281,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
@@ -312,8 +315,7 @@ class TestCli(object):
             call.make_github_repo_url(u'chocolate_chip')
         ]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),
-            call.path.exists().__bool__(),
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/chocolate_chip')
         ]
@@ -351,8 +353,7 @@ class TestCli(object):
             call.make_github_repo_url(u'chocolate_chip')
         ]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),
-            call.path.exists().__bool__(),
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/chocolate_chip')
         ]
@@ -382,7 +383,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -409,7 +410,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -440,7 +441,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),call.path.exists().__bool__(),call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -472,7 +473,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
@@ -503,7 +504,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call(['git', 'clone', 'git cookies', 'apps/cookies']),
@@ -539,7 +540,7 @@ class TestCli(object):
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
         assert proc_mock.mock_calls == [
             call(['git', 'clone', 'git cookies', 'apps/cookies']),
@@ -569,7 +570,7 @@ class TestCli(object):
         ]
         assert shutil_mock.mock_calls == [call.rmtree('apps/cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -592,7 +593,7 @@ class TestCli(object):
         ]
         assert shutil_mock.mock_calls == [call.rmtree('apps/cookies')]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'), call.path.exists().__bool__(), call.path.isdir('apps/cookies')
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
@@ -681,8 +682,7 @@ class TestCli(object):
             call.rmtree('apps/cake')
         ]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),
-            call.path.exists().__bool__(),
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/cake')
         ]
@@ -713,8 +713,7 @@ class TestCli(object):
             call.rmtree('apps/cake')
         ]
         assert os_mock.mock_calls == [
-            call.path.exists('apps'),
-            call.path.exists().__bool__(),
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/cake')
         ]
