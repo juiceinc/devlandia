@@ -468,6 +468,7 @@ def get_environment_interactively(env, tag_lookup):
 def stop(ctx, clean, env):
     """Stop a running juicebox in this environment
     """
+    os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
 
     if clean:
