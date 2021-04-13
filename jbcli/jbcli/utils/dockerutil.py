@@ -72,9 +72,9 @@ def _intersperse(el, l):
 
 
 def docker_compose(args, env=None, ganesha=False):
-    # Since our docker-compose.common.yml file is the first one we pass, and it is not inside
-    # the environment directories, we need to pass `--project-name` and `--project-directory`.
-    compose_files = ['docker-compose.common.yml', 'docker-compose.yml']
+    # Since our docker-compose.yml file is the first one we pass,
+    # we need to pass `--project-name` and `--project-directory`.
+    compose_files = ['docker-compose.yml']
     compose_files.extend(glob('docker-compose-*.yml'))
     if ganesha:
         compose_files.append('docker-compose.ganesha.yml')
