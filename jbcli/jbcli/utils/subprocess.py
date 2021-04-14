@@ -4,7 +4,6 @@ from __future__ import print_function
 import subprocess
 from subprocess import CalledProcessError
 from .format import echo_warning
-import sys
 
 __all__ = ['CalledProcessError', 'check_call', 'check_output']
 
