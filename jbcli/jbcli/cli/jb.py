@@ -16,6 +16,7 @@ from subprocess import Popen
 
 import click
 import docker.errors
+from collections import OrderedDict
 from PyInquirer import prompt, Separator
 from six.moves.urllib.parse import urlparse, urlunparse
 import yaml
@@ -361,10 +362,12 @@ def activate_ssh(env, environ):
               help='run an SSH tunnel for redshift')
 @click.option("--ganesha", default=False, is_flag=True,
               help="Enable ganesha")
+@click.option("--hstm", default=False, is_flag=True,
+              help="Enable hstm")
 @click.option("--core", default=False, is_flag=True,
               help="Use local Fruition checkout with this image")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha, core):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
     """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
@@ -372,13 +375,12 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, core):
         return
 
     # A dictionary of environment names and tags to use
-    tag_replacements = {
-        "hstm-dev": "hstm-qa",
-        "hstm-newcore": "develop-py3",
-        "core": "develop-py3",
-        "dev": "develop-py3",
-        "stable": "master-py3"
-    }
+    tag_replacements = OrderedDict()
+    tag_replacements["core"] = "develop-py3"
+    tag_replacements["dev"] = "develop-py3"
+    tag_replacements["stable"] = "master-py3"
+    tag_replacements["hstm-dev"] = "hstm-qa"
+    tag_replacements["hstm-newcore"] = "develop-py3"
 
     env = get_environment_interactively(env, tag_replacements)
     core_path = "readme"
@@ -409,7 +411,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, core):
 
     if not noupdate:
         dockerutil.pull(tag=tag)
-    if env.startswith("hstm-"):
+    if env.startswith("hstm-") or hstm:
         activate_hstm()
         print("Activating HSTM")
     cleanup_ssh(env)
