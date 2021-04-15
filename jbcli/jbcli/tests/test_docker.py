@@ -16,9 +16,8 @@ class TestDocker:
         dockerutil.up()
         assert check_mock.mock_calls == [
             call(['docker-compose',
-                  '--project-directory', '.', '--project-name', 'stable',
-                  '-f', '../docker-compose.common.yml', '-f', 'docker-compose.yml',
-                  'up',
+                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '-f', 'docker-compose.yml','up',
                   '--abort-on-container-exit'], env=None)
         ]
 
@@ -27,9 +26,8 @@ class TestDocker:
         dockerutil.destroy()
         assert check_mock.mock_calls == [
             call(['docker-compose',
-                  '--project-directory', '.', '--project-name', 'stable',
-                  '-f', '../docker-compose.common.yml', '-f', 'docker-compose.yml',
-                  'down'], env=None)
+                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '-f', 'docker-compose.yml', 'down'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -37,9 +35,8 @@ class TestDocker:
         dockerutil.halt()
         assert check_mock.mock_calls == [
             call(['docker-compose',
-                  '--project-directory', '.', '--project-name', 'stable',
-                  '-f', '../docker-compose.common.yml', '-f', 'docker-compose.yml',
-                  'stop'], env=None)
+                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '-f', 'docker-compose.yml', 'stop'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -55,8 +52,7 @@ class TestDocker:
             call([
                 'docker-compose',
                 '--project-directory', '.',
-                '--project-name', 'stable',
-                '-f', '../docker-compose.common.yml',
+                '--project-name', 'devlandia',
                 '-f', 'docker-compose.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
@@ -84,7 +80,7 @@ class TestDocker:
     @patch('jbcli.utils.dockerutil.click')
     def test_ensure_home(self, click_mock, monkeypatch):
         for env in ['core', 'test', 'hstm-newcore']:
-            monkeypatch.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+            monkeypatch.chdir(DEVLANDIA_DIR)
             dockerutil.ensure_home()
 
     @patch('jbcli.utils.dockerutil.click')
@@ -95,7 +91,7 @@ class TestDocker:
         dockerutil.ensure_home()
         assert os_mock.mock_calls == [
             call.path.isfile('docker-compose.yml'),
-            call.path.isdir('../../apps'),
+            call.path.isdir('apps'),
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
@@ -140,7 +136,7 @@ class TestDocker:
     @patch('jbcli.utils.dockerutil.check_call')
     @patch('jbcli.utils.dockerutil.check_output')
     def test_pull(self, check_output_mock, check_mock, monkeypatch):
-        monkeypatch.chdir(os.path.join(DEVLANDIA_DIR, 'environments', 'core'))
+        monkeypatch.chdir(DEVLANDIA_DIR)
 
         def check_output(args):
             assert args == [

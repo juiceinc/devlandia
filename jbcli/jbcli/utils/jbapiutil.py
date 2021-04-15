@@ -20,7 +20,7 @@ def get_admin_token(refresh_token=False):
     url = "{SERVER}/api/v1/jb/api-token-auth/".format(SERVER=SERVER)
     payload = {"email": JB_ADMIN_USER, "password": JB_ADMIN_PASSWORD}
     response = post(url, data=payload)
-    if response.status_code == 200:
+    if response.status_code in (200, 201):
         token = response.json()["token"]
         echo_success("New admin token acquired.")
         stash.put('token', token)

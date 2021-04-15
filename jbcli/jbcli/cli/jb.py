@@ -16,6 +16,7 @@ from subprocess import Popen
 
 import click
 import docker.errors
+from collections import OrderedDict
 from PyInquirer import prompt, Separator
 from six.moves.urllib.parse import urlparse, urlunparse
 import yaml
@@ -50,6 +51,7 @@ def cli():
 def add(applications, add_desktop, runtime):
     """Checkout a juicebox app (or list of apps) and load it
     """
+    os.chdir(DEVLANDIA_DIR)
     try:
         if dockerutil.is_running():
             failed_apps = []
@@ -165,7 +167,7 @@ def clone(existing_app, new_app, init, track, runtime):
 def remove(applications, runtime):
     """Remove a juicebox app (or list of apps) from your local environment
     """
-
+    os.chdir(DEVLANDIA_DIR)
     try:
         if dockerutil.is_running() and dockerutil.ensure_home():
             failed_apps = []
@@ -237,85 +239,6 @@ def ls(showall=False, semantic=False):
     except subprocess.CalledProcessError:
         echo_warning('You must login to the registry first.')
 
-
-@click.option('--showall', default=False, help='Show all tagged images',
-              is_flag=True)
-@click.option('--env', default=None, help='Select in this environment')
-@click.argument('tag', nargs=1, required=False)
-@cli.command()
-def select(tag, env=None, showall=False):
-    """Select tagged image to use
-    """
-
-    if env is None:
-        questions = [
-            {
-                'type': 'list',
-                'name': 'env',
-                'message': 'What environment would you like to change?',
-                'choices': ['test', 'core', 'hstm-test', 'hstm-core']
-            }
-        ]
-        response = prompt(questions)
-        env = response.get('env')
-        if env is None:
-            echo_highlight('No environment selected.')
-            return
-
-    found = False
-    if tag is None:
-        # Present a scrolling list for the user to pick a tag
-        click.echo('Gathering data on available tags...\n')
-        tag_choices = []
-        prev_priority = None
-        for row in dockerutil.image_list(print_flag=False, showall=showall):
-            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
-            if prev_priority and prev_priority != tag_priority:
-                tag_choices.append(Separator())
-            tag_choices.append({
-                'name': '{} (published {})'.format(tag, human_readable),
-                'value': tag
-            })
-            prev_priority = tag_priority
-
-        questions = [
-            {
-                'type': 'list',
-                'name': 'tag',
-                'message': 'What tag would you like to use in {}?'.format(env),
-                'choices': tag_choices
-            }
-        ]
-        response = prompt(questions)
-        tag = response.get('tag')
-        found = True
-        if tag is None:
-            echo_highlight('No tag selected.')
-            return
-
-    if not found:
-        click.echo('Checking this tag is valid...\n')
-        for img in dockerutil.image_list(showall=True, print_flag=False):
-            if tag == img[0]:
-                found = True
-                break
-
-        echo_warning('The tag \'{}\' doesn\'t exist.'.format(tag))
-        return
-
-    # Store the tag and ensure the environment are using the right tags
-    jb_select = stash.get('jb_select', {})
-    if not isinstance(jb_select, dict):
-        jb_select = {
-            'test': jb_select
-        }
-    jb_select[env] = tag
-    stash.put('jb_select', jb_select)
-
-    for env, tag in jb_select.items():
-        dockerutil.set_tag(env, tag)
-
-
 def populate_env_with_secrets():
     env = get_deployment_secrets()
     env.update(os.environ)
@@ -323,7 +246,7 @@ def populate_env_with_secrets():
 
 
 def cleanup_ssh(env):
-    compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
+    compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
     try:
         os.remove(compose_fn)
     except OSError as e:
@@ -400,7 +323,7 @@ def activate_ssh(env, environ):
 
     atexit.register(cleanup)
 
-    compose_fn = os.path.join(DEVLANDIA_DIR, 'environments', env, 'docker-compose-ssh.yml')
+    compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
     host_addr = get_host_ip()
     content = {
         'version': '3.2',
@@ -439,39 +362,65 @@ def activate_ssh(env, environ):
               help='run an SSH tunnel for redshift')
 @click.option("--ganesha", default=False, is_flag=True,
               help="Enable ganesha")
+@click.option("--hstm", default=False, is_flag=True,
+              help="Enable hstm")
+@click.option("--core", default=False, is_flag=True,
+              help="Use local Fruition checkout with this image")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
     """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
         echo_warning('Run `jb stop` to stop this instance.')
         return
 
-    env = get_environment_interactively(env)
+    # A dictionary of environment names and tags to use
+    tag_replacements = OrderedDict()
+    tag_replacements["core"] = "develop-py3"
+    tag_replacements["dev"] = "develop-py3"
+    tag_replacements["stable"] = "master-py3"
+    tag_replacements["hstm-dev"] = "hstm-qa"
+    tag_replacements["hstm-newcore"] = "develop-py3"
+
+    env = get_environment_interactively(env, tag_replacements)
+    core_path = "readme"
+    core_end = "unused"
+
+
+    if "core" in env or core:
+        if os.path.exists("fruition"):
+            core_path = "fruition"
+            core_end = "code"
+        else:
+            print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
+            sys.exit()
+    if env in tag_replacements.keys():
+        tag = tag_replacements[env]
+    else:
+        tag = env
 
     if not noupgrade:
         ctx.invoke(upgrade)
 
-    stash.put('current_env', env)
-    os.chdir("./environments/{}".format(env))
+    stash.put('current_env', tag)
+    env_dot = open(".env", "w")
+    env_dot.write(f"DEVLANDIA_PORT=8000\nTAG={tag}\nFRUITION={core_path}\nFILE={core_end}")
+    env_dot.close()
+
     environ = populate_env_with_secrets()
 
     if not noupdate:
-        dockerutil.pull(tag=None)
-    if env.startswith("hstm-"):
+        dockerutil.pull(tag=tag)
+    if env.startswith("hstm-") or hstm:
         activate_hstm()
+        print("Activating HSTM")
     cleanup_ssh(env)
     if ssh:
         environ.update(activate_ssh(env, environ))
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
-def get_environment_interactively(env):
-    if env is None:
-        # If we're already in an environment directory, use it
-        abs_cwd = os.path.abspath('.')
-        if os.path.basename(os.path.dirname(abs_cwd)) == 'environments':
-            env = os.path.basename(abs_cwd)
+def get_environment_interactively(env, tag_lookup):
 
     os.chdir(DEVLANDIA_DIR)
     if env:
@@ -485,46 +434,21 @@ def get_environment_interactively(env):
 
     # Generate suffixes for each environment that contain information on what image is
     # associated with a tag, and when those images were published
-    extra_lookup = {}
 
-    jb_select = stash.get('jb_select', {})
-    if not isinstance(jb_select, dict):
-        jb_select = {
-            'test': jb_select
-        }
-
-    for env, selected_tag in jb_select.items():
-        extra_lookup[env] = selected_tag
-
+    tag_dict = {}
     for row in tags:
         tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+        tag_dict[tag] = f"({tag}) published {human_readable}"
 
-        if tag == 'master':
-            extra_lookup['master'] = 'stable/master - ({}) published {}'.format(stable_version, human_readable)
-        if tag == 'develop':
-            extra_lookup['dev'] = 'dev - (develop) published {}'.format(human_readable)
-            extra_lookup['core'] = 'core - (develop) published {}'.format(human_readable)
-        for env, selected_tag in jb_select.items():
-            if tag == selected_tag:
-                extra_lookup[env] = '{} - ({}, set with `jb select`) published {}'.format(env, selected_tag, human_readable)
-
-    if 'test' not in extra_lookup:
-        extra_lookup['test'] = 'test - set with `jb select`'
-
-    env_choices = [
-        {'name': extra_lookup.get('master', 'master'), 'value': 'stable'},
-        {'name': extra_lookup.get('dev', 'dev'), 'value': 'dev'},
-        {'name': extra_lookup.get('core', 'core'), 'value': 'core'},
-        {'name': extra_lookup.get('test', 'test'), 'value': 'test'},
-        {'name': extra_lookup.get('hstm-dev', 'hstm-dev'), 'value': 'hstm-dev'},
-        {'name': extra_lookup.get('hstm-newcore', 'hstm-newcore'), 'value': 'hstm-newcore'}
-    ]
+    env_choices = []
+    for k, v in tag_lookup.items():
+        env_choices.append({'name': k + " - " + tag_dict[v], 'value': k})
 
     questions = [
         {
             'type': 'list',
             'name': 'env',
-            'message': 'what environment would you like to use?',
+            'message': 'What environment would you like to use?',
             'choices': env_choices
         }
     ]
@@ -546,8 +470,7 @@ def get_environment_interactively(env):
 def stop(ctx, clean, env):
     """Stop a running juicebox in this environment
     """
-    env = get_environment_interactively(env)
-    os.chdir("./environments/{}".format(env))
+    os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
 
     if clean:
@@ -560,43 +483,6 @@ def stop(ctx, clean, env):
 
 
 @cli.command()
-def yo_upgrade():
-    """ Attempt to upgrade yo juicebox to the current version
-    """
-    dockerutil.ensure_root()
-    dockerutil.ensure_virtualenv()
-
-    try:
-        # Get the latest generator-juicebox
-        output = subprocess.check_call(
-            ['npm', 'install', '--package-lock=false', 'generator-juicebox'])
-        click.echo(output)
-        echo_success('Updated yo juicebox successfully')
-
-        # Ensure the yo-rc.json file exists.
-        yo_rc_path = os.path.join(os.getcwd(), '.yo-rc.json')
-        if not os.path.exists(yo_rc_path):
-            with open(yo_rc_path, 'w') as f:
-                f.write('{}')
-        echo_success('Ensured .yo-rc.json exists')
-
-        # Ensure that the yo command line tool is symlinked
-        yo_symlink_path = os.path.join(os.environ['VIRTUAL_ENV'], 'bin', 'yo')
-        npm_yo_path = os.path.join(os.getcwd(), 'node_modules', '.bin', 'yo')
-        if sys.platform == 'win32':
-            print("The `yo` command is available at {}".format(npm_yo_path))
-        else:
-            if not os.path.exists(yo_symlink_path):
-                print("trying to symlink existing path", npm_yo_path, "to",
-                      yo_symlink_path)
-                os.symlink(npm_yo_path, yo_symlink_path)
-                echo_success('Ensured you can run yo juicebox')
-    except subprocess.CalledProcessError:
-        echo_warning('Failed to upgrade yo')
-        click.get_current_context().abort()
-
-
-@cli.command()
 @click.pass_context
 def upgrade(ctx):
     """ Attempt to upgrade jb command line """
@@ -604,7 +490,7 @@ def upgrade(ctx):
 
     try:
         subprocess.check_call(['git', 'pull'])
-        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt'])
+        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt', '-q'])
     except subprocess.CalledProcessError:
         echo_warning('Failed to `git pull`')
         click.get_current_context().abort()
@@ -670,7 +556,7 @@ def _run(args, env, service='juicebox'):
             subprocess.check_call(['docker', 'exec', '-it', container.name] + cmd)
         elif env is not None:
             click.echo("starting new {}".format(env))
-            os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+            os.chdir(DEVLANDIA_DIR)
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
         else:
             echo_warning(
@@ -696,4 +582,6 @@ def dc(args, env, ganesha):
 
 def activate_hstm():
     os.environ['AWS_PROFILE'] = 'hstm'
-
+    env_dot = open(".env", "a")
+    env_dot.write(f"\nJB_HSTM=on")
+    env_dot.close()

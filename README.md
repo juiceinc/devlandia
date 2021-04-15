@@ -10,7 +10,7 @@ other than Windows 10 Pro, Enterprise, or Education with a minimum build number 
 
 Create a new virtual environment for devlandia by changing to the desired directory and running ``virtualenv devlandia``.
 This can be done in a central place such as ``~/.virtualenvs`` or in your project directory.  Devlandia should 
-be using Python 2.7.12.  If you have multiple versions of Python installed and want to specify the version for 
+be using Python 3.7.8.  If you have multiple versions of Python installed and want to specify the version for 
 your virtual environment, run ``virtualenv -p /path/to/python/install devlandia``.  If you installed your virtual 
 environment to ``~/.virtualenvs/`` you'll need to run ``source ~/.virtualenvs/devlandia/bin/activate`` to activate it.
 Once your environment is setup and activated run ``pip install -r requirements.txt`` from the root directory of devlandia.
@@ -20,7 +20,9 @@ directory for your devlandia virtual environment.  Be sure to edit the file to p
 directory.  This will automatically log you in to our private Docker registry every time you activate the virtual
 environment.
 
-Finally you'll need to cd into the desired environment at ``environments/<env>`` and run ``jb start`` as normal.  
+Finally, you'll need to run ``jb start`` from the devlandia directory. You will see a menu that will give you options
+as to what environment you would like to run. You can instead specify an image name or other options and bypass the menu
+selection like so ``jb start master-py3``
 Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it 
 will go through its initialization and will come up at ``http://localhost:8000/``.  If you're starting in a HSTM specific
 environment, go to ``http://localhost:8000/admin`` to bypass the single signon.  To add new apps, go to the root of
@@ -91,8 +93,7 @@ There could be a couple issues at play here.  In the PyCharm menu -> Project: de
 
 # Core Development
 If you'll be working on the core and wanted to test things in Devlandia, you'll use a bit of a different workflow.  Clone
-the develop branch of fruition into `/environments/core/` with `git clone --recursive git@github.com:juiceinc/fruition.git`.
-You should now have a structure like the following `environments/core/fruition/`.  The core docker-compose file is 
-currently based on the image from `/environments/stable`.  The docker-compose file selectively mounts your local Juicebox 
+the develop branch of fruition into the root devlandia directory with `git clone --recursive git@github.com:juiceinc/fruition.git`.
+The core docker-compose file is currently based on the image from the current develop branch.  The docker-compose file selectively mounts your local Juicebox 
 code subdirectories into corresponding directories inside the container at `/code/`. Edits to local core code should be 
 reflected inside the running container. After cloning the repo, run `npm install` in the `fruition` folder, to install requirements. You will be responsible for keeping this branch up to date.  It's not something Devlandia will handle itself. 

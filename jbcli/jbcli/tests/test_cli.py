@@ -12,8 +12,6 @@ import six
 from ..cli.jb import DEVLANDIA_DIR, cli
 
 
-CORE_DIR = os.path.join(DEVLANDIA_DIR, 'environments/core')
-
 Container = namedtuple('Container', ['name'])
 
 
@@ -55,10 +53,15 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
+        # call.path.join('/Users/david.paul/Desktop/devlandia'),
+        #  call.chdir(<MagicMock name='os.path.join()' id='4513544464'>),
+        #  call.path.isdir('apps/cookies')
         assert 'Adding cookies' in result.output
 
     @patch('jbcli.cli.jb.jbapiutil')
@@ -85,7 +88,9 @@ class TestCli(object):
             call.load_app(u'cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -113,7 +118,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -144,7 +151,9 @@ class TestCli(object):
             call.load_app(u'cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -167,7 +176,9 @@ class TestCli(object):
             call.is_running(),
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.jbapiutil')
     @patch('jbcli.cli.jb.dockerutil')
@@ -186,14 +197,16 @@ class TestCli(object):
             call.is_running(),
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_add_not_running(self, dockerutil_mock):
+    def test_add_not_running(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['add', 'cookies'])
-
         assert dockerutil_mock.mock_calls == [
             call.is_running()
         ]
@@ -201,7 +214,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_add_not_running_venv3(self, dockerutil_mock):
+    def test_add_not_running_venv3(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['add', 'cookies', '--runtime', 'venv3'])
@@ -234,7 +248,10 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        print(os_mock.mock_calls)
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call.check_call(['github', 'apps/cookies'])
@@ -263,7 +280,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call.check_call(['github', 'apps/cookies'])
@@ -296,6 +315,7 @@ class TestCli(object):
             call.make_github_repo_url(u'chocolate_chip')
         ]
         assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/chocolate_chip')
         ]
@@ -333,6 +353,7 @@ class TestCli(object):
             call.make_github_repo_url(u'chocolate_chip')
         ]
         assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/chocolate_chip')
         ]
@@ -361,7 +382,9 @@ class TestCli(object):
             call.is_running()
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -386,7 +409,9 @@ class TestCli(object):
             call.is_running()
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -415,7 +440,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -445,7 +472,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call.check_call(['git', 'clone', 'git cookies', 'apps/cookies'])
         ]
@@ -474,7 +503,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call(['github', 'apps/cookies'])
@@ -508,7 +539,9 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py loadjuiceboxapp cookies')
         ]
         assert apps_mock.mock_calls == [call.make_github_repo_url(u'cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
         assert proc_mock.mock_calls == [
             call(['git', 'clone', 'git cookies', 'apps/cookies']),
             call(['github', 'apps/cookies'])
@@ -536,7 +569,9 @@ class TestCli(object):
             call.run('/venv/bin/python manage.py deletejuiceboxapp cookies')
         ]
         assert shutil_mock.mock_calls == [call.rmtree('apps/cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.shutil')
@@ -557,10 +592,13 @@ class TestCli(object):
             call.run('/venv3/bin/python manage.py deletejuiceboxapp cookies')
         ]
         assert shutil_mock.mock_calls == [call.rmtree('apps/cookies')]
-        assert os_mock.mock_calls == [call.path.isdir('apps/cookies')]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR), call.path.isdir('apps/cookies')
+        ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_running(self, dockerutil_mock):
+    def test_remove_not_running(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes'])
@@ -573,7 +611,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_running_venv3(self, dockerutil_mock):
+    def test_remove_not_running_venv3(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(['remove', 'cookies', '--yes', '--runtime', 'venv3'])
@@ -586,7 +625,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_home(self, dockerutil_mock):
+    def test_remove_not_home(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = False
 
@@ -601,7 +641,8 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_remove_not_home_venv3(self, dockerutil_mock):
+    def test_remove_not_home_venv3(self, dockerutil_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = False
 
@@ -641,6 +682,7 @@ class TestCli(object):
             call.rmtree('apps/cake')
         ]
         assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/cake')
         ]
@@ -671,6 +713,7 @@ class TestCli(object):
             call.rmtree('apps/cake')
         ]
         assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR),
             call.path.isdir('apps/cookies'),
             call.path.isdir('apps/cake')
         ]
@@ -770,7 +813,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_stop(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.halt.return_value = None
@@ -784,7 +827,7 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_stop_clean(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+        monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.destroy.return_value = None
@@ -796,38 +839,35 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start(self, dockerutil_mock, monkeypatch):
+    def test_start(self, dockerutil_mock):
         """Starting brings docker-compose up in the environment of the cwd."""
-        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupgrade'])
+        result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag=None),
+            call.pull(tag="develop-py3"),
             call.up(env=ANY, ganesha=False)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupgrade(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
+    def test_start_noupgrade(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupgrade'])
+        result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag=None),
+            call.pull(tag="develop-py3"),
             call.up(env=ANY, ganesha=False)
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
     def test_start_noupdate(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(CORE_DIR)
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        result = invoke(['start', '--noupdate', '--noupgrade'])
+        result = invoke(['start', 'develop-py3', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.up(env=ANY, ganesha=False)
@@ -1094,9 +1134,7 @@ class TestCli(object):
         result = invoke(['yo_upgrade'])
 
         # TODO: Improve these tests
-        assert proc_mock.mock_calls == [
-            call.check_call(['npm', 'install', '--package-lock=false', 'generator-juicebox']),
-        ]
+        assert proc_mock.mock_calls == []
         # assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')

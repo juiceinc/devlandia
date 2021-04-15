@@ -72,12 +72,12 @@ def _intersperse(el, l):
 
 
 def docker_compose(args, env=None, ganesha=False):
-    # Since our docker-compose.common.yml file is the first one we pass, and it is not inside
-    # the environment directories, we need to pass `--project-name` and `--project-directory`.
-    compose_files = ['../docker-compose.common.yml', 'docker-compose.yml']
+    # Since our docker-compose.yml file is the first one we pass,
+    # we need to pass `--project-name` and `--project-directory`.
+    compose_files = ['docker-compose.yml']
     compose_files.extend(glob('docker-compose-*.yml'))
     if ganesha:
-        compose_files.append('../docker-compose.ganesha.yml')
+        compose_files.append('docker-compose.ganesha.yml')
     file_args = _intersperse('-f', compose_files)
     env_name = os.path.basename(os.path.abspath('.'))
     cmd = [
@@ -124,7 +124,7 @@ def ensure_root():
 
     :rtype: ``bool``
     """
-    if not os.path.isdir('environments'):
+    if not os.path.isdir('jbcli'):
         # We're not in the devlandia root
         echo_warning(
             'Please run this command from inside the Devlandia root '
@@ -159,7 +159,7 @@ def ensure_home():
 
 
 def check_home():
-    if os.path.isfile('docker-compose.yml') and os.path.isdir('../../apps'):
+    if os.path.isfile('docker-compose.yml') and os.path.isdir('apps'):
         return os.path.dirname(os.path.abspath(os.path.curdir))
 
 

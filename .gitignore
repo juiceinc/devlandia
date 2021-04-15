@@ -94,10 +94,6 @@ ENV/
 .yo-rc.json
 
 # core local fruition symlink
-environments/core/fruition
-environments/py2core/fruition
-environments/hstm-core/hstm-juicebox
-environments/hstm-newcore/fruition
-environments/apps
-
+fruition
+.env
 docker-compose-ssh.yml

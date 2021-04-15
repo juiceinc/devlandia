@@ -1,6 +1,13 @@
 version: '3.2'
 services:
   juicebox:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:${TAG}"
+    command: bash -c "/venv/bin/python docker/entrypoint.py"
+    volumes:
+      - ./apps:/code/apps
+      - ~/.boto:/root/.boto:ro
+      - ~/.config/juicebox:/root/.config/juicebox:ro
+      - ./${FRUITION}:/${FILE}
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
@@ -13,6 +20,7 @@ services:
       - postgres
       - redis
     environment:
+      - JB_HSTM=${JB_HSTM}
       - ENVIRONMENT=docker
       - DJANGO_SETTINGS_MODULE=fruition.settings.contained
       - REGION=us-east-1
@@ -54,9 +62,9 @@ services:
       - AWS_PROFILE
   postgres:
     environment:
-      - POSTGRES_USER=juicebox
-      - POSTGRES_PASSWORD=juicebox
-      - POSTGRES_DB=juicebox
+        - POSTGRES_USER=juicebox
+        - POSTGRES_PASSWORD=juicebox
+        - POSTGRES_DB=juicebox
     image: "postgres:12.4-alpine"
   redis:
-    image: "redis:4.0.14"
+      image: "redis:4.0.14"
