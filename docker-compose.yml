@@ -8,6 +8,7 @@ services:
       - ~/.boto:/root/.boto:ro
       - ~/.config/juicebox:/root/.config/juicebox:ro
       - ./${FRUITION}:/${FILE}
+      - ./recipe:/code/recipe
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
