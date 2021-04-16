@@ -1,6 +1,4 @@
-from __future__ import absolute_import
-from __future__ import print_function
-
+import sys
 import subprocess
 from subprocess import CalledProcessError
 from .format import echo_warning
