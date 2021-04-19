@@ -338,7 +338,7 @@ def jb_watch(app='', should_reload=False):
         event_handler = WatchHandler(should_reload)
         observer = Observer()
 
-        observer.schedule(event_handler, path='../../apps/' + app, recursive=True)
+        observer.schedule(event_handler, path='apps/' + app, recursive=True)
         observer.start()
         try:
             while True:
