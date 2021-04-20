@@ -2,7 +2,9 @@ version: '3.2'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:${TAG}"
-    command: bash -c "/venv/bin/python docker/entrypoint.py"
+    command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
+                /venv/bin/pip install -U -q -r requirements.txt -r requirements_dev.txt ;
+            fi ; /venv/bin/python docker/entrypoint.py"
     volumes:
       - ./apps:/code/apps
       - ~/.boto:/root/.boto:ro

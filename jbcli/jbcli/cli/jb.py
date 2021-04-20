@@ -385,12 +385,13 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
     env = get_environment_interactively(env, tag_replacements)
     core_path = "readme"
     core_end = "unused"
-
+    workflow = "dev"
 
     if "core" in env or core:
         if os.path.exists("fruition"):
             core_path = "fruition"
             core_end = "code"
+            workflow = "core"
         else:
             print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
             sys.exit()
@@ -404,7 +405,11 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
 
     stash.put('current_env', tag)
     env_dot = open(".env", "w")
-    env_dot.write(f"DEVLANDIA_PORT=8000\nTAG={tag}\nFRUITION={core_path}\nFILE={core_end}")
+    env_dot.write(f"DEVLANDIA_PORT=8000\n"
+                  f"TAG={tag}\n"
+                  f"FRUITION={core_path}\n"
+                  f"FILE={core_end}\n"
+                  f"WORKFLOW={workflow}")
     env_dot.close()
 
     environ = populate_env_with_secrets()
