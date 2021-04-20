@@ -40,8 +40,8 @@ class WatchHandler(FileSystemEventHandler):
             path = event.src_path.split('/')
 
         # Path looks like
-        # ['..', '..', 'apps', 'privileging', 'stacks', 'overview', 'templates.html']
-        app = path[3]
+        # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
+        app = path[1]
         filename = path[-1]
         is_python_change = filename.endswith('.py') and isinstance(event, FileModifiedEvent)
 
