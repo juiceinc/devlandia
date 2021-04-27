@@ -366,8 +366,10 @@ def activate_ssh(env, environ):
               help="Enable hstm")
 @click.option("--core", default=False, is_flag=True,
               help="Use local Fruition checkout with this image")
+@click.option("--recipe", default=False, is_flag=True,
+              help="Enable local recipe checkout with this image")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, recipe):
     """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
@@ -385,7 +387,8 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
     env = get_environment_interactively(env, tag_replacements)
     core_path = "readme"
     core_end = "unused"
-
+    recipe_path = "recipereadme"
+    recipe_end = "unused"
 
     if "core" in env or core:
         if os.path.exists("fruition"):
@@ -394,6 +397,15 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
         else:
             print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
             sys.exit()
+
+        if recipe:
+            if os.path.exists("recipe"):
+                recipe_path = "recipe"
+                recipe_end = "code/recipe"
+            else:
+                print("Could not find local recipe checkout, please check that it is symlinked to the top level of Devlandia")
+                sys.exit()
+
     if env in tag_replacements.keys():
         tag = tag_replacements[env]
     else:
@@ -404,7 +416,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
 
     stash.put('current_env', tag)
     env_dot = open(".env", "w")
-    env_dot.write(f"DEVLANDIA_PORT=8000\nTAG={tag}\nFRUITION={core_path}\nFILE={core_end}")
+    env_dot.write(f"DEVLANDIA_PORT=8000\nTAG={tag}\nFRUITION={core_path}\nFILE={core_end}\nRECIPE={recipe_path}\nRECIPEFILE={recipe_end}\n")
     env_dot.close()
 
     environ = populate_env_with_secrets()
