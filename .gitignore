@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+f# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -97,3 +97,5 @@ ENV/
 fruition
 .env
 docker-compose-ssh.yml
+recipe/
+fruition/
