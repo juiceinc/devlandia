@@ -5,6 +5,9 @@ services:
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
                 /venv/bin/pip install -q -U -r requirements.txt;
                 /venv/bin/pip install -q -U -r requirements_dev.txt;
+                if [ '${RECIPE}' = 'recipe' ] ; then
+                  /venv/bin/pip install -e recipe/;
+                fi;
             fi ; /venv/bin/python docker/entrypoint.py"
     volumes:
       - ./apps:/code/apps
