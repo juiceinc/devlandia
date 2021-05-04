@@ -401,7 +401,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
             workflow = "core"
         else:
             print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
-            sys.exit()
+            sys.exit(1)
 
     # "dev_recipe" devlandia uses editable recipe code
     if dev_recipe:
@@ -411,10 +411,10 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
                 recipe_end = "code/recipe"
             else:
                 print("Could not find local recipe checkout, please check that it is symlinked to the top level of Devlandia")
-                sys.exit()
+                sys.exit(1)
         else:
             print("The dev-recipe flag requires running a core environment")
-            sys.exit()
+            sys.exit(1)
 
     # Replace the enviroment with the tagged Juicebox image
     # that is running in that environment

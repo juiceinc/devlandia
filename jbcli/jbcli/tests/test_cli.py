@@ -30,7 +30,7 @@ class TestCli(object):
     def test_bad_command(self):
         result = invoke(['cookies'])
         assert result.exit_code == 2
-        assert "No such command \"cookies\"" in result.output
+        assert "No such command 'cookies'" in result.output
 
     @patch('jbcli.cli.jb.jbapiutil')
     @patch('jbcli.cli.jb.dockerutil')
@@ -888,10 +888,10 @@ class TestCli(object):
         os_mock.getcwd.return_value = ''
         os_mock.path.exists.return_value = False
         os_mock.symlink.return_value = False
-        with patch('builtins.open', mock_open()) as m:
-            result = invoke(['start', 'core', '--noupgrade'])
+        result = invoke(['start', 'core', '--noupgrade'])
         assert result.exit_code == 1
-        assert 'Could not find' in result.output
+        print(result.output)
+        assert 'Could not find Local Fruition Checkout' in result.output
 
     @patch('jbcli.cli.jb.os')
     @patch('jbcli.cli.jb.dockerutil')
