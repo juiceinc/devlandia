@@ -6,7 +6,7 @@ from subprocess import CalledProcessError
 
 from click.testing import CliRunner
 from docker.errors import APIError
-from mock import call, patch, ANY
+from mock import call, mock_open, patch, ANY
 import six
 
 from ..cli.jb import DEVLANDIA_DIR, cli
@@ -30,7 +30,7 @@ class TestCli(object):
     def test_bad_command(self):
         result = invoke(['cookies'])
         assert result.exit_code == 2
-        assert "No such command 'cookies'" in result.output
+        assert "No such command \"cookies\"" in result.output
 
     @patch('jbcli.cli.jb.jbapiutil')
     @patch('jbcli.cli.jb.dockerutil')
@@ -845,6 +845,104 @@ class TestCli(object):
         dockerutil_mock.ensure_home.return_value = True
         result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.pull(tag="develop-py3"),
+            call.up(env=ANY, ganesha=False)
+        ]
+
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_start_with_custom_tag(self, dockerutil_mock):
+        """Starting can occur with any tag."""
+        dockerutil_mock.is_running.return_value = False
+        dockerutil_mock.ensure_home.return_value = True
+        result = invoke(['start', 'potato', '--noupgrade'])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.pull(tag="potato"),
+            call.up(env=ANY, ganesha=False)
+        ]
+
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_start_with_tag_lookup(self, dockerutil_mock):
+        """Starting stable uses the tag master-py3."""
+        dockerutil_mock.is_running.return_value = False
+        dockerutil_mock.ensure_home.return_value = True
+        result = invoke(['start', 'stable', '--noupgrade'])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.pull(tag="master-py3"),
+            call.up(env=ANY, ganesha=False)
+        ]
+
+    @patch('jbcli.cli.jb.os')
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_start_core_without_fruitiondir(self, dockerutil_mock, os_mock):
+        """Starting core requires a fruition directory."""
+        dockerutil_mock.is_running.return_value = False
+        dockerutil_mock.ensure_home.return_value = True
+        os_mock.environ.return_value = False
+        os_mock.path.join.return_value = ''
+        os_mock.getcwd.return_value = ''
+        os_mock.path.exists.return_value = False
+        os_mock.symlink.return_value = False
+        with patch('builtins.open', mock_open()) as m:
+            result = invoke(['start', 'core', '--noupgrade'])
+        assert result.exit_code == 1
+        assert 'Could not find' in result.output
+
+    @patch('jbcli.cli.jb.os')
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_start_core_with_fruitiondir(self, dockerutil_mock, os_mock):
+        """Starting core requires a fruition directory."""
+        dockerutil_mock.is_running.return_value = False
+        dockerutil_mock.ensure_home.return_value = True
+        os_mock.environ.return_value = False
+        os_mock.path.join.return_value = ''
+        os_mock.getcwd.return_value = ''
+        os_mock.path.exists.return_value = True
+        os_mock.symlink.return_value = False
+        with patch('builtins.open', mock_open()) as m:
+            result = invoke(['start', 'core', '--noupgrade'])
+        assert result.exit_code == 0
+        # We link the fruition/ directory with .env
+        assert m.mock_calls == [
+            call('.env', 'w'),
+            ANY,
+            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE=recipereadme\nRECIPEFILE=unused\n'),
+            ANY
+        ]
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.pull(tag="develop-py3"),
+            call.up(env=ANY, ganesha=False)
+        ]
+
+    @patch('jbcli.cli.jb.os')
+    @patch('jbcli.cli.jb.dockerutil')
+    def test_start_core_with_fruitiondir_and_recipe(self, dockerutil_mock, os_mock):
+        """Starting core requires a fruition directory."""
+        dockerutil_mock.is_running.return_value = False
+        dockerutil_mock.ensure_home.return_value = True
+        os_mock.environ.return_value = False
+        os_mock.path.join.return_value = ''
+        os_mock.getcwd.return_value = ''
+        os_mock.path.exists.return_value = True
+        os_mock.symlink.return_value = False
+        with patch('builtins.open', mock_open()) as m:
+            result = invoke(['start', 'core', '--noupgrade', '--dev-recipe'])
+        assert result.exit_code == 0
+        # We link the fruition/ directory with .env
+        # We ALSO link the recipe/ directory
+        print(m.mock_calls)
+        assert m.mock_calls == [
+            call('.env', 'w'),
+            ANY,
+            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE=recipe\nRECIPEFILE=code/recipe\n'),
+            ANY
+        ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),

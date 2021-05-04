@@ -25,7 +25,6 @@ from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
-from ..utils.storageutil import stash
 
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -427,7 +426,6 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     if not noupgrade:
         ctx.invoke(upgrade)
 
-    stash.put('current_env', tag)
     with open(".env", "w") as env_dot:
         env_dot.write(
             f"DEVLANDIA_PORT=8000\n"
