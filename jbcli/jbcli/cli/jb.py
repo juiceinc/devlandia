@@ -25,7 +25,6 @@ from ..utils import apps, dockerutil, jbapiutil, subprocess
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
-from ..utils.storageutil import stash
 
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -365,9 +364,11 @@ def activate_ssh(env, environ):
 @click.option("--hstm", default=False, is_flag=True,
               help="Enable hstm")
 @click.option("--core", default=False, is_flag=True,
-              help="Use local Fruition checkout with this image")
+              help="Use local fruition checkout with this image (core and hstm-core environments do this automatically)")
+@click.option("--dev-recipe", default=False, is_flag=True,
+              help="Use local recipe checkout, requires running a core environment")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     """Configure the environment and start Juicebox"""
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
@@ -386,15 +387,37 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
     core_path = "readme"
     core_end = "unused"
     workflow = "dev"
+    recipe_path = "recipereadme"
+    recipe_end = "unused"
 
-    if "core" in env or core:
+    # "core" devlandia uses editable fruition code
+    is_core = "core" in env or core
+    is_hstm = env.startswith("hstm-") or hstm
+
+    if is_core:
         if os.path.exists("fruition"):
             core_path = "fruition"
             core_end = "code"
             workflow = "core"
         else:
             print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
-            sys.exit()
+            sys.exit(1)
+
+    # "dev_recipe" devlandia uses editable recipe code
+    if dev_recipe:
+        if is_core:
+            if os.path.exists("recipe"):
+                recipe_path = "recipe"
+                recipe_end = "code/recipe"
+            else:
+                print("Could not find local recipe checkout, please check that it is symlinked to the top level of Devlandia")
+                sys.exit(1)
+        else:
+            print("The dev-recipe flag requires running a core environment")
+            sys.exit(1)
+
+    # Replace the enviroment with the tagged Juicebox image
+    # that is running in that environment
     if env in tag_replacements.keys():
         tag = tag_replacements[env]
     else:
@@ -403,20 +426,22 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core):
     if not noupgrade:
         ctx.invoke(upgrade)
 
-    stash.put('current_env', tag)
-    env_dot = open(".env", "w")
-    env_dot.write(f"DEVLANDIA_PORT=8000\n"
-                  f"TAG={tag}\n"
-                  f"FRUITION={core_path}\n"
-                  f"FILE={core_end}\n"
-                  f"WORKFLOW={workflow}")
-    env_dot.close()
+    with open(".env", "w") as env_dot:
+        env_dot.write(
+            f"DEVLANDIA_PORT=8000\n"
+            f"TAG={tag}\n"
+            f"FRUITION={core_path}\n"
+            f"FILE={core_end}\n"
+            f"WORKFLOW={workflow}\n"
+            f"RECIPE={recipe_path}\n"
+            f"RECIPEFILE={recipe_end}\n"
+        )
 
     environ = populate_env_with_secrets()
 
     if not noupdate:
         dockerutil.pull(tag=tag)
-    if env.startswith("hstm-") or hstm:
+    if is_hstm:
         activate_hstm()
         print("Activating HSTM")
     cleanup_ssh(env)

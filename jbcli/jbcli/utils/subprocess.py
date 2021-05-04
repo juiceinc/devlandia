@@ -1,5 +1,5 @@
-import sys
 import subprocess
+import sys
 from subprocess import CalledProcessError
 from .format import echo_warning
 

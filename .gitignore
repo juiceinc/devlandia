@@ -97,3 +97,5 @@ ENV/
 fruition
 .env
 docker-compose-ssh.yml
+recipe/
+fruition/
