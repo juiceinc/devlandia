@@ -66,6 +66,7 @@ services:
       - JB_PREVERITY_REDSHIFT_CONNECTION
       - JB_REDSHIFT_CONNECTION
       - JB_HSTM
+      - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
   postgres:
     environment:
