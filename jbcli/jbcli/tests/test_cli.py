@@ -1360,21 +1360,3 @@ class TestCli(object):
                 '/venv/bin/python', 'manage.py', 'test'])
         ]
         assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.dockerutil')
-    @patch('jbcli.cli.jb.subprocess')
-    def test_jb_manage_running_not_matching_env(self, subprocess_mock, dockerutil_mock):
-        """When an --env is given, and there is no matching container, we run a new one.
-        """
-        dockerutil_mock.is_running.return_value = Container(name='core_juicebox_1')
-        dockerutil_mock.check_home.return_value = None
-        subprocess_mock.check_call.side_effect = Exception("don't run this!")
-        dockerutil_mock.run_jb.return_value = None
-
-        result = invoke(['manage', '--env', 'stable', 'test'])
-        assert dockerutil_mock.run_jb.mock_calls == [
-            call(['/venv/bin/python', 'manage.py', 'test'], env=ANY, service='juicebox')
-        ]
-        name, args, kwargs = dockerutil_mock.run_jb.mock_calls[0]
-        assert kwargs['env']['test_secret'] == 'true'
-        assert result.exit_code == 0
