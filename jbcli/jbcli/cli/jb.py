@@ -579,7 +579,7 @@ def _run(args, env, service='juicebox'):
 
     container = dockerutil.is_running(service=service)
     try:
-        if container and (env is None or container.name.startswith(env)):
+        if container:
             click.echo("running command in {}".format(container.name))
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
