@@ -94,8 +94,7 @@ ENV/
 .yo-rc.json
 
 # core local fruition symlink
-fruition
 .env
 docker-compose-ssh.yml
-recipe/
-fruition/
+recipe
+fruition
