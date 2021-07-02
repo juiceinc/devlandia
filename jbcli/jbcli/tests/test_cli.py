@@ -838,7 +838,6 @@ class TestCli(object):
             call.destroy()
         ]
 
-    @patch('jbcli.cli.jb.time')
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.os')
     @patch('jbcli.cli.jb.auth')
@@ -847,7 +846,7 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         os_mock.path.isdir.return_value = True
-        auth_mock.deduped_mfas = ['mfa_serial=arn:aws:iam::423681189101:mfa/TestMFA']
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
@@ -857,10 +856,12 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_with_custom_tag(self, dockerutil_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_with_custom_tag(self, auth_mock, dockerutil_mock):
         """Starting can occur with any tag."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'potato', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
@@ -870,10 +871,12 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_with_tag_lookup(self, dockerutil_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_with_tag_lookup(self, auth_mock, dockerutil_mock):
         """Starting stable uses the tag master-py3."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'stable', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
@@ -884,7 +887,8 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.os')
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_core_without_fruitiondir(self, dockerutil_mock, os_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_core_without_fruitiondir(self, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
@@ -893,6 +897,7 @@ class TestCli(object):
         os_mock.getcwd.return_value = ''
         os_mock.path.exists.return_value = False
         os_mock.symlink.return_value = False
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'core', '--noupgrade'])
         assert result.exit_code == 1
         print(result.output)
@@ -900,7 +905,8 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.os')
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_core_with_fruitiondir(self, dockerutil_mock, os_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_core_with_fruitiondir(self, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
@@ -909,6 +915,7 @@ class TestCli(object):
         os_mock.getcwd.return_value = ''
         os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         with patch('builtins.open', mock_open()) as m:
             result = invoke(['start', 'core', '--noupgrade'])
         assert result.exit_code == 0
@@ -927,7 +934,8 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.os')
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_core_with_fruitiondir_and_recipe(self, dockerutil_mock, os_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_core_with_fruitiondir_and_recipe(self, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
@@ -936,6 +944,7 @@ class TestCli(object):
         os_mock.getcwd.return_value = ''
         os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         with patch('builtins.open', mock_open()) as m:
             result = invoke(['start', 'core', '--noupgrade', '--dev-recipe'])
         assert result.exit_code == 0
@@ -955,9 +964,11 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupgrade(self, dockerutil_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_noupgrade(self, auth_mock, dockerutil_mock):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
@@ -967,9 +978,11 @@ class TestCli(object):
         ]
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_noupdate(self, dockerutil_mock, monkeypatch):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_noupdate(self, auth_mock, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'develop-py3', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -978,9 +991,11 @@ class TestCli(object):
         assert result.exit_code == 0
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start_already_running(self, dockerutil_mock):
+    @patch('jbcli.cli.jb.auth')
+    def test_start_already_running(self, auth_mock, dockerutil_mock):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
+        auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', '--noupgrade'])
 
         assert 'An instance of Juicebox is already running' in result.output
