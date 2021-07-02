@@ -6,6 +6,7 @@ import json
 def set_creds():
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         mfa_serial = None
+        choice = 0
         try:
             with open(f"{os.path.expanduser('~')}/.aws/config") as config:
                 echo_success("Found ~/.aws/config file.")

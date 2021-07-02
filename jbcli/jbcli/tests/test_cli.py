@@ -838,11 +838,16 @@ class TestCli(object):
             call.destroy()
         ]
 
+    @patch('jbcli.cli.jb.time')
     @patch('jbcli.cli.jb.dockerutil')
-    def test_start(self, dockerutil_mock):
+    @patch('jbcli.cli.jb.os')
+    @patch('jbcli.cli.jb.auth')
+    def test_start(self, auth_mock, os_mock, dockerutil_mock):
         """Starting brings docker-compose up in the environment of the cwd."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        os_mock.path.isdir.return_value = True
+        auth_mock.deduped_mfas = ['mfa_serial=arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'develop-py3', '--noupgrade'])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
