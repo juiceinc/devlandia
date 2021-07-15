@@ -70,6 +70,7 @@ class WatchHandler(FileSystemEventHandler):
 def _intersperse(el, l):
     return [y for x in zip([el]*len(l), l) for y in x]
 
+
 def docker_compose(args, env=None, ganesha=False):
     # Since our docker-compose.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
