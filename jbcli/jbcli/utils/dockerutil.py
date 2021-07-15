@@ -79,8 +79,6 @@ def docker_compose(args, env=None, ganesha=False):
         compose_files.append('docker-compose.ganesha.yml')
     file_args = _intersperse('-f', compose_files)
     env_name = os.path.basename(os.path.abspath('.'))
-    print(os.path.abspath('.'))
-    print(env_name)
     cmd = [
         'docker-compose', '--project-directory', '.',
         '--project-name', env_name
