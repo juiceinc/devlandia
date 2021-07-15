@@ -74,7 +74,7 @@ If you have multiple profiles the ~/.aws/config file might look like this:
 Once this is set up, you can run ``jb start <optional_env>``.  If you only have one MFA device it will automatically detect
 that and use that one.  If you have multiple MFA devices you'll be prompted to select the MFA device's index in the list (0 based).
 
-You will then be prompted for your MFA token and Juicebox should start.
+You will then be prompted for your MFA token, as well as the profile name and Juicebox should start.
 
 # Debugging
 The juicebox image is built with SSH enabled so that we can set up a remote interpreter through the connection.  For 
