@@ -87,7 +87,7 @@ def docker_compose(args, env=None, ganesha=False):
 
 
 def up(env=None, ganesha=False):
-    """Starts and optionally creates        a Docker environment based on
+    """Starts and optionally creates Docker environment based on
     docker-compose.yml """
     docker_compose(['up', '--abort-on-container-exit'], env=env, ganesha=ganesha)
 
