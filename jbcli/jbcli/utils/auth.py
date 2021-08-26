@@ -19,6 +19,7 @@ def set_creds():
             for section in config.sections():
                 try:
                     mfa = config.get(section, 'mfa_serial')
+                    continue
                 except configparser.NoOptionError:
                     echo_warning(f"No MFA Detected in section {section}, skipping.")
                 if 'profile ' in section:
