@@ -8,7 +8,7 @@ import configparser
 def set_creds():
     if "AWS_ACCESS_KEY_ID" not in os.environ:
         mfa_serial = None
-        mfas = {}
+        mfas = []
         profiles = []
         mfa_map = {}
         choice = 0
