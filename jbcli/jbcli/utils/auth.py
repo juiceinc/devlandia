@@ -49,4 +49,3 @@ def set_creds():
             os.environ['AWS_ACCESS_KEY_ID'] = output['Credentials']['AccessKeyId']
             os.environ['AWS_SECRET_ACCESS_KEY'] = output['Credentials']['SecretAccessKey']
             os.environ['AWS_SESSION_TOKEN'] = output['Credentials']['SessionToken']
-            print(os.getcwd())
