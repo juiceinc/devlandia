@@ -24,7 +24,6 @@ def set_creds():
                     profile_details.append(details)
             except Exception as e:
                 profile_details.append((parsed, 'No MFA device'))
-                print(e)
     except Exception as e:
         print(e)
     if len(profile_details) > 1:
@@ -43,7 +42,7 @@ def set_creds():
         ]
 
         profile = prompt(questions).get('profile')
-        if profile and profile[1] is not 'No MFA device':
+        if profile and profile[1] != 'No MFA device':
             token = input("Please enter MFA Code: ")
             output = json.loads(
                 check_output(['aws', 'sts', 'get-session-token', '--profile', f'{profile[0]}', '--serial-number',
