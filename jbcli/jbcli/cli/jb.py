@@ -447,9 +447,6 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
 
     if not noupdate:
         dockerutil.pull(tag=tag)
-    if is_hstm:
-        activate_hstm()
-        print("Activating HSTM")
     cleanup_ssh(env)
     if ssh:
         environ.update(activate_ssh(env, environ))
@@ -616,9 +613,3 @@ def dc(args, env, ganesha):
         env = dockerutil.check_home()
     os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
     dockerutil.docker_compose(cmd, ganesha=ganesha)
-
-
-def activate_hstm():
-    os.environ['AWS_PROFILE'] = 'hstm'
-    with open(".env", "a") as env_dot:
-        env_dot.write(f"\nJB_HSTM=on")
