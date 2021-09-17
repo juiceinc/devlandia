@@ -21,18 +21,19 @@ from PyInquirer import prompt, Separator
 from six.moves.urllib.parse import urlparse, urlunparse
 import yaml
 
-from ..utils import apps, dockerutil, jbapiutil, subprocess
+from ..utils import apps, dockerutil, jbapiutil, subprocess, auth
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
-
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
 JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, 'jbcli'))
 
+
 def normalize(name):
-    return name.replace("_","-")
+    return name.replace("_", "-")
+
 
 @click.group(context_settings={"token_normalize_func": normalize})
 @click.version_option()
@@ -42,11 +43,13 @@ def cli():
     """
     pass
 
+
 @cli.command()
 @click.argument('applications', nargs=-1, required=True)
 @click.option('--add-desktop/--no-add-desktop', default=False,
               help='Optionally add to Github Desktop')
-@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+@click.option('--runtime', default='venv',
+              help='Which runtime to use, defaults to venv, the only other option is venv3')
 def add(applications, add_desktop, runtime):
     """Checkout a juicebox app (or list of apps) and load it
     """
@@ -114,7 +117,8 @@ def add(applications, add_desktop, runtime):
               help='Initialize VCS repository')
 @click.option('--track/--no-track', default=True,
               help='Track remote VCS repository')
-@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3', default='venv')
+@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3',
+              default='venv')
 def clone(existing_app, new_app, init, track, runtime):
     """ Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
@@ -237,6 +241,7 @@ def ls(showall=False, semantic=False):
         dockerutil.image_list(showall=showall, semantic=semantic)
     except subprocess.CalledProcessError:
         echo_warning('You must login to the registry first.')
+
 
 def populate_env_with_secrets():
     env = get_deployment_secrets()
@@ -370,6 +375,7 @@ def activate_ssh(env, environ):
 @click.pass_context
 def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     """Configure the environment and start Juicebox"""
+    auth.set_creds()
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
         echo_warning('Run `jb stop` to stop this instance.')
@@ -400,7 +406,9 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
             core_end = "code"
             workflow = "core"
         else:
-            print("Could not find Local Fruition Checkout, please check that it is symlinked to the top level of Devlandia")
+            print(
+                "Could not find Local Fruition Checkout, please check that it is symlinked to the top level of "
+                "Devlandia")
             sys.exit(1)
 
     # "dev_recipe" devlandia uses editable recipe code
@@ -410,7 +418,9 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
                 recipe_path = "recipe"
                 recipe_end = "code/recipe"
             else:
-                print("Could not find local recipe checkout, please check that it is symlinked to the top level of Devlandia")
+                print(
+                    "Could not find local recipe checkout, please check that it is symlinked to the top level of "
+                    "Devlandia")
                 sys.exit(1)
         else:
             print("The dev-recipe flag requires running a core environment")
@@ -418,11 +428,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
 
     # Replace the enviroment with the tagged Juicebox image
     # that is running in that environment
-    if env in tag_replacements.keys():
-        tag = tag_replacements[env]
-    else:
-        tag = env
-
+    tag = tag_replacements[env] if env in tag_replacements.keys() else env
     if not noupgrade:
         ctx.invoke(upgrade)
 
@@ -451,7 +457,6 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
 
 
 def get_environment_interactively(env, tag_lookup):
-
     os.chdir(DEVLANDIA_DIR)
     if env:
         return env
@@ -470,9 +475,10 @@ def get_environment_interactively(env, tag_lookup):
         tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
-    env_choices = []
-    for k, v in tag_lookup.items():
-        env_choices.append({'name': k + " - " + tag_dict[v], 'value': k})
+    env_choices = [
+        {'name': k + " - " + tag_dict[v], 'value': k}
+        for k, v in tag_lookup.items()
+    ]
 
     questions = [
         {
@@ -527,7 +533,8 @@ def upgrade(ctx):
 
 
 @cli.command()
-@click.option('--runtime', default='venv', help='Which runtime to use, defaults to venv, the only other option is venv3')
+@click.option('--runtime', default='venv',
+              help='Which runtime to use, defaults to venv, the only other option is venv3')
 def clear_cache(runtime):
     """Clears cache"""
     try:
@@ -610,8 +617,7 @@ def dc(args, env, ganesha):
     os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
     dockerutil.docker_compose(cmd, ganesha=ganesha)
 
+
 def activate_hstm():
-    os.environ['AWS_PROFILE'] = 'hstm'
-    env_dot = open(".env", "a")
-    env_dot.write(f"\nJB_HSTM=on")
-    env_dot.close()
+    with open(".env", "a") as env_dot:
+        env_dot.write(f"\nJB_HSTM=on")
