@@ -223,10 +223,20 @@ def pull(tag):
         full_path = parse_dc_file(tag=tag)
         abs_path = os.path.abspath(os.getcwd())
         os.chdir('../..')
-        docker_login = check_output([
-            'aws', 'ecr', 'get-login',
-            '--registry-ids', '423681189101', '976661725066',
-            '--no-include-email'])
+
+        # Retry several times as saving credentials can fail on Windows
+        tries = 1
+        while True:
+            try:
+                docker_login = check_output([
+                    'aws', 'ecr', 'get-login',
+                    '--registry-ids', '423681189101', '976661725066',
+                    '--no-include-email'])
+            except:
+                tries += 1
+                if tries > 3:
+                    raise
+                time.sleep(2)
         docker_logins = docker_login.split(b'\n')
         for docker_login in docker_logins:
             if docker_login:
