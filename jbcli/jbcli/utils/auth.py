@@ -20,6 +20,8 @@ def has_current_session():
         test = stash.get('AWS_ACCESS_KEY_ID')
         if test is None:
             set_creds()
+        else:
+            load_creds()
     except Exception as e:
         print(f'Error: {e}')
 
@@ -63,21 +65,32 @@ def set_creds():
             output = json.loads(
                 check_output(['aws', 'sts', 'get-session-token', '--profile', f'{profile[0]}', '--serial-number',
                               f'{profile[1]}', '--token-code', f'{token}', '--duration-seconds', '86400']))
-            _extracted_from_set_creds_44(output)
+            _extracted_from_set_creds(output)
         elif profile:
             output = json.loads(
                 check_output(['aws', 'sts', 'get-session-token', '--profile', f'{profile[0]}', '--duration-seconds',
                               '86400']))
-            _extracted_from_set_creds_44(output)
+            _extracted_from_set_creds(output)
         else:
             echo_warning('Profile not selected, exiting.')
             exit(1)
 
 
-def _extracted_from_set_creds_44(output):
+def load_creds():
+    print("Loading cached credentials")
+    stash = Stash("~/.config/juicebox/creds.toml")
+    os.environ['AWS_ACCESS_KEY_ID'] = stash.get('AWS_ACCESS_KEY_ID')
+    os.environ['AWS_SECRET_ACCESS_KEY'] = stash.get('AWS_SECRET_ACCESS_KEY')
+    os.environ['AWS_SESSION_TOKEN'] = stash.get('AWS_SESSION_TOKEN')
+
+def test_creds():
+
+
+def _extracted_from_set_creds(output):
+    stash = Stash("~/.config/juicebox/creds.toml")
     os.environ['AWS_ACCESS_KEY_ID'] = output['Credentials']['AccessKeyId']
-    # print(output['Credentials']['AccessKeyId'])
     os.environ['AWS_SECRET_ACCESS_KEY'] = output['Credentials']['SecretAccessKey']
-    # print(output['Credentials']['SecretAccessKey'])
     os.environ['AWS_SESSION_TOKEN'] = output['Credentials']['SessionToken']
-    # print(output['Credentials']['SessionToken']
+    stash.put("AWS_ACCESS_KEY_ID", output['Credentials']['AccessKeyId'])
+    stash.put("AWS_SECRET_ACCESS_KEY", output['Credentials']['SecretAccessKey'])
+    stash.put("AWS_SESSION_TOKEN", output['Credentials']['SessionToken'])

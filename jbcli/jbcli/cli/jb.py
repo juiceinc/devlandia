@@ -289,8 +289,7 @@ def activate_ssh(env, environ):
     for envvar, localport in [
         ("JB_REDSHIFT_CONNECTION", 5439),
         ("JB_HSTM_REDSHIFT_CONNECTION", 5438),
-        ("JB_MANAGED_REDSHIFT_CONNECTION", 5437),
-        ("JB_PREVERITY_REDSHIFT_CONNECTION", 5436)
+        ("JB_PREVERITY_REDSHIFT_CONNECTION", 5437)
     ]:
         if envvar not in environ:
             continue
