@@ -2,10 +2,26 @@ import configparser
 import json
 import os
 
+import boto3
 from PyInquirer import prompt
 
 from .subprocess import check_output
 from ..utils.format import echo_warning, echo_success
+from ..utils.storageutil import Stash
+
+
+def has_valid_session() -> bool:
+    return True
+
+
+def has_current_session():
+    stash = Stash("~/.config/juicebox/creds.toml")
+    try:
+        test = stash.get('AWS_ACCESS_KEY_ID')
+        if test is None:
+            set_creds()
+    except Exception as e:
+        print(f'Error: {e}')
 
 
 def set_creds():
@@ -46,8 +62,7 @@ def set_creds():
             token = input("Please enter MFA Code: ")
             output = json.loads(
                 check_output(['aws', 'sts', 'get-session-token', '--profile', f'{profile[0]}', '--serial-number',
-                              f'{profile[1]}',
-                              '--token-code', f'{token}', '--duration-seconds', '86400']))
+                              f'{profile[1]}', '--token-code', f'{token}', '--duration-seconds', '86400']))
             _extracted_from_set_creds_44(output)
         elif profile:
             output = json.loads(
@@ -61,5 +76,8 @@ def set_creds():
 
 def _extracted_from_set_creds_44(output):
     os.environ['AWS_ACCESS_KEY_ID'] = output['Credentials']['AccessKeyId']
+    # print(output['Credentials']['AccessKeyId'])
     os.environ['AWS_SECRET_ACCESS_KEY'] = output['Credentials']['SecretAccessKey']
+    # print(output['Credentials']['SecretAccessKey'])
     os.environ['AWS_SESSION_TOKEN'] = output['Credentials']['SessionToken']
+    # print(output['Credentials']['SessionToken']
