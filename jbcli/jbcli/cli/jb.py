@@ -11,20 +11,20 @@ import socket
 import struct
 import sys
 import time
+from collections import OrderedDict
 from multiprocessing import Process
 from subprocess import Popen
 
 import click
 import docker.errors
-from collections import OrderedDict
-from PyInquirer import prompt, Separator
-from six.moves.urllib.parse import urlparse, urlunparse
 import yaml
+from PyInquirer import prompt
+from six.moves.urllib.parse import urlparse, urlunparse
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess, auth
 from ..utils.format import echo_highlight, echo_warning, echo_success
-from ..utils.secrets import get_deployment_secrets
 from ..utils.reload import create_browser_instance
+from ..utils.secrets import get_deployment_secrets
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
@@ -259,8 +259,6 @@ def cleanup_ssh(env):
 
 
 def get_host_ip():
-    # On linux, `host.docker.internal` doesn't work,
-    # but we have a nice way to find the address w/ the docker0 interface.
     try:
         ifname = b'docker0'
         SIOCGIFADDR = 0x8915
@@ -375,7 +373,6 @@ def activate_ssh(env, environ):
 def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
-    # auth.set_creds()
     if dockerutil.is_running():
         echo_warning('An instance of Juicebox is already running')
         echo_warning('Run `jb stop` to stop this instance.')
@@ -533,14 +530,11 @@ def upgrade(ctx):
 
 
 @cli.command()
-@click.option('--runtime', default='venv',
-              help='Which runtime to use, defaults to venv, the only other option is venv3')
-def clear_cache(runtime):
+def clear_cache():
     """Clears cache"""
     try:
         if dockerutil.is_running():
-            dockerutil.run(
-                '/{}/bin/python manage.py clear_cache'.format(runtime))
+            dockerutil.run('/venv/bin/python manage.py clear_cache')
         else:
             echo_warning('Juicebox not running.  Run jb start')
             click.get_current_context().abort()
@@ -580,6 +574,7 @@ def run(args, env, service):
 
 
 def _run(args, env, service='juicebox'):
+    auth.has_current_session()
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
@@ -620,4 +615,4 @@ def dc(args, env, ganesha):
 
 def activate_hstm():
     with open(".env", "a") as env_dot:
-        env_dot.write(f"\nJB_HSTM=on")
+        env_dot.write('\nJB_HSTM=on')
