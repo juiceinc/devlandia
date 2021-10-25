@@ -1276,27 +1276,6 @@ class TestCli(object):
         assert result.exit_code == 1
 
     @patch('jbcli.cli.jb.dockerutil')
-    def test_clear_cache_venv3(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-
-        result = invoke(['clear_cache', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [call.is_running(),
-                                              call.run(
-                                                  '/venv3/bin/python manage.py clear_cache')]
-
-        assert result.exit_code == 0
-
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_clear_cache_not_running_venv3(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = False
-
-        result = invoke(['clear_cache', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running()
-        ]
-        assert result.exit_code == 1
-
-    @patch('jbcli.cli.jb.dockerutil')
     def test_jb_pull(self, dockerutil_mock):
         result = invoke(['pull'])
         assert dockerutil_mock.mock_calls == [
@@ -1313,23 +1292,6 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.run('/venv/bin/python manage.py clear_cache')
-        ]
-        assert click_mock.mock_calls == [
-            call.get_current_context(),
-            call.get_current_context().abort()
-        ]
-        assert 'Could not clear cache' in result.output
-
-    @patch('jbcli.cli.jb.click')
-    @patch('jbcli.cli.jb.dockerutil')
-    def test_clear_cache_fail_venv3(self, dockerutil_mock, click_mock):
-        dockerutil_mock.is_running.return_value = True
-        dockerutil_mock.run.side_effect = APIError('Failure')
-        result = invoke(['clear_cache', '--runtime', 'venv3'])
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run(
-                '/venv3/bin/python manage.py clear_cache')
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
