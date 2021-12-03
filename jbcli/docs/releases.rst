@@ -2,6 +2,12 @@
 Releases
 ========
 
+0.20.0
+======
+
+- Improved: Added prompt for how often to check if an image is out of date.  This is done at startup initially
+- Added: Command ``jb interval <days>`` to update the value that's set.
+
 0.15.0
 ======
 
