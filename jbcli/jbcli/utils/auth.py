@@ -82,6 +82,12 @@ def set_creds():
         else:
             echo_warning('Profile not selected, exiting.')
             exit(1)
+    elif len(profile_details) == 1:
+        token = input("Please enter MFA Code: ")
+        output = json.loads(check_output(['aws', 'sts', 'get-session-token', '--profile', f'{profile_details[0][0]}',
+                                          '--serial-number', f'{profile_details[0][1]}', '--token-code', f'{token}',
+                                          '--duration-seconds', '86400']))
+        set_and_cache_creds(output)
 
 
 def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_token):
