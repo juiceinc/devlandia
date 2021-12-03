@@ -460,14 +460,15 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
         environ.update(activate_ssh(env, environ))
     dockerutil.up(env=environ, ganesha=ganesha)
 
+
 def check_outdated_image(env):
     print("Checking Image age")
     # grab list of docker images from check_call, turn into list of objects, do silly
     # things with regex and return local image age
     local_images = dockerutil.list_local().decode("utf-8")
     lines = local_images.split("\n")
-    keys = re.split(r'\s{2,}',lines[0])
-    image_list = [dict(zip(keys, re.split(r'\s{2,}',i))) for i in lines[1:-1]]
+    keys = re.split(r'\s{2,}', lines[0])
+    image_list = [dict(zip(keys, re.split(r'\s{2,}', i))) for i in lines[1:-1]]
     local_age = False
     for image in image_list:
         if env in image['TAG']:
@@ -481,7 +482,7 @@ def check_outdated_image(env):
         for row in remote_images:
             tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
             tag_dict[tag] = f"({tag}) published {human_readable}"
-        remote_age= tag_dict[env].split()[2:-1]
+        remote_age = tag_dict[env].split()[2:-1]
 
         # when it's just one hour / day it's formatted like "an hour/ a day" so we need to sanitize here
         if remote_age[0] == "an" or remote_age[0] == "a":
@@ -489,7 +490,7 @@ def check_outdated_image(env):
             remote_age[1] += "s"
 
         # compare local and remote
-        age_diff = format.compare_human_readable(local_age,remote_age)
+        age_diff = format.compare_human_readable(local_age, remote_age)
         if int(age_diff.days) >= 1:
             question = [
                 {
@@ -504,11 +505,6 @@ def check_outdated_image(env):
             return answer['age_diff']
         else:
             return f"image {age_diff} older than remote"
-
-
-
-
-
 
 
 def get_environment_interactively(env, tag_lookup):
