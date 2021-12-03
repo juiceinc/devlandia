@@ -354,3 +354,6 @@ def jb_watch(app='', should_reload=False):
 def js_watch():
     if is_running() and ensure_home():
         run('./node_modules/.bin/webpack --mode=development --progress --colors --watch')
+
+def list_local():
+    return check_output(['docker', 'image', 'list'])

@@ -14,6 +14,7 @@ import time
 from collections import OrderedDict
 from multiprocessing import Process
 from subprocess import Popen
+import re
 
 import click
 import docker.errors
@@ -21,7 +22,7 @@ import yaml
 from PyInquirer import prompt
 from six.moves.urllib.parse import urlparse, urlunparse
 
-from ..utils import apps, dockerutil, jbapiutil, subprocess, auth
+from ..utils import apps, dockerutil, jbapiutil, subprocess, auth, format
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.reload import create_browser_instance
 from ..utils.secrets import get_deployment_secrets
@@ -387,6 +388,10 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     tag_replacements["hstm-newcore"] = "develop-py3"
 
     env = get_environment_interactively(env, tag_replacements)
+
+    #check if local image is outdated
+
+
     core_path = "readme"
     core_end = "unused"
     workflow = "dev"
@@ -426,6 +431,12 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     # Replace the enviroment with the tagged Juicebox image
     # that is running in that environment
     tag = tag_replacements[env] if env in tag_replacements.keys() else env
+
+    if noupdate:
+        image_query = check_outdated_image(tag)
+        if image_query == "yes":
+            noupdate = False
+
     if not noupgrade:
         ctx.invoke(upgrade)
 
@@ -451,6 +462,53 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     if ssh:
         environ.update(activate_ssh(env, environ))
     dockerutil.up(env=environ, ganesha=ganesha)
+
+def check_outdated_image(env):
+    print("Checking Image age")
+    # grab list of docker images from check_call, turn into list of objects, do silly
+    # things with regex and return local image age
+    local_images = dockerutil.list_local().decode("utf-8")
+    lines = local_images.split("\n")
+    keys = re.split(r'\s{2,}',lines[0])
+    image_list = [dict(zip(keys, re.split(r'\s{2,}',i))) for i in lines[1:-1]]
+    local_age = False
+    for image in image_list:
+        if env in image['TAG']:
+            local_age = image['CREATED'].split()[:-1]
+    # if no local image, continue
+    if local_age:
+        # get list of remote images and find the relavent one and extract the date
+        remote_images = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
+        tag_dict = {}
+        for row in remote_images:
+            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+            tag_dict[tag] = f"({tag}) published {human_readable}"
+        remote_age= tag_dict[env].split()[2:-1]
+        # when it's just one hour / day it's formatted like "an hour/ a day" so we need to sanitize here
+        if remote_age[0] == "an" or remote_age[0] == "a":
+            remote_age[0] = "1"
+            remote_age[1] += "s"
+        # compare local and remote
+        age_diff = format.compare_human_readable(local_age,remote_age)
+        if int(age_diff.days) >= 1:
+            question = [
+                {
+                    'type': 'list',
+                    'name': 'age_diff',
+                    'message': f'local image is {age_diff} older than remote image, '
+                               f'would you like to update?',
+                    'choices': ["no", "yes"]
+                }
+            ]
+            answer = prompt(question)
+            return answer['age_diff']
+        else:
+            return f"image {age_diff} older than remote"
+
+
+
+
+
 
 
 def get_environment_interactively(env, tag_lookup):
