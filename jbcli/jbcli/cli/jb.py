@@ -465,6 +465,7 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
 @click.argument('days', nargs=1, required=False)
 @cli.command()
 def interval(days):
+    """Set a new value (in days) for the frequency to check docker images for updates."""
     if days:
         stash.put('interval', days)
     else:
