@@ -389,9 +389,6 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
 
     env = get_environment_interactively(env, tag_replacements)
 
-    #check if local image is outdated
-
-
     core_path = "readme"
     core_end = "unused"
     workflow = "dev"
@@ -475,6 +472,7 @@ def check_outdated_image(env):
     for image in image_list:
         if env in image['TAG']:
             local_age = image['CREATED'].split()[:-1]
+
     # if no local image, continue
     if local_age:
         # get list of remote images and find the relavent one and extract the date
@@ -484,10 +482,12 @@ def check_outdated_image(env):
             tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
             tag_dict[tag] = f"({tag}) published {human_readable}"
         remote_age= tag_dict[env].split()[2:-1]
+
         # when it's just one hour / day it's formatted like "an hour/ a day" so we need to sanitize here
         if remote_age[0] == "an" or remote_age[0] == "a":
             remote_age[0] = "1"
             remote_age[1] += "s"
+
         # compare local and remote
         age_diff = format.compare_human_readable(local_age,remote_age)
         if int(age_diff.days) >= 1:
