@@ -48,6 +48,9 @@ def compare_human_readable(old, new):
     :param old: same as param new but older
     """
     now = datetime.now()
+    if new[1] == 'months':
+        new[1] = 'weeks'
+        new[0] = int(new[0])/4
     old_date = now - timedelta(**{old[1]:int(old[0])})
     new_date = now - timedelta(**{new[1]: int(new[0])})
     return abs(old_date - new_date)

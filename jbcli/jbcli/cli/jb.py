@@ -26,10 +26,13 @@ from ..utils import apps, dockerutil, jbapiutil, subprocess, auth, format
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.reload import create_browser_instance
 from ..utils.secrets import get_deployment_secrets
+from ..utils.storageutil import Stash
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
 JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, 'jbcli'))
+
+stash = Stash("~/.config/juicebox/devlandia.toml")
 
 
 def normalize(name):
@@ -433,10 +436,8 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
         image_query = check_outdated_image(tag)
         if image_query == "yes":
             noupdate = False
-
     if not noupgrade:
         ctx.invoke(upgrade)
-
     with open(".env", "w") as env_dot:
         env_dot.write(
             f"DEVLANDIA_PORT=8000\n"
@@ -461,10 +462,42 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
+@click.argument('days', nargs=1, required=False)
+@cli.command()
+def interval(days):
+    if days:
+        stash.put('interval', days)
+    else:
+        prompt_interval()
+
+
+def prompt_interval():
+    question = [
+        {
+            'type': 'input',
+            'name': 'interval',
+            'message': 'How often do you want to be prompted about out of date images (in days)?'
+        }
+    ]
+    answer = prompt(question)['interval']
+    stash.put("interval", answer)
+
+
 def check_outdated_image(env):
     print("Checking Image age")
+    interval = 1
+    try:
+        interval = stash.get('interval')
+        if interval is None:
+            echo_warning("Docker image prompt interval not set.")
+            prompt_interval()
+            interval = stash.get('interval')
+    except Exception as e:
+        pass
+
     # grab list of docker images from check_call, turn into list of objects, do silly
     # things with regex and return local image age
+
     local_images = dockerutil.list_local().decode("utf-8")
     lines = local_images.split("\n")
     keys = re.split(r'\s{2,}', lines[0])
@@ -491,7 +524,7 @@ def check_outdated_image(env):
 
         # compare local and remote
         age_diff = format.compare_human_readable(local_age, remote_age)
-        if int(age_diff.days) >= 1:
+        if int(age_diff.days) >= int(interval):
             question = [
                 {
                     'type': 'list',
