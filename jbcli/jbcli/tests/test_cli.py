@@ -979,9 +979,11 @@ class TestCli(object):
 
     @patch('jbcli.cli.jb.dockerutil')
     @patch('jbcli.cli.jb.auth')
-    def test_start_noupdate(self, auth_mock, dockerutil_mock, monkeypatch):
+    @patch('jbcli.cli.jb.check_outdated_image')
+    def test_start_noupdate(self, image_mock, auth_mock, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        image_mock.answer = "no"
         auth_mock.deduped_mfas = ['arn:aws:iam::423681189101:mfa/TestMFA']
         result = invoke(['start', 'develop-py3', '--noupdate', '--noupgrade'])
         assert dockerutil_mock.mock_calls == [

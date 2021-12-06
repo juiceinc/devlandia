@@ -2,7 +2,7 @@
 outputs.
 """
 from click import secho
-from datetime import datetime
+from datetime import datetime, timedelta
 from humanize import naturaltime
 
 
@@ -40,3 +40,17 @@ def human_readable_timediff(dt):
     :type dt: datetime
     """
     return naturaltime(datetime.now() - dt)
+
+def compare_human_readable(old, new):
+    """ Compare the difference in age between 2 human readable times
+
+    :param new: human readable diff sliced into list to be [ number, date operand ]
+    :param old: same as param new but older
+    """
+    now = datetime.now()
+    if new[1] == 'months':
+        new[1] = 'weeks'
+        new[0] = int(new[0])/4
+    old_date = now - timedelta(**{old[1]:int(old[0])})
+    new_date = now - timedelta(**{new[1]: int(new[0])})
+    return abs(old_date - new_date)
