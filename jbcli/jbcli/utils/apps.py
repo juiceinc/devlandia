@@ -125,11 +125,7 @@ $ git push -u origin master
             echo_warning(errmsg)
         try:
             check_call(['github', '{}'.format(app_dir)])
-        except CalledProcessError as exc_info:
-            LOG.error(str(exc_info))
-            click.echo()
-            echo_warning('Failed to add to github desktop')
-        except OSError as exc_info:
+        except (CalledProcessError, OSError) as exc_info:
             LOG.error(str(exc_info))
             click.echo()
             echo_warning('Failed to add to github desktop')

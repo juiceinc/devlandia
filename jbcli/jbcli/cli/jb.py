@@ -519,26 +519,25 @@ def check_outdated_image(env):
         remote_age = tag_dict[env].split()[2:-1]
 
         # when it's just one hour / day it's formatted like "an hour/ a day" so we need to sanitize here
-        if remote_age[0] == "an" or remote_age[0] == "a":
+        if remote_age[0] in ["an", "a"]:
             remote_age[0] = "1"
             remote_age[1] += "s"
 
         # compare local and remote
         age_diff = format.compare_human_readable(local_age, remote_age)
-        if int(age_diff.days) >= int(interval):
-            question = [
-                {
-                    'type': 'list',
-                    'name': 'age_diff',
-                    'message': f'local image is {age_diff} older than remote image, '
-                               f'would you like to update?',
-                    'choices': ["no", "yes"]
-                }
-            ]
-            answer = prompt(question)
-            return answer['age_diff']
-        else:
+        if int(age_diff.days) < int(interval):
             return f"image {age_diff} older than remote"
+        question = [
+            {
+                'type': 'list',
+                'name': 'age_diff',
+                'message': f'local image is {age_diff} older than remote image, '
+                           f'would you like to update?',
+                'choices': ["no", "yes"]
+            }
+        ]
+        answer = prompt(question)
+        return answer['age_diff']
 
 
 def get_environment_interactively(env, tag_lookup):
