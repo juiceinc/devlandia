@@ -75,8 +75,7 @@ def add(applications, add_desktop, runtime):
                     github_repo_url = apps.make_github_repo_url(app)
 
                     try:
-                        subprocess.check_call(['git', 'clone', github_repo_url,
-                                               app_dir])
+                        subprocess.check_call(['git', 'clone', github_repo_url, app_dir])
                     except subprocess.CalledProcessError:
                         failed_apps.append(app)
                         continue

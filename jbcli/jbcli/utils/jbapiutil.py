@@ -76,26 +76,26 @@ def load_app(app, refresh_token=False):
             except ConnectionError:
                 echo_warning('Can not connect, retrying')
                 # Retry with backoffs of 1,2,4,8 seconds
-                time.sleep(2**retry_cnt)
+                time.sleep(2 ** retry_cnt)
                 retry_cnt += 1
                 continue
             break
 
         if response.status_code == 200:
             result = response.json()
-            echo_success("{} was added successfully via API.".format(app))
+            echo_success(f"{app} was added successfully via API.")
             echo_result(result)
             return True
         if response.status_code == 204:
-           echo_success("{} was added successfully via API.".format(app))
-           echo_success("Wish I could tell you more but you're not running in Juicebox 3.38+!")
-           return True            
+            echo_success(f"{app} was added successfully via API.")
+            echo_success("Wish I could tell you more but you're not running in Juicebox 3.38+!")
+            return True
         elif response.status_code == 401:
             echo_warning('Token is expired')
             return load_app(app, refresh_token=True)
         else:
             result = response.json()
-            echo_warning("Loading app status code was {}".format(response.status_code))
+            echo_warning(f"Loading app status code was {response.status_code}")
             echo_result(result)
             return False
     else:
