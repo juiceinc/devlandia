@@ -66,13 +66,12 @@ def add(applications, add_desktop, runtime):
                 app_dir = 'apps/{}'.format(app)
                 if os.path.isdir(app_dir):
                     # App already exists, update it.
-                    echo_highlight('App {} already exists.'.format(app))
+                    echo_highlight(f'App {app} already exists.')
 
                 else:
                     # App doesn't exist, clone it
-                    echo_highlight('Adding {}...'.format(app))
-                    echo_highlight(
-                        'Downloading app {} from Github.'.format(app))
+                    echo_highlight(f'Adding {app}...')
+                    echo_highlight(f'Downloading app {app} from Github.')
                     github_repo_url = apps.make_github_repo_url(app)
 
                     try:
@@ -86,26 +85,21 @@ def add(applications, add_desktop, runtime):
                         try:
                             subprocess.check_call(['github', app_dir])
                         except subprocess.CalledProcessError:
-                            echo_warning(
-                                'Failed to add {} to Github Desktop.'.format(
-                                    app))
+                            echo_warning(f'Failed to add {app} to Github Desktop.')
                 try:
                     if not jbapiutil.load_app(app):
                         dockerutil.run(
-                            '/{}/bin/python manage.py loadjuiceboxapp {}'.format(
-                                runtime, app))
-                        echo_success('{} was added successfully.'.format(app))
+                            f'/{runtime}/bin/python manage.py loadjuiceboxapp {app}')
+                        echo_success(f'{app} was added successfully.')
 
                 except docker.errors.APIError as e:
-                    echo_warning(
-                        'Failed to add {} to the Juicebox VM.'.format(app))
+                    echo_warning(f'Failed to add {app} to the Juicebox VM.')
                     failed_apps.append(app)
                     print(e.explanation)
 
             if failed_apps:
                 click.echo()
-                echo_warning(
-                    'Failed to load: {}.'.format(', '.join(failed_apps)))
+                echo_warning(f'Failed to load: {", ".join(failed_apps)}.')
                 click.get_current_context().abort()
         else:
             echo_warning('Juicebox is not running.  Please run jb start.')
@@ -253,7 +247,7 @@ def populate_env_with_secrets():
     return env
 
 
-def cleanup_ssh(env):
+def cleanup_ssh():
     compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
     try:
         os.remove(compose_fn)
@@ -280,7 +274,7 @@ def get_host_ip():
         return out.splitlines()[0].split()[0].decode('ascii')
 
 
-def activate_ssh(env, environ):
+def activate_ssh(environ):
     """
     Start the SSH tunnels, and manipulate the environment variables so that
     they are pointing at the right ports.
@@ -324,7 +318,7 @@ def activate_ssh(env, environ):
         while process.poll() is None:
             time.sleep(0.2)
         print("exit status:", process.poll())
-        cleanup_ssh(env)
+        cleanup_ssh()
 
     atexit.register(cleanup)
 
@@ -370,7 +364,8 @@ def activate_ssh(env, environ):
 @click.option("--hstm", default=False, is_flag=True,
               help="Enable hstm")
 @click.option("--core", default=False, is_flag=True,
-              help="Use local fruition checkout with this image (core and hstm-core environments do this automatically)")
+              help="Use local fruition checkout with this image "
+                   "(core and hstm-core environments do this automatically)")
 @click.option("--dev-recipe", default=False, is_flag=True,
               help="Use local recipe checkout, requires running a core environment")
 @click.pass_context
@@ -456,9 +451,9 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
     if is_hstm:
         activate_hstm()
         print("Activating HSTM")
-    cleanup_ssh(env)
+    cleanup_ssh()
     if ssh:
-        environ.update(activate_ssh(env, environ))
+        environ.update(activate_ssh(environ))
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
@@ -486,13 +481,13 @@ def prompt_interval():
 
 def check_outdated_image(env):
     print("Checking Image age")
-    interval = 1
+    interval_val = 1
     try:
-        interval = stash.get('interval')
-        if interval is None:
+        interval_val = stash.get('interval')
+        if interval_val is None:
             echo_warning("Docker image prompt interval not set.")
             prompt_interval()
-            interval = stash.get('interval')
+            interval_val = stash.get('interval')
     except Exception as e:
         pass
 
@@ -525,7 +520,7 @@ def check_outdated_image(env):
 
         # compare local and remote
         age_diff = format.compare_human_readable(local_age, remote_age)
-        if int(age_diff.days) < int(interval):
+        if int(age_diff.days) < int(interval_val):
             return f"image {age_diff} older than remote"
         question = [
             {
