@@ -55,7 +55,8 @@ def cli():
 @click.option('--runtime', default='venv',
               help='Which runtime to use, defaults to venv, the only other option is venv3')
 def add(applications, add_desktop, runtime):
-    """Checkout a juicebox app (or list of apps) and load it
+    """Checkout a juicebox app (or list of apps) and load it, can check out
+    a specific branch by using `appslug@branchname`
     """
     os.chdir(DEVLANDIA_DIR)
     try:
@@ -63,6 +64,11 @@ def add(applications, add_desktop, runtime):
             failed_apps = []
 
             for app in applications:
+                branch = False
+                if "@" in app:
+                    app_split = app.split("@")
+                    app = app_split[0]
+                    branch = app_split[1]
                 app_dir = 'apps/{}'.format(app)
                 if os.path.isdir(app_dir):
                     # App already exists, update it.
@@ -75,7 +81,11 @@ def add(applications, add_desktop, runtime):
                     github_repo_url = apps.make_github_repo_url(app)
 
                     try:
-                        subprocess.check_call(['git', 'clone', github_repo_url, app_dir])
+                        if not branch:
+                            subprocess.check_call(['git', 'clone', github_repo_url, app_dir])
+                        else:
+                            subprocess.check_call(['git', 'clone', '-b', branch, github_repo_url, app_dir])
+                        echo_warning(github_repo_url)
                     except subprocess.CalledProcessError:
                         failed_apps.append(app)
                         continue
