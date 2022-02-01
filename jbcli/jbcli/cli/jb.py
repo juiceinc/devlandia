@@ -60,58 +60,57 @@ def add(applications, add_desktop, runtime):
     """
     os.chdir(DEVLANDIA_DIR)
     try:
-        if dockerutil.is_running():
-            failed_apps = []
-
-            for app in applications:
-                branch = False
-                if "@" in app:
-                    app_split = app.split("@")
-                    app = app_split[0]
-                    branch = app_split[1]
-                app_dir = 'apps/{}'.format(app)
-                if os.path.isdir(app_dir):
-                    # App already exists, update it.
-                    echo_highlight(f'App {app} already exists.')
-
-                else:
-                    # App doesn't exist, clone it
-                    echo_highlight(f'Adding {app}...')
-                    echo_highlight(f'Downloading app {app} from Github.')
-                    github_repo_url = apps.make_github_repo_url(app)
-
-                    try:
-                        if not branch:
-                            subprocess.check_call(['git', 'clone', github_repo_url, app_dir])
-                        else:
-                            subprocess.check_call(['git', 'clone', '-b', branch, github_repo_url, app_dir])
-                        echo_warning(github_repo_url)
-                    except subprocess.CalledProcessError:
-                        failed_apps.append(app)
-                        continue
-
-                    if add_desktop:
-                        try:
-                            subprocess.check_call(['github', app_dir])
-                        except subprocess.CalledProcessError:
-                            echo_warning(f'Failed to add {app} to Github Desktop.')
-                try:
-                    if not jbapiutil.load_app(app):
-                        dockerutil.run(
-                            f'/{runtime}/bin/python manage.py loadjuiceboxapp {app}')
-                        echo_success(f'{app} was added successfully.')
-
-                except docker.errors.APIError as e:
-                    echo_warning(f'Failed to add {app} to the Juicebox VM.')
-                    failed_apps.append(app)
-                    print(e.explanation)
-
-            if failed_apps:
-                click.echo()
-                echo_warning(f'Failed to load: {", ".join(failed_apps)}.')
-                click.get_current_context().abort()
-        else:
+        if not dockerutil.is_running():
             echo_warning('Juicebox is not running.  Please run jb start.')
+            click.get_current_context().abort()
+
+        failed_apps = []
+
+        for app in applications:
+            branch = False
+            if "@" in app:
+                app_split = app.split("@")
+                app = app_split[0]
+                branch = app_split[1]
+            app_dir = 'apps/{}'.format(app)
+            if os.path.isdir(app_dir):
+                # App already exists, update it.
+                echo_highlight(f'App {app} already exists.')
+
+            else:
+                # App doesn't exist, clone it
+                echo_highlight(f'Adding {app}...')
+                echo_highlight(f'Downloading app {app} from Github.')
+                github_repo_url = apps.make_github_repo_url(app)
+
+                try:
+                    if not branch:
+                        subprocess.check_call(['git', 'clone', github_repo_url, app_dir])
+                    else:
+                        subprocess.check_call(['git', 'clone', '-b', branch, github_repo_url, app_dir])
+                except subprocess.CalledProcessError:
+                    failed_apps.append(app)
+                    continue
+
+                if add_desktop:
+                    try:
+                        subprocess.check_call(['github', app_dir])
+                    except subprocess.CalledProcessError:
+                        echo_warning(f'Failed to add {app} to Github Desktop.')
+            try:
+                if not jbapiutil.load_app(app):
+                    dockerutil.run(
+                        f'/{runtime}/bin/python manage.py loadjuiceboxapp {app}')
+                    echo_success(f'{app} was added successfully.')
+
+            except docker.errors.APIError as e:
+                echo_warning(f'Failed to add {app} to the Juicebox VM.')
+                failed_apps.append(app)
+                print(e.explanation)
+
+        if failed_apps:
+            click.echo()
+            echo_warning(f'Failed to load: {", ".join(failed_apps)}.')
             click.get_current_context().abort()
     except docker.errors.APIError as de:
         echo_warning(de.message)
@@ -589,9 +588,8 @@ def get_environment_interactively(env, tag_lookup):
 @cli.command()
 @click.option('--clean', default=False, help='clean up docker containers (using docker-compose down)',
               is_flag=True)
-@click.option('--env', help='Which environment to use')
 @click.pass_context
-def stop(ctx, clean, env):
+def stop(ctx, clean):
     """Stop a running juicebox in this environment
     """
     os.chdir(DEVLANDIA_DIR)

@@ -46,7 +46,7 @@ class WatchHandler(FileSystemEventHandler):
         is_python_change = filename.endswith('.py') and isinstance(event, FileModifiedEvent)
 
         if 'builds' not in path and '.idea' not in path and '.git' not in path:
-            click.echo('Change detected in {}.'.format(app))
+            click.echo(f'Change detected in {app}.')
             if is_python_change:
                 # We don't need to reload the app just refresh
                 # the browser after juicebox service restarts
@@ -55,8 +55,7 @@ class WatchHandler(FileSystemEventHandler):
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
-                    run('/venv/bin/python manage.py loadjuiceboxapp {}'.format(
-                                app))
+                    run(f'/venv/bin/python manage.py loadjuiceboxapp {app}')
                 echo_success('{} was added successfully.'.format(app))
                 if self.should_reload:
                     refresh_browser()
@@ -68,7 +67,7 @@ class WatchHandler(FileSystemEventHandler):
 
 
 def _intersperse(el, l):
-    return [y for x in zip([el]*len(l), l) for y in x]
+    return [y for x in zip([el] * len(l), l) for y in x]
 
 
 def docker_compose(args, env=None, ganesha=False):
@@ -179,9 +178,8 @@ def run(command):
                     for o in output:
                         if o is not None:
                             print(o)
-                else:
-                    if output is not None:
-                        print(output)
+                elif output is not None:
+                    print(output)
 
 
 def parse_dc_file(tag):
@@ -192,26 +190,24 @@ def parse_dc_file(tag):
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
+    if not os.path.isfile(os.getcwd() + '/docker-compose.yml'):
+        return
     base_ecr = '423681189101.dkr.ecr.us-east-1.amazonaws.com/'
     dc_list = []
-    if os.path.isfile(os.getcwd() + '/docker-compose.yml'):
-        with open("docker-compose.yml") as dc:
-            for line in dc:
-                if base_ecr in line:
-                    dc_list.append(line.split(':'))
-                    for pair in dc_list:
-                        pair = [i.strip().strip('\"') for i in pair]
+    with open("docker-compose.yml") as dc:
+        for line in dc:
+            if base_ecr in line:
+                dc_list.append(line.split(':'))
+                for pair in dc_list:
+                    pair = [i.strip().strip('\"') for i in pair]
 
-                        if 'controlcenter-dev' in pair[1]:
-                            full_path = base_ecr + 'controlcenter-dev:'
-                        elif 'juicebox-dev' in pair[1]:
-                            full_path = base_ecr + 'juicebox-devlandia:'
+                    if 'controlcenter-dev' in pair[1]:
+                        full_path = base_ecr + 'controlcenter-dev:'
+                    elif 'juicebox-dev' in pair[1]:
+                        full_path = base_ecr + 'juicebox-devlandia:'
 
-                        if tag is not None:
-                            full_path = full_path + tag
-                        else:
-                            full_path = full_path + pair[2]
-                        return full_path
+                    full_path = full_path + tag if tag is not None else full_path + pair[2]
+                    return full_path
 
 
 def pull(tag):
@@ -219,20 +215,21 @@ def pull(tag):
 
     :param tag: Tag of image to download from the current environment
     """
-    if ensure_home() is True:
-        full_path = parse_dc_file(tag=tag)
-        abs_path = os.path.abspath(os.getcwd())
-        os.chdir('../..')
-        docker_login = check_output([
-            'aws', 'ecr', 'get-login',
-            '--registry-ids', '423681189101', '976661725066',
-            '--no-include-email'])
-        docker_logins = docker_login.split(b'\n')
-        for docker_login in docker_logins:
-            if docker_login:
-                check_call(docker_login.split())
-        check_call(['docker', 'pull', full_path])
-        os.chdir(abs_path)
+    if ensure_home() is not True:
+        return
+    full_path = parse_dc_file(tag=tag)
+    abs_path = os.path.abspath(os.getcwd())
+    os.chdir('../..')
+    docker_login = check_output([
+        'aws', 'ecr', 'get-login',
+        '--registry-ids', '423681189101', '976661725066',
+        '--no-include-email'])
+    docker_logins = docker_login.split(b'\n')
+    for docker_login in docker_logins:
+        if docker_login:
+            check_call(docker_login.split())
+    check_call(['docker', 'pull', full_path])
+    os.chdir(abs_path)
 
 
 def image_list(showall=False, print_flag=True, semantic=False):
@@ -283,13 +280,14 @@ def image_list(showall=False, print_flag=True, semantic=False):
     # Sort in descending order of priority and timestamp
     def sort_order(row):
         return (row[3], row[0])
+
     newImageList.sort(key=sort_order, reverse=True)
 
     if print_flag:
         print(
             tabulate(newImageList,
-                headers=['Image Name', 'Time Tagged', 'Relative', 'Priority', 'Is Semantic', 'Master Version']
-            )
+                     headers=['Image Name', 'Time Tagged', 'Relative', 'Priority', 'Is Semantic', 'Master Version']
+                     )
         )
 
     return newImageList
@@ -354,6 +352,7 @@ def jb_watch(app='', should_reload=False):
 def js_watch():
     if is_running() and ensure_home():
         run('./node_modules/.bin/webpack --mode=development --progress --colors --watch')
+
 
 def list_local():
     return check_output(['docker', 'image', 'list'])
