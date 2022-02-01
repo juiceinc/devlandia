@@ -26,6 +26,10 @@ If the application is not already found in the application directory, it is
 downloaded from Github. It will then load the application into the Juicebox VM,
 and optionally add the repo to the Github desktop application.
 
+If you would like to specify a specific branch to use for adding an app, you
+can use the syntax `appslug@branchname` and it will clone that branch directly
+
+
 Options
 ~~~~~~~
 
