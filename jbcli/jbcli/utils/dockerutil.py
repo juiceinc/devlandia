@@ -206,7 +206,7 @@ def parse_dc_file(tag):
                     elif 'juicebox-dev' in pair[1]:
                         full_path = base_ecr + 'juicebox-devlandia:'
 
-                    full_path = full_path + tag if tag is not None else full_path + pair[2]
+                    full_path = full_path + (tag if tag is not None else pair[2])
                     return full_path
 
 
