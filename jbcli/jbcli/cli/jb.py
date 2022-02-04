@@ -511,15 +511,22 @@ def check_outdated_image(env):
     for image in image_list:
         if env in image['TAG']:
             local_age = image['CREATED'].split()[:-1]
+            if local_age[1] in ["an", "a"]:
+                if len(local_age) > 2:
+                    del local_age[1]
+                local_age[0] = "1"
+                local_age[1] += "s"
 
     # if no local image, continue
     if local_age:
+        print(local_age)
         # get list of remote images and find the relavent one and extract the date
         remote_images = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
         tag_dict = {}
         for row in remote_images:
             tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
             tag_dict[tag] = f"({tag}) published {human_readable}"
+        print(f"Tag  dict: {tag_dict[env]}")
         remote_age = tag_dict[env].split()[2:-1]
 
         # when it's just one hour / day it's formatted like "an hour/ a day" so we need to sanitize here
