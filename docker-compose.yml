@@ -22,9 +22,11 @@ services:
     depends_on:
       - "redis"
       - "postgres"
+      - "snapshot"
     links:
       - postgres
       - redis
+      - snapshot
     environment:
       - ENVIRONMENT=docker
       - DJANGO_SETTINGS_MODULE=fruition.settings.contained
@@ -39,6 +41,7 @@ services:
       - JB_REDIS_LOCATION=redis:6379
       - DJANGO_DEBUG=on
       - JB_INSECURE_COOKIES=yes
+      - JB_SNAPSHOT_LOCATION=snapshot:8080
 
       - JB_DEVLANDIA=on
       - JB_UPLOAD_WITH_DJANGO=on
@@ -66,6 +69,7 @@ services:
       - JB_HSTM
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
+      - JB_SNAPSHOTS_SERVICE
   postgres:
     environment:
         - POSTGRES_USER=juicebox
@@ -74,3 +78,8 @@ services:
     image: "postgres:12.4-alpine"
   redis:
       image: "redis:4.0.14"
+
+  snapshot:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshottest:latest"
+    ports:
+      - "8080:5060"

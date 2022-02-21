@@ -376,8 +376,10 @@ def activate_ssh(environ):
                    "(core and hstm-core environments do this automatically)")
 @click.option("--dev-recipe", default=False, is_flag=True,
               help="Use local recipe checkout, requires running a core environment")
+@click.option("--snapshot", default=False, is_flag=True,
+              help="Start local snapshot server for local snapshot related development")
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
+def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, snapshot):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
     if dockerutil.is_running():
@@ -456,6 +458,8 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe):
 
     if not noupdate:
         dockerutil.pull(tag=tag)
+    if snapshot:
+        activate_snapshot()
     if is_hstm:
         activate_hstm()
         print("Activating HSTM")
@@ -583,6 +587,10 @@ def get_environment_interactively(env, tag_lookup):
         click.get_current_context().abort()
 
     return env
+
+def activate_snapshot():
+    with open(".env", "a") as env_dot:
+        env_dot.write('\nJB_SNAPSHOTS_SERVICE=http://localhost:8080/snapshot/')
 
 
 @cli.command()
