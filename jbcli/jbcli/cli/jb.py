@@ -590,7 +590,7 @@ def get_environment_interactively(env, tag_lookup):
 
 def activate_snapshot():
     with open(".env", "a") as env_dot:
-        env_dot.write('\nJB_SNAPSHOTS_SERVICE=http://localhost:8080/snapshot/')
+        env_dot.write('\nJB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/')
 
 
 @cli.command()
