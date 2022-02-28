@@ -80,5 +80,10 @@ services:
 
   snapshot:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshottest:latest"
+    environment:
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_ACCESS_KEY_ID
+      - AWS_SESSION_TOKEN
+      - AWS_SECURITY_TOKEN
     ports:
       - "8080:8080"
