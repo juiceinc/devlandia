@@ -42,17 +42,17 @@
       <option name="pathMappings">
         <list>
           <mapping local-root="$PROJECT_DIR$/apps" remote-root="/code/apps" />
-          <mapping local-root="$PROJECT_DIR$/environments/core/fruition" remote-root="/code" />
+          <mapping local-root="$PROJECT_DIR$/fruition" remote-root="/code" />
         </list>
       </option>
     </PathMappingSettings>
     <option name="launchJavascriptDebuger" value="false" />
     <option name="host" value="" />
-    <option name="additionalOptions" value="runserver 0.0.0.0:8888" />
+    <option name="additionalOptions" value="0.0.0.0:8888" />
     <option name="browserUrl" value="http://localhost:8888/" />
     <option name="runTestServer" value="false" />
     <option name="runNoReload" value="false" />
-    <option name="useCustomRunCommand" value="true" />
+    <option name="useCustomRunCommand" value="false" />
     <option name="customRunCommand" value="/code/manage.py" />
     <method v="2" />
   </configuration>
