@@ -510,6 +510,11 @@ def check_outdated_image(env):
     for image in image_list:
         if env in image['TAG']:
             local_age = image['CREATED'].split()[:-1]
+            if local_age[1] in ["an", "a"]:
+                if len(local_age) > 2:
+                    del local_age[1]
+                local_age[0] = "1"
+                local_age[1] += "s"
 
     # if no local image, continue
     if local_age:
