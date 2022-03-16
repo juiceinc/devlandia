@@ -43,7 +43,6 @@ services:
       - JB_INSECURE_COOKIES=yes
 
       - JB_DEVLANDIA=on
-      - JB_SIGNUP_DOMAIN=http://127.0.0.1.nip.io:8000
       - JB_UPLOAD_WITH_DJANGO=on
       - JB_LOGS_STDOUT=off
       - JB_DEBUG_LOGGING=on
