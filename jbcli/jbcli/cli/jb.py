@@ -498,7 +498,7 @@ def start(
     if not noupgrade:
         ctx.invoke(upgrade)
     if dev_snapshot:
-        local_snapshot_dir = "juicebox-snapshots-service"
+        local_snapshot_dir = "./juicebox-snapshots-service"
         container_snapshot_dir = "/code"
     else:
         local_snapshot_dir = "./nothing"
