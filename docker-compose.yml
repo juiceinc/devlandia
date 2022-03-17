@@ -87,5 +87,6 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SESSION_TOKEN
       - AWS_SECURITY_TOKEN
+      - JB_DEBUG=true
     ports:
       - "8080:8080"
