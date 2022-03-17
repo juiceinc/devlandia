@@ -80,6 +80,8 @@ services:
 
   snapshot:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshottest:latest"
+    volumes:
+      - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
     environment:
       - AWS_SECRET_ACCESS_KEY
       - AWS_ACCESS_KEY_ID

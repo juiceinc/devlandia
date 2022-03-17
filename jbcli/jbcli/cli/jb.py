@@ -423,14 +423,14 @@ def activate_ssh(environ):
     help="Use local recipe checkout, requires running a core environment",
 )
 @click.option(
-    "--snapshot",
+    "--dev-snapshot",
     default=False,
     is_flag=True,
-    help="Start local snapshot server for local snapshot related development",
+    help="Mount local juicebox-snapshots-service code into snapshots container",
 )
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, snapshot
+    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -497,7 +497,15 @@ def start(
             noupdate = False
     if not noupgrade:
         ctx.invoke(upgrade)
+    if dev_snapshot:
+        local_snapshot_dir = "juicebox-snapshots-service"
+        container_snapshot_dir = "/code"
+    else:
+        local_snapshot_dir = "./nothing"
+        container_snapshot_dir = "/nothing"
+
     with open(".env", "w") as env_dot:
+        # why are we using .env instead of just putting things into the environment?
         env_dot.write(
             f"DEVLANDIA_PORT=8000\n"
             f"TAG={tag}\n"
@@ -507,13 +515,13 @@ def start(
             f"RECIPE={recipe_path}\n"
             f"RECIPEFILE={recipe_end}\n"
         )
+        env_dot.write(f"LOCAL_SNAPSHOT_DIR={local_snapshot_dir}\n")
+        env_dot.write(f"CONTAINER_SNAPSHOT_DIR={container_snapshot_dir}\n")
 
     environ = populate_env_with_secrets()
 
     if not noupdate:
         dockerutil.pull(tag=tag)
-    if snapshot:
-        activate_snapshot()
     if is_hstm:
         activate_hstm()
         print("Activating HSTM")
