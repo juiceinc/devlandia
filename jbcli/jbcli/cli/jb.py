@@ -29,8 +29,8 @@ from ..utils.secrets import get_deployment_secrets
 from ..utils.storageutil import Stash
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
-DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, '..', '..', '..'))
-JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, 'jbcli'))
+DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, "..", "..", ".."))
+JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, "jbcli"))
 
 stash = Stash("~/.config/juicebox/devlandia.toml")
 
@@ -49,11 +49,17 @@ def cli():
 
 
 @cli.command()
-@click.argument('applications', nargs=-1, required=True)
-@click.option('--add-desktop/--no-add-desktop', default=False,
-              help='Optionally add to Github Desktop')
-@click.option('--runtime', default='venv',
-              help='Which runtime to use, defaults to venv, the only other option is venv3')
+@click.argument("applications", nargs=-1, required=True)
+@click.option(
+    "--add-desktop/--no-add-desktop",
+    default=False,
+    help="Optionally add to Github Desktop",
+)
+@click.option(
+    "--runtime",
+    default="venv",
+    help="Which runtime to use, defaults to venv, the only other option is venv3",
+)
 def add(applications, add_desktop, runtime):
     """Checkout a juicebox app (or list of apps) and load it, can check out
     a specific branch by using `appslug@branchname`
@@ -61,7 +67,7 @@ def add(applications, add_desktop, runtime):
     os.chdir(DEVLANDIA_DIR)
     try:
         if not dockerutil.is_running():
-            echo_warning('Juicebox is not running.  Please run jb start.')
+            echo_warning("Juicebox is not running.  Please run jb start.")
             click.get_current_context().abort()
 
         failed_apps = []
@@ -72,39 +78,44 @@ def add(applications, add_desktop, runtime):
                 app_split = app.split("@")
                 app = app_split[0]
                 branch = app_split[1]
-            app_dir = 'apps/{}'.format(app)
+            app_dir = "apps/{}".format(app)
             if os.path.isdir(app_dir):
                 # App already exists, update it.
-                echo_highlight(f'App {app} already exists.')
+                echo_highlight(f"App {app} already exists.")
 
             else:
                 # App doesn't exist, clone it
-                echo_highlight(f'Adding {app}...')
-                echo_highlight(f'Downloading app {app} from Github.')
+                echo_highlight(f"Adding {app}...")
+                echo_highlight(f"Downloading app {app} from Github.")
                 github_repo_url = apps.make_github_repo_url(app)
 
                 try:
                     if not branch:
-                        subprocess.check_call(['git', 'clone', github_repo_url, app_dir])
+                        subprocess.check_call(
+                            ["git", "clone", github_repo_url, app_dir]
+                        )
                     else:
-                        subprocess.check_call(['git', 'clone', '-b', branch, github_repo_url, app_dir])
+                        subprocess.check_call(
+                            ["git", "clone", "-b", branch, github_repo_url, app_dir]
+                        )
                 except subprocess.CalledProcessError:
                     failed_apps.append(app)
                     continue
 
                 if add_desktop:
                     try:
-                        subprocess.check_call(['github', app_dir])
+                        subprocess.check_call(["github", app_dir])
                     except subprocess.CalledProcessError:
-                        echo_warning(f'Failed to add {app} to Github Desktop.')
+                        echo_warning(f"Failed to add {app} to Github Desktop.")
             try:
                 if not jbapiutil.load_app(app):
                     dockerutil.run(
-                        f'/{runtime}/bin/python manage.py loadjuiceboxapp {app}')
-                    echo_success(f'{app} was added successfully.')
+                        f"/{runtime}/bin/python manage.py loadjuiceboxapp {app}"
+                    )
+                    echo_success(f"{app} was added successfully.")
 
             except docker.errors.APIError as e:
-                echo_warning(f'Failed to add {app} to the Juicebox VM.')
+                echo_warning(f"Failed to add {app} to the Juicebox VM.")
                 failed_apps.append(app)
                 print(e.explanation)
 
@@ -117,65 +128,76 @@ def add(applications, add_desktop, runtime):
 
 
 @cli.command()
-@click.argument('existing_app', required=True)
-@click.argument('new_app', required=True)
-@click.option('--init/--no-init', default=True,
-              help='Initialize VCS repository')
-@click.option('--track/--no-track', default=True,
-              help='Track remote VCS repository')
-@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3',
-              default='venv')
+@click.argument("existing_app", required=True)
+@click.argument("new_app", required=True)
+@click.option("--init/--no-init", default=True, help="Initialize VCS repository")
+@click.option("--track/--no-track", default=True, help="Track remote VCS repository")
+@click.option(
+    "--runtime",
+    help="Which runtime to use, defaults to venv, the only other option is venv3",
+    default="venv",
+)
 def clone(existing_app, new_app, init, track, runtime):
-    """ Clones an existing application to a new one. Make sure you have a
+    """Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
     """
     try:
         if dockerutil.is_running():
-            existing_app_dir = 'apps/{}'.format(existing_app)
-            new_app_dir = 'apps/{}'.format(new_app)
+            existing_app_dir = "apps/{}".format(existing_app)
+            new_app_dir = "apps/{}".format(new_app)
 
             if not os.path.isdir(existing_app_dir):
-                echo_warning('App {} does not exist.'.format(existing_app))
+                echo_warning("App {} does not exist.".format(existing_app))
                 click.get_current_context().abort()
             if os.path.isdir(new_app_dir):
-                echo_warning('App {} already exists.'.format(new_app))
+                echo_warning("App {} already exists.".format(new_app))
                 click.get_current_context().abort()
 
-            echo_highlight('Cloning from {} to {}...'.format(existing_app,
-                                                             new_app))
+            echo_highlight("Cloning from {} to {}...".format(existing_app, new_app))
 
             try:
-                result = apps.clone(new_app, existing_app_dir, new_app_dir,
-                                    init_vcs=init, track_vcs=track)
+                result = apps.clone(
+                    new_app,
+                    existing_app_dir,
+                    new_app_dir,
+                    init_vcs=init,
+                    track_vcs=track,
+                )
             except (OSError, ValueError):
-                echo_warning('Cloning failed')
+                echo_warning("Cloning failed")
                 click.get_current_context().abort()
             if not result:
                 click.get_current_context().abort()
 
             try:
                 dockerutil.run(
-                    '/{}/bin/python manage.py loadjuiceboxapp {}'.format(
-                        runtime, new_app))
+                    "/{}/bin/python manage.py loadjuiceboxapp {}".format(
+                        runtime, new_app
+                    )
+                )
             except docker.errors.APIError:
-                echo_warning('Failed to load: {}.'.format(new_app))
+                echo_warning("Failed to load: {}.".format(new_app))
                 click.get_current_context().abort()
         else:
-            echo_warning('Juicebox is not running.  Run jb start.')
+            echo_warning("Juicebox is not running.  Run jb start.")
             click.get_current_context().abort()
     except docker.errors.APIError as de:
         echo_warning(de.message)
 
 
 @cli.command()
-@click.argument('applications', nargs=-1, required=True)
-@click.confirmation_option('--yes', is_flag=True,
-                           prompt='Are you sure you want to delete?')
-@click.option('--runtime', help='Which runtime to use, defaults to venv, the only other option is venv3'
-                                'option.', default='venv')
+@click.argument("applications", nargs=-1, required=True)
+@click.confirmation_option(
+    "--yes", is_flag=True, prompt="Are you sure you want to delete?"
+)
+@click.option(
+    "--runtime",
+    help="Which runtime to use, defaults to venv, the only other option is venv3"
+    "option.",
+    default="venv",
+)
 def remove(applications, runtime):
-    """Remove a juicebox app (or list of apps) from your local environment
-    """
+    """Remove a juicebox app (or list of apps) from your local environment"""
     os.chdir(DEVLANDIA_DIR)
     try:
         if dockerutil.is_running() and dockerutil.ensure_home():
@@ -183,42 +205,45 @@ def remove(applications, runtime):
 
             for app in applications:
                 try:
-                    if os.path.isdir('apps/{}'.format(app)):
-                        echo_highlight('Removing {}...'.format(app))
-                        shutil.rmtree('apps/{}'.format(app))
+                    if os.path.isdir("apps/{}".format(app)):
+                        echo_highlight("Removing {}...".format(app))
+                        shutil.rmtree("apps/{}".format(app))
                         dockerutil.run(
-                            '/{}/bin/python manage.py deletejuiceboxapp {}'.format(
-                                runtime, app))
-                        echo_success('Successfully deleted {}'.format(app))
+                            "/{}/bin/python manage.py deletejuiceboxapp {}".format(
+                                runtime, app
+                            )
+                        )
+                        echo_success("Successfully deleted {}".format(app))
                     else:
-                        echo_warning('App {} didn\'t exist.'.format(app))
+                        echo_warning("App {} didn't exist.".format(app))
                 except docker.errors.APIError:
                     print(docker.errors.APIError.message)
                     failed_apps.append(app)
             if failed_apps:
                 click.echo()
-                echo_warning(
-                    'Failed to remove: {}.'.format(', '.join(failed_apps)))
+                echo_warning("Failed to remove: {}.".format(", ".join(failed_apps)))
                 click.get_current_context().abort()
         else:
-            echo_warning('Juicebox is not running.  Run jb start.')
+            echo_warning("Juicebox is not running.  Run jb start.")
             click.get_current_context().abort()
     except docker.errors.APIError:
         click.echo()
-        echo_warning('Juicebox is not running.  Run jb start.')
+        echo_warning("Juicebox is not running.  Run jb start.")
         click.get_current_context().abort()
 
 
-@click.option('--includejs', default=False, help='Watch for js changes',
-              is_flag=True)
-@click.option('--app', default='', help='Watch a specific app.')
-@click.option('--reload', default=False, help='Refresh browser after file changes.',
-              is_flag=True)
+@click.option("--includejs", default=False, help="Watch for js changes", is_flag=True)
+@click.option("--app", default="", help="Watch a specific app.")
+@click.option(
+    "--reload", default=False, help="Refresh browser after file changes.", is_flag=True
+)
 @cli.command()
-def watch(includejs=False, app='', reload=False):
-    """ Watch for changes in apps and js and reload/rebuild"""
+def watch(includejs=False, app="", reload=False):
+    """Watch for changes in apps and js and reload/rebuild"""
     procs = []
-    jb_watch_proc = Process(target=dockerutil.jb_watch, kwargs={'app': app, 'should_reload': reload})
+    jb_watch_proc = Process(
+        target=dockerutil.jb_watch, kwargs={"app": app, "should_reload": reload}
+    )
     jb_watch_proc.start()
     procs.append(jb_watch_proc)
 
@@ -234,19 +259,18 @@ def watch(includejs=False, app='', reload=False):
         proc.join()
 
 
-@click.option('--showall', default=False, help='Show all tagged images',
-              is_flag=True)
-@click.option('--semantic', default=False, help='Show all semantic versions.',
-              is_flag=True)
+@click.option("--showall", default=False, help="Show all tagged images", is_flag=True)
+@click.option(
+    "--semantic", default=False, help="Show all semantic versions.", is_flag=True
+)
 @cli.command()
 def ls(showall=False, semantic=False):
-    """List available containers
-    """
+    """List available containers"""
     try:
-        echo_success('The following tagged images are available:')
+        echo_success("The following tagged images are available:")
         dockerutil.image_list(showall=showall, semantic=semantic)
     except subprocess.CalledProcessError:
-        echo_warning('You must login to the registry first.')
+        echo_warning("You must login to the registry first.")
 
 
 def populate_env_with_secrets():
@@ -256,7 +280,7 @@ def populate_env_with_secrets():
 
 
 def cleanup_ssh():
-    compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
+    compose_fn = os.path.join(DEVLANDIA_DIR, "docker-compose-ssh.yml")
     try:
         os.remove(compose_fn)
     except OSError as e:
@@ -266,20 +290,23 @@ def cleanup_ssh():
 
 def get_host_ip():
     try:
-        ifname = b'docker0'
+        ifname = b"docker0"
         SIOCGIFADDR = 0x8915
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        interface = struct.pack('256s', ifname[:15])
+        interface = struct.pack("256s", ifname[:15])
         addr = fcntl.ioctl(s.fileno(), SIOCGIFADDR, interface)[20:24]
         return socket.inet_ntoa(addr)
     except Exception as e:
-        print("[get_host_ip] Couldn't get docker0 address, falling back to slow method", e)
+        print(
+            "[get_host_ip] Couldn't get docker0 address, falling back to slow method", e
+        )
         out = dockerutil.client.containers.run(
-            'ubuntu:18.04', 'getent hosts host.docker.internal')
+            "ubuntu:18.04", "getent hosts host.docker.internal"
+        )
         # returns output like:
         #   192.168.1.1    host.docker.internal
         #   192.168.1.2    host.docker.internal
-        return out.splitlines()[0].split()[0].decode('ascii')
+        return out.splitlines()[0].split()[0].decode("ascii")
 
 
 def activate_ssh(environ):
@@ -293,7 +320,7 @@ def activate_ssh(environ):
     for envvar, localport in [
         ("JB_REDSHIFT_CONNECTION", 5439),
         ("JB_HSTM_REDSHIFT_CONNECTION", 5438),
-        ("JB_PREVERITY_REDSHIFT_CONNECTION", 5437)
+        ("JB_PREVERITY_REDSHIFT_CONNECTION", 5437),
     ]:
         if envvar not in environ:
             continue
@@ -313,10 +340,17 @@ def activate_ssh(environ):
     ssh_links = [leaf for tree in ssh_links for leaf in tree]  # flatten
 
     command = [
-        "ssh", "-T", "-N",
-        "-o", "ServerAliveInterval 30", "-o", "ServerAliveCountMax 3", "-o", "StrictHostKeyChecking=accept-new",
+        "ssh",
+        "-T",
+        "-N",
+        "-o",
+        "ServerAliveInterval 30",
+        "-o",
+        "ServerAliveCountMax 3",
+        "-o",
+        "StrictHostKeyChecking=accept-new",
         *ssh_links,
-        "vpn2.juiceboxdata.com"
+        "vpn2.juiceboxdata.com",
     ]
     process = Popen(command)
 
@@ -330,23 +364,22 @@ def activate_ssh(environ):
 
     atexit.register(cleanup)
 
-    compose_fn = os.path.join(DEVLANDIA_DIR, 'docker-compose-ssh.yml')
+    compose_fn = os.path.join(DEVLANDIA_DIR, "docker-compose-ssh.yml")
     host_addr = get_host_ip()
     content = {
-        'version': '3.2',
-        'services': {
-            'juicebox': {
-                'extra_hosts': [
-                    f"{url.hostname}:{host_addr}"
-                    for (url, _, _) in redshifts.values()
+        "version": "3.2",
+        "services": {
+            "juicebox": {
+                "extra_hosts": [
+                    f"{url.hostname}:{host_addr}" for (url, _, _) in redshifts.values()
                 ],
                 # We want to make sure that the environment variables we're going to set
                 # will be passed through to the container.
                 "environment": list(redshifts.keys()),
             }
-        }
+        },
     }
-    with open(compose_fn, 'w') as compose_file:
+    with open(compose_fn, "w") as compose_file:
         compose_file.write(yaml.safe_dump(content))
     # We *could* just write the new connection strings into the YAML content above,
     # but that would mean leaving secrets around on disk, so we'll just put them into
@@ -358,33 +391,52 @@ def activate_ssh(environ):
 
 
 @cli.command()
-@click.argument('env', nargs=1, required=False)
-@click.option('--noupdate', default=False,
-              help='Do not automatically update Docker image on start',
-              is_flag=True)
-@click.option('--noupgrade', default=False,
-              help='Do not automatically update jb and generators on start',
-              is_flag=True)
-@click.option('--ssh', default=False, is_flag=True,
-              help='run an SSH tunnel for redshift')
-@click.option("--ganesha", default=False, is_flag=True,
-              help="Enable ganesha")
-@click.option("--hstm", default=False, is_flag=True,
-              help="Enable hstm")
-@click.option("--core", default=False, is_flag=True,
-              help="Use local fruition checkout with this image "
-                   "(core and hstm-core environments do this automatically)")
-@click.option("--dev-recipe", default=False, is_flag=True,
-              help="Use local recipe checkout, requires running a core environment")
-@click.option("--snapshot", default=False, is_flag=True,
-              help="Start local snapshot server for local snapshot related development")
+@click.argument("env", nargs=1, required=False)
+@click.option(
+    "--noupdate",
+    default=False,
+    help="Do not automatically update Docker image on start",
+    is_flag=True,
+)
+@click.option(
+    "--noupgrade",
+    default=False,
+    help="Do not automatically update jb and generators on start",
+    is_flag=True,
+)
+@click.option(
+    "--ssh", default=False, is_flag=True, help="run an SSH tunnel for redshift"
+)
+@click.option("--ganesha", default=False, is_flag=True, help="Enable ganesha")
+@click.option("--hstm", default=False, is_flag=True, help="Enable hstm")
+@click.option(
+    "--core",
+    default=False,
+    is_flag=True,
+    help="Use local fruition checkout with this image "
+    "(core and hstm-core environments do this automatically)",
+)
+@click.option(
+    "--dev-recipe",
+    default=False,
+    is_flag=True,
+    help="Use local recipe checkout, requires running a core environment",
+)
+@click.option(
+    "--snapshot",
+    default=False,
+    is_flag=True,
+    help="Start local snapshot server for local snapshot related development",
+)
 @click.pass_context
-def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, snapshot):
+def start(
+    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, snapshot
+):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
     if dockerutil.is_running():
-        echo_warning('An instance of Juicebox is already running')
-        echo_warning('Run `jb stop` to stop this instance.')
+        echo_warning("An instance of Juicebox is already running")
+        echo_warning("Run `jb stop` to stop this instance.")
         return
 
     # A dictionary of environment names and tags to use
@@ -415,7 +467,8 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, s
         else:
             print(
                 "Could not find Local Fruition Checkout, please check that it is symlinked to the top level of "
-                "Devlandia")
+                "Devlandia"
+            )
             sys.exit(1)
 
     # "dev_recipe" devlandia uses editable recipe code
@@ -427,7 +480,8 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, s
             else:
                 print(
                     "Could not find local recipe checkout, please check that it is symlinked to the top level of "
-                    "Devlandia")
+                    "Devlandia"
+                )
                 sys.exit(1)
         else:
             print("The dev-recipe flag requires running a core environment")
@@ -469,12 +523,12 @@ def start(ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, s
     dockerutil.up(env=environ, ganesha=ganesha)
 
 
-@click.argument('days', nargs=1, required=False)
+@click.argument("days", nargs=1, required=False)
 @cli.command()
 def interval(days):
     """Set a new value (in days) for the frequency to check docker images for updates."""
     if days:
-        stash.put('interval', days)
+        stash.put("interval", days)
     else:
         prompt_interval()
 
@@ -482,12 +536,12 @@ def interval(days):
 def prompt_interval():
     question = [
         {
-            'type': 'input',
-            'name': 'interval',
-            'message': 'How often do you want to be prompted about out of date images (in days)?'
+            "type": "input",
+            "name": "interval",
+            "message": "How often do you want to be prompted about out of date images (in days)?",
         }
     ]
-    answer = prompt(question)['interval']
+    answer = prompt(question)["interval"]
     stash.put("interval", answer)
 
 
@@ -495,11 +549,11 @@ def check_outdated_image(env):
     print("Checking Image age")
     interval_val = 1
     try:
-        interval_val = stash.get('interval')
+        interval_val = stash.get("interval")
         if interval_val is None:
             echo_warning("Docker image prompt interval not set.")
             prompt_interval()
-            interval_val = stash.get('interval')
+            interval_val = stash.get("interval")
     except Exception as e:
         pass
 
@@ -508,12 +562,12 @@ def check_outdated_image(env):
 
     local_images = dockerutil.list_local().decode("utf-8")
     lines = local_images.split("\n")
-    keys = re.split(r'\s{2,}', lines[0])
-    image_list = [dict(zip(keys, re.split(r'\s{2,}', i))) for i in lines[1:-1]]
+    keys = re.split(r"\s{2,}", lines[0])
+    image_list = [dict(zip(keys, re.split(r"\s{2,}", i))) for i in lines[1:-1]]
     local_age = False
     for image in image_list:
-        if env in image['TAG']:
-            local_age = image['CREATED'].split()[:-1]
+        if env in image["TAG"]:
+            local_age = image["CREATED"].split()[:-1]
             if local_age[1] in ["an", "a"]:
                 if len(local_age) > 2:
                     del local_age[1]
@@ -523,10 +577,19 @@ def check_outdated_image(env):
     # if no local image, continue
     if local_age:
         # get list of remote images and find the relavent one and extract the date
-        remote_images = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
+        remote_images = dockerutil.image_list(
+            showall=True, print_flag=False, semantic=False
+        )
         tag_dict = {}
         for row in remote_images:
-            tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
+            (
+                tag,
+                pushed,
+                human_readable,
+                tag_priority,
+                is_semantic_tag,
+                stable_version,
+            ) = row
             tag_dict[tag] = f"({tag}) published {human_readable}"
         remote_age = tag_dict[env].split()[2:-1]
 
@@ -541,15 +604,15 @@ def check_outdated_image(env):
             return f"image {age_diff} older than remote"
         question = [
             {
-                'type': 'list',
-                'name': 'age_diff',
-                'message': f'local image is {age_diff} older than remote image, '
-                           f'would you like to update?',
-                'choices': ["no", "yes"]
+                "type": "list",
+                "name": "age_diff",
+                "message": f"local image is {age_diff} older than remote image, "
+                f"would you like to update?",
+                "choices": ["no", "yes"],
             }
         ]
         answer = prompt(question)
-        return answer['age_diff']
+        return answer["age_diff"]
 
 
 def get_environment_interactively(env, tag_lookup):
@@ -558,7 +621,7 @@ def get_environment_interactively(env, tag_lookup):
         return env
 
     click.echo("Welcome to devlandia!")
-    click.echo('Gathering data on available environments...\n')
+    click.echo("Gathering data on available environments...\n")
     # get a list of all the current images
     tags = dockerutil.image_list(showall=True, print_flag=False, semantic=False)
     # these are the tags we want to look for in the list of images
@@ -572,39 +635,42 @@ def get_environment_interactively(env, tag_lookup):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = [
-        {'name': k + " - " + tag_dict[v], 'value': k}
-        for k, v in tag_lookup.items()
+        {"name": k + " - " + tag_dict[v], "value": k} for k, v in tag_lookup.items()
     ]
 
     questions = [
         {
-            'type': 'list',
-            'name': 'env',
-            'message': 'What environment would you like to use?',
-            'choices': env_choices
+            "type": "list",
+            "name": "env",
+            "message": "What environment would you like to use?",
+            "choices": env_choices,
         }
     ]
 
-    env = prompt(questions).get('env')
+    env = prompt(questions).get("env")
 
     if not env:
-        echo_highlight('No environment selected.')
+        echo_highlight("No environment selected.")
         click.get_current_context().abort()
 
     return env
 
+
 def activate_snapshot():
     with open(".env", "a") as env_dot:
-        env_dot.write('\nJB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/')
+        env_dot.write("\nJB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/")
 
 
 @cli.command()
-@click.option('--clean', default=False, help='clean up docker containers (using docker-compose down)',
-              is_flag=True)
+@click.option(
+    "--clean",
+    default=False,
+    help="clean up docker containers (using docker-compose down)",
+    is_flag=True,
+)
 @click.pass_context
 def stop(ctx, clean):
-    """Stop a running juicebox in this environment
-    """
+    """Stop a running juicebox in this environment"""
     os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
 
@@ -612,22 +678,22 @@ def stop(ctx, clean):
         dockerutil.destroy()
     elif dockerutil.is_running():
         dockerutil.halt()
-        echo_highlight('Juicebox is no longer running.')
+        echo_highlight("Juicebox is no longer running.")
     else:
-        echo_highlight('Juicebox is not running')
+        echo_highlight("Juicebox is not running")
 
 
 @cli.command()
 @click.pass_context
 def upgrade(ctx):
-    """ Attempt to upgrade jb command line """
+    """Attempt to upgrade jb command line"""
     dockerutil.ensure_root()
 
     try:
-        subprocess.check_call(['git', 'pull'])
-        subprocess.check_call(['pip', 'install', '-r', 'requirements.txt', '-q'])
+        subprocess.check_call(["git", "pull"])
+        subprocess.check_call(["pip", "install", "-r", "requirements.txt", "-q"])
     except subprocess.CalledProcessError:
-        echo_warning('Failed to `git pull`')
+        echo_warning("Failed to `git pull`")
         click.get_current_context().abort()
 
 
@@ -636,46 +702,51 @@ def clear_cache():
     """Clears cache"""
     try:
         if dockerutil.is_running():
-            dockerutil.run('/venv/bin/python manage.py clear_cache')
+            dockerutil.run("/venv/bin/python manage.py clear_cache")
         else:
-            echo_warning('Juicebox not running.  Run jb start')
+            echo_warning("Juicebox not running.  Run jb start")
             click.get_current_context().abort()
     except docker.errors.APIError:
-        echo_warning('Could not clear cache')
+        echo_warning("Could not clear cache")
         click.get_current_context().abort()
 
 
 @cli.command()
-@click.argument('tag', required=False)
+@click.argument("tag", required=False)
 def pull(tag=None):
-    """ Pulls updates for the image of the environment you're currently in
-    """
+    """Pulls updates for the image of the environment you're currently in"""
     dockerutil.pull(tag)
 
 
-@cli.command(context_settings=dict(
-    ignore_unknown_options=True,
-))
-@click.argument('args', nargs=-1, type=click.UNPROCESSED)
-@click.option('--env', help='Which environment to use')
+@cli.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+    )
+)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
+@click.option("--env", help="Which environment to use")
 def manage(args, env):
     """Run an arbitrary manage.py command in the JB container"""
-    cmd = ['/venv/bin/python', 'manage.py'] + list(args)
+    cmd = ["/venv/bin/python", "manage.py"] + list(args)
     return _run(cmd, env)
 
 
-@cli.command(context_settings=dict(
-    ignore_unknown_options=True,
-))
-@click.argument('args', nargs=-1, type=click.UNPROCESSED)
-@click.option('--env', help='Which environment to use')
-@click.option('--service', help='Which service to run the command in', default='juicebox')
+@cli.command(
+    context_settings=dict(
+        ignore_unknown_options=True,
+    )
+)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
+@click.option("--env", help="Which environment to use")
+@click.option(
+    "--service", help="Which service to run the command in", default="juicebox"
+)
 def run(args, env, service):
     """Run an arbitrary command in the JB container"""
     return _run(args, env, service)
 
 
-def _run(args, env, service='juicebox'):
+def _run(args, env, service="juicebox"):
     auth.has_current_session()
     cmd = list(args)
     if env is None:
@@ -687,7 +758,7 @@ def _run(args, env, service='juicebox'):
             click.echo("running command in {}".format(container.name))
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
-            subprocess.check_call(['docker', 'exec', '-it', container.name] + cmd)
+            subprocess.check_call(["docker", "exec", "-it", container.name] + cmd)
         elif env is not None:
             click.echo("starting new {}".format(env))
             os.chdir(DEVLANDIA_DIR)
@@ -695,7 +766,8 @@ def _run(args, env, service='juicebox'):
         else:
             echo_warning(
                 "Juicebox not running and no --env given. "
-                "Please pass --env, or start juicebox in the background first.")
+                "Please pass --env, or start juicebox in the background first."
+            )
             click.get_current_context().abort()
     except subprocess.CalledProcessError as e:
         echo_warning("command exited with {}".format(e.returncode))
@@ -703,7 +775,7 @@ def _run(args, env, service='juicebox'):
 
 
 @cli.command()
-@click.argument('args', nargs=-1, type=click.UNPROCESSED)
+@click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to run docker-compose for")
 @click.option("--ganesha", default=False, is_flag=True, help="Enable ganesha")
 def dc(args, env, ganesha):
@@ -711,10 +783,10 @@ def dc(args, env, ganesha):
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
-    os.chdir(os.path.join(DEVLANDIA_DIR, 'environments', env))
+    os.chdir(os.path.join(DEVLANDIA_DIR, "environments", env))
     dockerutil.docker_compose(cmd, ganesha=ganesha)
 
 
 def activate_hstm():
     with open(".env", "a") as env_dot:
-        env_dot.write('\nJB_HSTM=on')
+        env_dot.write("\nJB_HSTM=on")
