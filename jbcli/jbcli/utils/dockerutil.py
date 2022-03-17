@@ -29,24 +29,25 @@ client = docker.from_env()
 
 
 class WatchHandler(FileSystemEventHandler):
-
     def __init__(self, should_reload=False):
         self.should_reload = should_reload
 
     def on_modified(self, event):
-        if sys.platform == 'win32':
-            path = re.split(r'[\\/]', event.src_path)
+        if sys.platform == "win32":
+            path = re.split(r"[\\/]", event.src_path)
         else:
-            path = event.src_path.split('/')
+            path = event.src_path.split("/")
 
         # Path looks like
         # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
         app = path[1]
         filename = path[-1]
-        is_python_change = filename.endswith('.py') and isinstance(event, FileModifiedEvent)
+        is_python_change = filename.endswith(".py") and isinstance(
+            event, FileModifiedEvent
+        )
 
-        if 'builds' not in path and '.idea' not in path and '.git' not in path:
-            click.echo(f'Change detected in {app}.')
+        if "builds" not in path and ".idea" not in path and ".git" not in path:
+            click.echo(f"Change detected in {app}.")
             if is_python_change:
                 # We don't need to reload the app just refresh
                 # the browser after juicebox service restarts
@@ -55,15 +56,15 @@ class WatchHandler(FileSystemEventHandler):
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
-                    run(f'/venv/bin/python manage.py loadjuiceboxapp {app}')
-                echo_success('{} was added successfully.'.format(app))
+                    run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
+                echo_success("{} was added successfully.".format(app))
                 if self.should_reload:
                     refresh_browser()
 
         else:
-            click.echo('Change to {} ignored'.format(event.src_path))
+            click.echo("Change to {} ignored".format(event.src_path))
 
-        click.echo('Waiting for changes...')
+        click.echo("Waiting for changes...")
 
 
 def _intersperse(el, l):
@@ -73,45 +74,42 @@ def _intersperse(el, l):
 def docker_compose(args, env=None, ganesha=False):
     # Since our docker-compose.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
-    compose_files = ['docker-compose.yml']
-    compose_files.extend(glob('docker-compose-*.yml'))
+    compose_files = ["docker-compose.yml"]
+    compose_files.extend(glob("docker-compose-*.yml"))
     if ganesha:
-        compose_files.append('docker-compose.ganesha.yml')
-    file_args = _intersperse('-f', compose_files)
-    env_name = os.path.basename(os.path.abspath('.'))
-    cmd = [
-        'docker-compose', '--project-directory', '.',
-        '--project-name', env_name
-    ]
+        compose_files.append("docker-compose.ganesha.yml")
+    file_args = _intersperse("-f", compose_files)
+    env_name = os.path.basename(os.path.abspath("."))
+    cmd = ["docker-compose", "--project-directory", ".", "--project-name", env_name]
     return check_call(cmd + file_args + args, env=env)
 
 
 def up(env=None, ganesha=False):
     """Starts and optionally creates a Docker environment based on
-    docker-compose.yml """
-    docker_compose(['up', '--abort-on-container-exit'], env=env, ganesha=ganesha)
+    docker-compose.yml"""
+    docker_compose(["up", "--abort-on-container-exit"], env=env, ganesha=ganesha)
 
 
-def run_jb(cmd, env=None, service='juicebox'):
-    docker_compose(['run', service] + cmd, env=env)
+def run_jb(cmd, env=None, service="juicebox"):
+    docker_compose(["run", service] + cmd, env=env)
 
 
 def destroy():
     """Removes all containers and networks defined in docker-compose.yml"""
-    docker_compose(['down'])
+    docker_compose(["down"])
 
 
 def halt():
     """Halts all containers defined in docker-compose file."""
-    docker_compose(['stop'])
+    docker_compose(["stop"])
 
 
-def is_running(service='juicebox'):
+def is_running(service="juicebox"):
     """Checks whether or not a Juicebox container is currently running.
 
     :rtype: ``bool``
     """
-    click.echo('Checking to see if Juicebox is running...')
+    click.echo("Checking to see if Juicebox is running...")
     containers = client.containers.list()
     for container in containers:
         if service in container.name:
@@ -123,11 +121,11 @@ def ensure_root():
 
     :rtype: ``bool``
     """
-    if not os.path.isdir('jbcli'):
+    if not os.path.isdir("jbcli"):
         # We're not in the devlandia root
         echo_warning(
-            'Please run this command from inside the Devlandia root '
-            'directory.')
+            "Please run this command from inside the Devlandia root " "directory."
+        )
         click.get_current_context().abort()
     return True
 
@@ -137,8 +135,8 @@ def ensure_virtualenv():
 
     :rtype: ``bool``
     """
-    if not os.environ.get('VIRTUAL_ENV', None):
-        echo_warning('Please make sure your virtual env is active.')
+    if not os.environ.get("VIRTUAL_ENV", None):
+        echo_warning("Please make sure your virtual env is active.")
         click.get_current_context().abort()
     return True
 
@@ -151,26 +149,26 @@ def ensure_home():
     if check_home() is None:
         # We're not in the environment home
         echo_warning(
-            'Please run this command from inside the desired environment in '
-            'Devlandia.')
+            "Please run this command from inside the desired environment in "
+            "Devlandia."
+        )
         click.get_current_context().abort()
     return True
 
 
 def check_home():
-    if os.path.isfile('docker-compose.yml') and os.path.isdir('apps'):
+    if os.path.isfile("docker-compose.yml") and os.path.isdir("apps"):
         return os.path.dirname(os.path.abspath(os.path.curdir))
 
 
 def run(command):
-    """Runs a command directly in the docker container.
-    """
+    """Runs a command directly in the docker container."""
     print("running command", command)
     containers = client.containers.list()
     for container in containers:
         # changed here to allow support for hstm environments too, just gets
         #  any juicebox container
-        if 'juicebox' in container.name:
+        if "juicebox" in container.name:
             juicebox = client.containers.get(container.name)
             command_run = juicebox.exec_run(command, stream=True)
             for output in command_run:
@@ -190,21 +188,21 @@ def parse_dc_file(tag):
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
-    if not os.path.isfile(os.getcwd() + '/docker-compose.yml'):
+    if not os.path.isfile(os.getcwd() + "/docker-compose.yml"):
         return
-    base_ecr = '423681189101.dkr.ecr.us-east-1.amazonaws.com/'
+    base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
     with open("docker-compose.yml") as dc:
         for line in dc:
             if base_ecr in line:
-                dc_list.append(line.split(':'))
+                dc_list.append(line.split(":"))
                 for pair in dc_list:
-                    pair = [i.strip().strip('\"') for i in pair]
+                    pair = [i.strip().strip('"') for i in pair]
 
-                    if 'controlcenter-dev' in pair[1]:
-                        full_path = base_ecr + 'controlcenter-dev:'
-                    elif 'juicebox-dev' in pair[1]:
-                        full_path = base_ecr + 'juicebox-devlandia:'
+                    if "controlcenter-dev" in pair[1]:
+                        full_path = base_ecr + "controlcenter-dev:"
+                    elif "juicebox-dev" in pair[1]:
+                        full_path = base_ecr + "juicebox-devlandia:"
 
                     full_path = full_path + (tag if tag is not None else pair[2])
                     return full_path
@@ -219,35 +217,42 @@ def pull(tag):
         return
     full_path = parse_dc_file(tag=tag)
     abs_path = os.path.abspath(os.getcwd())
-    os.chdir('../..')
-    docker_login = check_output([
-        'aws', 'ecr', 'get-login',
-        '--registry-ids', '423681189101', '976661725066',
-        '--no-include-email'])
-    docker_logins = docker_login.split(b'\n')
+    os.chdir("../..")
+    docker_login = check_output(
+        [
+            "aws",
+            "ecr",
+            "get-login",
+            "--registry-ids",
+            "423681189101",
+            "976661725066",
+            "--no-include-email",
+        ]
+    )
+    docker_logins = docker_login.split(b"\n")
     for docker_login in docker_logins:
         if docker_login:
             check_call(docker_login.split())
-    check_call(['docker', 'pull', full_path])
+    check_call(["docker", "pull", full_path])
     os.chdir(abs_path)
 
 
 def image_list(showall=False, print_flag=True, semantic=False):
     """Lists available tagged images"""
-    semantic_version_tag_pattern = re.compile('^\d+\.\d+\.\d+$')
+    semantic_version_tag_pattern = re.compile("^\d+\.\d+\.\d+$")
     imageList = []
     now = datetime.datetime.now()
     cmd = "aws ecr describe-images --registry-id 423681189101 --repository-name juicebox-devlandia"
     images = json.loads(check_output(cmd.split()))
-    for image in images['imageDetails']:
-        if 'imageTags' in image:
-            pushed = datetime.datetime.fromtimestamp(int(image['imagePushedAt']))
-            for tag in image['imageTags']:
+    for image in images["imageDetails"]:
+        if "imageTags" in image:
+            pushed = datetime.datetime.fromtimestamp(int(image["imagePushedAt"]))
+            for tag in image["imageTags"]:
                 human_readable = human_readable_timediff(pushed)
                 is_semantic_tag = bool(semantic_version_tag_pattern.match(tag))
-                if tag == 'master':
+                if tag == "master":
                     tag_priority = 4
-                elif tag == 'develop':
+                elif tag == "develop":
                     tag_priority = 3
                 elif is_semantic_tag:
                     tag_priority = 2
@@ -257,7 +262,9 @@ def image_list(showall=False, print_flag=True, semantic=False):
                 # If semantic, just return semantic tags
                 meets_semantic_criteria = (semantic and is_semantic_tag) or not semantic
                 # Use if showall is true, return all tags, otherwise return just last 30 days
-                meets_time_criteria = showall or (pushed >= now - datetime.timedelta(days=30))
+                meets_time_criteria = showall or (
+                    pushed >= now - datetime.timedelta(days=30)
+                )
 
                 if meets_semantic_criteria and meets_time_criteria:
                     row = [tag, pushed, human_readable, tag_priority, is_semantic_tag]
@@ -270,7 +277,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
     prevtag = None
     for row in imageList:
         tag, pushed, human_readable, tag_priority, is_semantic_tag = row
-        if tag == 'master':
+        if tag == "master":
             row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, prevtag]
         else:
             row = [tag, pushed, human_readable, tag_priority, is_semantic_tag, None]
@@ -285,16 +292,24 @@ def image_list(showall=False, print_flag=True, semantic=False):
 
     if print_flag:
         print(
-            tabulate(newImageList,
-                     headers=['Image Name', 'Time Tagged', 'Relative', 'Priority', 'Is Semantic', 'Master Version']
-                     )
+            tabulate(
+                newImageList,
+                headers=[
+                    "Image Name",
+                    "Time Tagged",
+                    "Relative",
+                    "Priority",
+                    "Is Semantic",
+                    "Master Version",
+                ],
+            )
         )
 
     return newImageList
 
 
 def set_tag(env, tag):
-    """Set an environment to use a tagged image """
+    """Set an environment to use a tagged image"""
     ensure_root()
 
     os.chdir("./environments/{}".format(env))
@@ -302,19 +317,19 @@ def set_tag(env, tag):
     with open("./docker-compose.yml", "rt") as dc:
         with open("out.txt", "wt") as out:
             for line in dc:
-                if 'juicebox-devlandia:' in line:
-                    oldTag = line.rpartition(':')[2]
+                if "juicebox-devlandia:" in line:
+                    oldTag = line.rpartition(":")[2]
                     if oldTag[:-2] != tag:
-                        out.write(line.replace(oldTag, tag) + '\"\n')
+                        out.write(line.replace(oldTag, tag) + '"\n')
                         changed = True
                 else:
                     out.write(line)
     if changed:
-        shutil.move('./out.txt', './docker-compose.yml')
+        shutil.move("./out.txt", "./docker-compose.yml")
     else:
-        os.remove('./out.txt')
+        os.remove("./out.txt")
 
-    echo_success('Environment {} is using {}'.format(env, tag))
+    echo_success("Environment {} is using {}".format(env, tag))
     os.chdir("../..")
 
 
@@ -328,15 +343,15 @@ def get_state(container_name):
     return client.containers.get(container_name).status
 
 
-def jb_watch(app='', should_reload=False):
+def jb_watch(app="", should_reload=False):
     """Run the Juicebox project watcher"""
     if is_running() and ensure_home():
-        click.echo('I\'m watching you Wazowski...always watching...always.')
+        click.echo("I'm watching you Wazowski...always watching...always.")
 
         event_handler = WatchHandler(should_reload)
         observer = Observer()
 
-        observer.schedule(event_handler, path='apps/' + app, recursive=True)
+        observer.schedule(event_handler, path="apps/" + app, recursive=True)
         observer.start()
         try:
             while True:
@@ -345,14 +360,16 @@ def jb_watch(app='', should_reload=False):
             observer.stop()
         observer.join()
     else:
-        echo_warning('Failed to start project watcher.')
+        echo_warning("Failed to start project watcher.")
         click.get_current_context().abort()
 
 
 def js_watch():
     if is_running() and ensure_home():
-        run('./node_modules/.bin/webpack --mode=development --progress --colors --watch')
+        run(
+            "./node_modules/.bin/webpack --mode=development --progress --colors --watch"
+        )
 
 
 def list_local():
-    return check_output(['docker', 'image', 'list'])
+    return check_output(["docker", "image", "list"])
