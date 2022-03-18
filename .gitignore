@@ -98,3 +98,4 @@ ENV/
 docker-compose-ssh.yml
 recipe
 fruition
+juicebox-snapshots-service
