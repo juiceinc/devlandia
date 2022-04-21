@@ -193,7 +193,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.option(
     "--runtime",
     help="Which runtime to use, defaults to venv, the only other option is venv3"
-    "option.",
+         "option.",
     default="venv",
 )
 def remove(applications, runtime):
@@ -240,13 +240,11 @@ def remove(applications, runtime):
 @cli.command()
 def watch(includejs=False, app="", reload=False):
     """Watch for changes in apps and js and reload/rebuild"""
-    procs = []
     jb_watch_proc = Process(
         target=dockerutil.jb_watch, kwargs={"app": app, "should_reload": reload}
     )
     jb_watch_proc.start()
-    procs.append(jb_watch_proc)
-
+    procs = [jb_watch_proc]
     if reload:
         create_browser_instance()
 
@@ -414,7 +412,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -430,10 +428,11 @@ def activate_ssh(environ):
 )
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
+    check_user_email()
     if dockerutil.is_running():
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
@@ -553,6 +552,29 @@ def prompt_interval():
     stash.put("interval", answer)
 
 
+def prompt_email():
+    question = [
+        {
+            "type": "input",
+            "name": "email",
+            "message": "Enter email address to be created",
+        }
+    ]
+    answer = prompt(question)["email"]
+    stash.put("email", answer)
+
+
+def check_user_email():
+    print("Checking that user email exists locally")
+    try:
+        user_email = stash.get('email')
+        if user_email is None:
+            echo_warning("User email not found locally")
+            prompt_email()
+    except Exception as e:
+        pass
+
+
 def check_outdated_image(env):
     print("Checking Image age")
     interval_val = 1
@@ -615,7 +637,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]

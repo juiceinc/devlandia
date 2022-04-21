@@ -54,9 +54,10 @@ def set_creds():
         print(e)
     if len(profile_details) > 1:
         choices = [
-            {'name': k[0] + ' - ' + k[1], 'value': (k[0], k[1])}
+            {'name': f'{k[0]} - {k[1]}', 'value': (k[0], k[1])}
             for k in profile_details
         ]
+
 
         questions = [
             {
