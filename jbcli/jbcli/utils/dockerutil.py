@@ -239,7 +239,7 @@ def pull(tag):
 
 def image_list(showall=False, print_flag=True, semantic=False):
     """Lists available tagged images"""
-    semantic_version_tag_pattern = re.compile("^\d+\.\d+\.\d+$")
+    semantic_version_tag_pattern = re.compile(r"^\d+\.\d+\.\d+$")
     imageList = []
     now = datetime.datetime.now()
     cmd = "aws ecr describe-images --registry-id 423681189101 --repository-name juicebox-devlandia"
