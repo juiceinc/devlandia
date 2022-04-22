@@ -431,13 +431,13 @@ def start(
         ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
-    auth.has_current_session()
-    check_user_email()
     if dockerutil.is_running():
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
-
+    auth.has_current_session()
+    check_user_email()
+    check_user_name()
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
@@ -552,6 +552,20 @@ def prompt_interval():
     stash.put("interval", answer)
 
 
+def prompt_name():
+    question = [
+        {
+            "type": "input",
+            "name": "name",
+            "message": "Enter First and Last Name",
+        }
+    ]
+    answer = prompt(question)["name"]
+    name_parts = answer.split(' ')
+    stash.put("firstname", name_parts[0])
+    stash.put("lastname", name_parts[1])
+
+
 def prompt_email():
     question = [
         {
@@ -571,6 +585,18 @@ def check_user_email():
         if user_email is None:
             echo_warning("User email not found locally")
             prompt_email()
+    except Exception as e:
+        pass
+
+
+def check_user_name():
+    print("Checking that user name exists locally")
+    try:
+        firstname = stash.get('firstname')
+        lastname = stash.get('lastname')
+        if firstname is None or lastname is None:
+            echo_warning("User name not found locally")
+            prompt_name()
     except Exception as e:
         pass
 
