@@ -691,8 +691,10 @@ def get_environment_interactively(env, tag_lookup):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = [
-        {"name": k + " - " + tag_dict[v], "value": k} for k, v in tag_lookup.items()
+        {"name": f'{k} - {tag_dict[v]}', "value": k}
+        for k, v in tag_lookup.items()
     ]
+
 
     questions = [
         {
