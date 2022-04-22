@@ -937,6 +937,18 @@ class TestCli(object):
         assert result.exit_code == 0
         # We link the fruition/ directory with .env
         assert m.mock_calls == [
+            call('/root/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/root/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/root/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
             call(".env", "w"),
             ANY,
             call().write(
@@ -974,6 +986,18 @@ class TestCli(object):
         # We ALSO link the recipe/ directory
         print(m.mock_calls)
         assert m.mock_calls == [
+            call('/root/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/root/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/root/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
             call(".env", "w"),
             ANY,
             call().write(
