@@ -557,7 +557,7 @@ def prompt_name():
         {
             "type": "input",
             "name": "name",
-            "message": "Enter First and Last Name",
+            "message": "Enter First and Last Name separted by space",
         }
     ]
     answer = prompt(question)["name"]
