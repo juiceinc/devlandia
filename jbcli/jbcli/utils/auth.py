@@ -144,12 +144,6 @@ def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_to
         aws_secret_access_key=aws_secret_access_key,
         aws_session_token=aws_session_token,
     )
-    ssm_test = boto3.client(
-        "ssm",
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        aws_session_token=aws_session_token,
-    )
     try:
         ecr_test.describe_images(
             registryId="423681189101",
@@ -158,15 +152,11 @@ def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_to
                 {"imageTag": "develop-py3"},
             ],
         )
-        # added a 2nd test because i was getting the check passing somehow for the first but not this one
-        ssm_test.get_parameters_by_path(
-            Path=" /jb-deployment-vars/devlandia/", Recursive=True, WithDecryption=True
-        )
 
         echo_success("Credentials are valid.")
         return True
 
-    except Exception as e:
+    except Exception:
         del os.environ["AWS_ACCESS_KEY_ID"]
         del os.environ["AWS_SECRET_ACCESS_KEY"]
         del os.environ["AWS_SESSION_TOKEN"]
