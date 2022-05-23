@@ -436,8 +436,7 @@ def start(
         echo_warning("Run `jb stop` to stop this instance.")
         return
     auth.has_current_session()
-    check_user_email()
-    check_user_name()
+    add_users()
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
@@ -552,6 +551,32 @@ def prompt_interval():
     stash.put("interval", answer)
 
 
+def add_users():
+    if stash.get("users") is not None:
+        return
+    new_users = []
+    question = [
+        {
+            "type": "input",
+            "name": "newusers",
+            "message": "How many users would you like to add?",
+        }
+    ]
+    newusers = int(prompt(question)["newusers"])
+    for _ in range(newusers):
+        temp_name = prompt_name()
+        temp_email = prompt_email()
+        temp_ue = prompt_user_extra()
+        temp_user_dict = {
+            "firstname": temp_name[0],
+            "lastname": temp_name[1],
+            "email": temp_email,
+            "user_extra": temp_ue,
+        }
+        new_users.append(temp_user_dict)
+    stash.put("users", new_users)
+
+
 def prompt_name():
     question = [
         {
@@ -562,8 +587,7 @@ def prompt_name():
     ]
     answer = prompt(question)["name"]
     name_parts = answer.split(' ')
-    stash.put("firstname", name_parts[0])
-    stash.put("lastname", name_parts[1])
+    return name_parts[0], name_parts[1]
 
 
 def prompt_email():
@@ -574,31 +598,34 @@ def prompt_email():
             "message": "Enter email address to be created",
         }
     ]
-    answer = prompt(question)["email"]
-    stash.put("email", answer)
+    return prompt(question)["email"]
 
+def prompt_user_extra():
+    question = [
+        {
+            "type": "input",
+            "name": "ue",
+            "message": "Enter user extra (default is {})",
+            "default": "{}"
+        }
+    ]
+    return prompt(question)["ue"]
 
 def check_user_email():
     print("Checking that user email exists locally")
-    try:
-        user_email = stash.get('email')
-        if user_email is None:
-            echo_warning("User email not found locally")
-            prompt_email()
-    except Exception as e:
-        pass
+    user_email = stash.get('email')
+    if user_email is None:
+        echo_warning("User email not found locally")
+        prompt_email()
 
 
 def check_user_name():
     print("Checking that user name exists locally")
-    try:
-        firstname = stash.get('firstname')
-        lastname = stash.get('lastname')
-        if firstname is None or lastname is None:
-            echo_warning("User name not found locally")
-            prompt_name()
-    except Exception as e:
-        pass
+    firstname = stash.get('firstname')
+    lastname = stash.get('lastname')
+    if firstname is None or lastname is None:
+        echo_warning("User name not found locally")
+        prompt_name()
 
 
 def check_outdated_image(env):
@@ -694,7 +721,6 @@ def get_environment_interactively(env, tag_lookup):
         {"name": f'{k} - {tag_dict[v]}', "value": k}
         for k, v in tag_lookup.items()
     ]
-
 
     questions = [
         {
