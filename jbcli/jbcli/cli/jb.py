@@ -193,7 +193,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.option(
     "--runtime",
     help="Which runtime to use, defaults to venv, the only other option is venv3"
-         "option.",
+    "option.",
     default="venv",
 )
 def remove(applications, runtime):
@@ -413,7 +413,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-         "(core and hstm-core environments do this automatically)",
+    "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -429,7 +429,7 @@ def activate_ssh(environ):
 )
 @click.pass_context
 def start(
-        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -437,7 +437,7 @@ def start(
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
-    add_users()
+
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
@@ -691,7 +691,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                           f"would you like to update?",
+                f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
@@ -719,8 +719,7 @@ def get_environment_interactively(env, tag_lookup):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = [
-        {"name": f'{k} - {tag_dict[v]}', "value": k}
-        for k, v in tag_lookup.items()
+        {"name": k + " - " + tag_dict[v], "value": k} for k, v in tag_lookup.items()
     ]
 
     questions = [

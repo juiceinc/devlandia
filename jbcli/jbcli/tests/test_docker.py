@@ -79,7 +79,7 @@ class TestDocker:
 
     @patch('jbcli.utils.dockerutil.click')
     def test_ensure_home(self, click_mock, monkeypatch):
-        for _ in ['core', 'test', 'hstm-newcore']:
+        for env in ['core', 'test', 'hstm-newcore']:
             monkeypatch.chdir(DEVLANDIA_DIR)
             dockerutil.ensure_home()
 
