@@ -437,7 +437,7 @@ def start(
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
-
+    add_users()
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
