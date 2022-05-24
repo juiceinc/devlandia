@@ -240,11 +240,12 @@ def remove(applications, runtime):
 @cli.command()
 def watch(includejs=False, app="", reload=False):
     """Watch for changes in apps and js and reload/rebuild"""
+    procs = []
     jb_watch_proc = Process(
         target=dockerutil.jb_watch, kwargs={"app": app, "should_reload": reload}
     )
     jb_watch_proc.start()
-    procs = [jb_watch_proc]
+    procs.append(jb_watch_proc)
     if reload:
         create_browser_instance()
 
@@ -431,11 +432,11 @@ def start(
         ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
+    auth.has_current_session()
     if dockerutil.is_running():
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
-    auth.has_current_session()
     add_users()
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
