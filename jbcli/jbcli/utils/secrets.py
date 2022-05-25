@@ -1,5 +1,7 @@
 import boto3
+from .auth import set_creds
 
+set_creds()
 SSM = boto3.client("ssm")
 
 
