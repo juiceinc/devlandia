@@ -1,11 +1,8 @@
 import boto3
-from .auth import set_creds
-
-set_creds()
-SSM = boto3.client("ssm")
+from .auth import has_current_session
 
 
-def list_all_in_paths(paths):
+def list_all_in_paths(paths, SSM):
     params = []
     next_token = None
     while True:
@@ -29,7 +26,10 @@ def get_all_from_paths(paths):
 
     this returns {'FOO': 'a', 'BAR': 'b'}
     """
-    all_parameters = list_all_in_paths(paths)
+    has_current_session()
+    SSM = boto3.client("ssm")
+
+    all_parameters = list_all_in_paths(paths, SSM)
 
     env_vars = {}
     for name in all_parameters:
@@ -49,5 +49,5 @@ def get_all_from_paths(paths):
 
 def get_deployment_secrets():
     return get_all_from_paths(
-        ["/jb-deployment-vars/common/", f"/jb-deployment-vars/devlandia/"]
+        ["/jb-deployment-vars/common/", "/jb-deployment-vars/devlandia/"]
     )
