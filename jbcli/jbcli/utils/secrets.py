@@ -1,5 +1,4 @@
 import boto3
-from .auth import has_current_session
 
 
 def list_all_in_paths(paths, SSM):
@@ -16,7 +15,7 @@ def list_all_in_paths(paths, SSM):
             return params
 
 
-def get_all_from_paths(paths):
+def get_all_from_paths(paths, SSM):
     """
     Given a SSM parameter path, get all parameters stored recursively under that path.
 
@@ -26,9 +25,6 @@ def get_all_from_paths(paths):
 
     this returns {'FOO': 'a', 'BAR': 'b'}
     """
-    has_current_session()
-    SSM = boto3.client("ssm")
-
     all_parameters = list_all_in_paths(paths, SSM)
 
     env_vars = {}
@@ -48,6 +44,8 @@ def get_all_from_paths(paths):
 
 
 def get_deployment_secrets():
+    # AWS credentials are already established before we call this
     return get_all_from_paths(
-        ["/jb-deployment-vars/common/", "/jb-deployment-vars/devlandia/"]
+        ["/jb-deployment-vars/common/", "/jb-deployment-vars/devlandia/"],
+        SSM=boto3.client("ssm"),
     )
