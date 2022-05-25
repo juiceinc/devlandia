@@ -1,4 +1,5 @@
 import boto3
+import botocore
 
 
 def list_all_in_paths(paths, SSM):
