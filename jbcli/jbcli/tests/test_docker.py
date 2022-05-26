@@ -16,7 +16,7 @@ class TestDocker:
         dockerutil.up()
         assert check_mock.mock_calls == [
             call(['docker-compose',
-                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '--project-directory', '.', '--project-name', 'jbcli',
                   '-f', 'docker-compose.yml','up',
                   '--abort-on-container-exit'], env=None)
         ]
@@ -52,7 +52,7 @@ class TestDocker:
             call([
                 'docker-compose',
                 '--project-directory', '.',
-                '--project-name', 'devlandia',
+                '--project-name', 'jbcli',
                 '-f', 'docker-compose.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
