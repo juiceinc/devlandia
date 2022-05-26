@@ -1,7 +1,22 @@
 import boto3
+import botocore
 
 
-def get_all_from_path(path):
+def list_all_in_paths(paths, SSM):
+    params = []
+    next_token = None
+    while True:
+        resp = SSM.describe_parameters(
+            ParameterFilters=[{"Key": "Name", "Option": "BeginsWith", "Values": paths}],
+            **{"NextToken": next_token} if next_token else {},
+        )
+        params.extend([x["Name"] for x in resp["Parameters"]])
+        next_token = resp.get("NextToken")
+        if not next_token:
+            return params
+
+
+def get_all_from_paths(paths, SSM):
     """
     Given a SSM parameter path, get all parameters stored recursively under that path.
 
@@ -11,34 +26,27 @@ def get_all_from_path(path):
 
     this returns {'FOO': 'a', 'BAR': 'b'}
     """
-    ssm = boto3.client("ssm")
-    next_token = None
+    all_parameters = list_all_in_paths(paths, SSM)
+
     env_vars = {}
-    while True:
+    for name in all_parameters:
         try:
-            kwargs = {}
-            if next_token is not None:
-                kwargs["NextToken"] = next_token
-            result = ssm.get_parameters_by_path(
-                Path=path, Recursive=True, WithDecryption=True, **kwargs
-            )
-        except Exception as e:
-            print("[WARNING] couldn't fetch parameters under path", path, e)
-            return {}
-        env_vars.update(
-            {
-                param["Name"].rsplit("/", 1)[-1]: param["Value"]
-                for param in result["Parameters"]
-            }
-        )
-        if result.get("NextToken") is None:
-            break
-        else:
-            next_token = result["NextToken"]
+            result = SSM.get_parameter(Name=name, WithDecryption=True)
+        except botocore.exceptions.ClientError as e:
+            if e.response["Error"]["Code"] == "AccessDeniedException":
+                print("skipping parameter that we don't have access to", name)
+                continue
+            else:
+                raise
+        bare_name = result["Parameter"]["Name"].rsplit("/", 1)[-1]
+        env_vars[bare_name] = result["Parameter"]["Value"].encode("ascii")
+
     return env_vars
 
 
 def get_deployment_secrets():
-    env = get_all_from_path("/jb-deployment-vars/common/")
-    env.update(get_all_from_path("/jb-deployment-vars/devlandia/"))
-    return env
+    # AWS credentials are already established before we call this
+    return get_all_from_paths(
+        ["/jb-deployment-vars/common/", "/jb-deployment-vars/devlandia/"],
+        SSM=boto3.client("ssm"),
+    )
