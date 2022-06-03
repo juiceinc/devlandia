@@ -5,6 +5,7 @@ import os
 import boto3
 from botocore.exceptions import ClientError
 from PyInquirer import prompt
+from jbcli.utils.secrets import list_all_in_paths
 
 from .subprocess import check_output
 from ..utils.format import echo_warning, echo_success
@@ -28,11 +29,7 @@ def has_current_session():
                 "Checking existing credentials to see if the session is still valid."
             )
             load_creds()
-            valid = check_cred_validity(
-                aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-                aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-                aws_session_token=os.environ["AWS_SESSION_TOKEN"],
-            )
+            valid = check_cred_validity()
             if not valid:
                 set_creds()
     except ClientError as e:
@@ -137,13 +134,8 @@ def set_creds():
         set_and_cache_creds(output)
 
 
-def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_token):
-    ecr_test = boto3.client(
-        "ecr",
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key,
-        aws_session_token=aws_session_token,
-    )
+def check_cred_validity():
+    ecr_test = boto3.client("ecr")
     try:
         ecr_test.describe_images(
             registryId="423681189101",
@@ -152,6 +144,10 @@ def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_to
                 {"imageTag": "develop-py3"},
             ],
         )
+
+        # For some reason, describing ECR images can be done without a current MFA
+        # session. so also check if we can describe parameters.
+        list_all_in_paths(["/jb-deployment-vars/devlandia/"], boto3.client("ssm"))
 
         echo_success("Credentials are valid.")
         return True
