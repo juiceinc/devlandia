@@ -1384,10 +1384,9 @@ class TestCli(object):
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
         prompt_mock.isatty.return_value = 'istty'
-        result = invoke(["run", "foo", "bar"])
-        assert subprocess_mock.mock_calls == [
-
-        ]
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["run", "foo", "bar"])
+        assert subprocess_mock.mock_calls == [call.check_call(['docker', 'exec', '-it', 'stable_juicebox_1', 'foo', 'bar'])]
         assert result.exit_code == 0
 
     @patch("jbcli.cli.jb.click")
@@ -1398,7 +1397,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.check_home.return_value = None
         prompt_mock.isatty.return_value = 'istty'
-        result = invoke(["manage", "test"])
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["manage", "test"])
         assert "Juicebox not running and no --env given" in result.output
 
     @patch("jbcli.cli.jb.dockerutil")
@@ -1412,8 +1412,8 @@ class TestCli(object):
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
         prompt_mock.isatty.return_value = 'istty'
-
-        result = invoke(["manage", "--env", "core", "test"])
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["manage", "--env", "core", "test"])
         assert subprocess_mock.mock_calls == [
             call.check_call(
                 [
