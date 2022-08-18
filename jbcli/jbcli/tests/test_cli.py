@@ -897,32 +897,80 @@ class TestCli(object):
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
-    def test_start_with_custom_tag(self, auth_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start_with_custom_tag(self, prompt_mock, auth_mock, dockerutil_mock):
         """Starting can occur with any tag."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
-        result = invoke(["start", "potato", "--noupgrade"])
+        prompt_mock.isatty.return_value = 'istty'
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["start", "potato", "--noupgrade"])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="potato"),
             call.up(env=ANY, ganesha=False),
         ]
+        assert m.mock_calls == [
+            call(expanduser('~/.config/juicebox/devlandia.toml')),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call(expanduser('~/.config/juicebox/devlandia.toml')),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call(expanduser('~/.config/juicebox/devlandia.toml'), 'w'),
+            call().__enter__(),
+            call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
+            call().__exit__(None, None, None),
+            call('.env', 'w'),
+            call().__enter__(),
+            call().write('DEVLANDIA_PORT=8000\nTAG=potato\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE'
+                         '=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
+            call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
+            call().__exit__(None, None, None)
+        ]
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
-    def test_start_with_tag_lookup(self, auth_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start_with_tag_lookup(self, prompt_mock, auth_mock, dockerutil_mock):
         """Starting stable uses the tag master-py3."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
-        result = invoke(["start", "stable", "--noupgrade"])
+        prompt_mock.isatty.return_value = 'istty'
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["start", "stable", "--noupgrade"])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="master-py3"),
             call.up(env=ANY, ganesha=False),
+        ]
+        assert m.mock_calls == [
+            call(expanduser('~/.config/juicebox/devlandia.toml')),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call(expanduser('~/.config/juicebox/devlandia.toml')),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call(expanduser('~/.config/juicebox/devlandia.toml'), 'w'),
+            call().__enter__(),
+            call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
+            call().__exit__(None, None, None),
+            call('.env', 'w'),
+            call().__enter__(),
+            call().write('DEVLANDIA_PORT=8000\nTAG=master-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE'
+                         '=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
+            call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
+            call().__exit__(None, None, None)
         ]
 
     @patch("jbcli.cli.jb.os")
