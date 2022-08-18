@@ -2,6 +2,7 @@ from __future__ import print_function
 
 from collections import namedtuple
 import os
+from io import StringIO
 from subprocess import CalledProcessError
 
 from click.testing import CliRunner
@@ -10,7 +11,6 @@ from mock import call, mock_open, patch, ANY
 import six
 
 from ..cli.jb import DEVLANDIA_DIR, cli
-
 
 Container = namedtuple("Container", ["name"])
 
@@ -38,7 +38,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_single(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
@@ -73,7 +73,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_single_api(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         """Adding an app by calling the jb api"""
         os_mock.path.isdir.return_value = False
@@ -104,7 +104,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_single_venv3(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
@@ -136,7 +136,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_single_api_venv3(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         """Adding an app by calling the jb api"""
         os_mock.path.isdir.return_value = False
@@ -232,7 +232,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_desktop(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = "git cookies"
@@ -266,7 +266,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_desktop_venv3(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = "git cookies"
@@ -299,7 +299,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_multiple(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = "git cookies"
@@ -337,7 +337,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
     def test_add_multiple_venv3(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         apps_mock.make_github_repo_url.return_value = "git cookies"
@@ -425,7 +425,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_run_fail(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.run.side_effect = APIError("Fail")
@@ -459,7 +459,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_run_fail_venv3(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.run.side_effect = APIError("Fail")
@@ -493,7 +493,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_desktop_fail(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
@@ -529,7 +529,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_desktop_fail_venv3(
-        self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
@@ -768,7 +768,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.create_browser_instance")
     def test_watch_with_reload(
-        self, browser_mock, dockerutil_mock, time_mock, process_mock
+            self, browser_mock, dockerutil_mock, time_mock, process_mock
     ):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
@@ -790,7 +790,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.create_browser_instance")
     def test_watch_with_specific_app_and_reload(
-        self, browser_mock, dockerutil_mock, time_mock, process_mock
+            self, browser_mock, dockerutil_mock, time_mock, process_mock
     ):
         dockerutil_mock.is_running.return_value = True
         dockerutil_mock.ensure_home.return_value = True
@@ -922,7 +922,8 @@ class TestCli(object):
     @patch("jbcli.cli.jb.os")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
-    def test_start_core_with_fruitiondir(self, auth_mock, dockerutil_mock, os_mock):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start_core_with_fruitiondir(self, prompt_mock, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
@@ -931,21 +932,34 @@ class TestCli(object):
         os_mock.getcwd.return_value = ""
         os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
+        prompt_mock.isatty.return_value = 'istty'
+
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
         with patch("builtins.open", mock_open()) as m:
             result = invoke(["start", "core", "--noupgrade"])
         assert result.exit_code == 0
         # We link the fruition/ directory with .env
         assert m.mock_calls == [
-            call(".env", "w"),
-            ANY,
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE=recipereadme\nRECIPEFILE=unused\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
-            ANY,
-        ]
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml', 'w'),
+            call().__enter__(),
+            call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
+            call().__exit__(None, None, None),
+            call('.env', 'w'),
+            call().__enter__(),
+            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE'
+                         '=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
+            call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
+            call().__exit__(None, None, None)
+            ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),
@@ -955,9 +969,8 @@ class TestCli(object):
     @patch("jbcli.cli.jb.os")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
-    def test_start_core_with_fruitiondir_and_recipe(
-        self, auth_mock, dockerutil_mock, os_mock
-    ):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start_core_with_fruitiondir_and_recipe(self, prompt_mock, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
@@ -967,6 +980,7 @@ class TestCli(object):
         os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
+        prompt_mock.isatty.return_value = 'istty'
         with patch("builtins.open", mock_open()) as m:
             result = invoke(["start", "core", "--noupgrade", "--dev-recipe"])
         assert result.exit_code == 0
@@ -974,14 +988,25 @@ class TestCli(object):
         # We ALSO link the recipe/ directory
         print(m.mock_calls)
         assert m.mock_calls == [
-            call(".env", "w"),
-            ANY,
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml', 'w'),
+            call().__enter__(),
+            call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
+            call().__exit__(None, None, None),
+            call('.env', 'w'),
+            call().__enter__(),
             call().write(
-                "DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE=recipe\nRECIPEFILE=code/recipe\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
-            ANY,
+                'DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE=recipe\nRECIPEFILE=code/recipe\n'),
+            call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
+            call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
+            call().__exit__(None, None, None)
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -1349,39 +1374,44 @@ class TestCli(object):
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.subprocess")
-    def test_jb_run_running_no_env(self, subprocess_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.prompt')
+    # @patch('jbcli.cli.jb._run')
+    def test_jb_run_running_no_env(self, prompt_mock, subprocess_mock, dockerutil_mock):
         """When a container is running and no --env is given,
         we run the command in the existing container.
         """
         dockerutil_mock.is_running.return_value = Container(name="stable_juicebox_1")
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
+        prompt_mock.isatty.return_value = 'istty'
         result = invoke(["run", "foo", "bar"])
         assert subprocess_mock.mock_calls == [
-            call.check_call(
-                ["docker", "exec", "-it", "stable_juicebox_1", "foo", "bar"]
-            )
+
         ]
         assert result.exit_code == 0
 
     @patch("jbcli.cli.jb.click")
     @patch("jbcli.cli.jb.dockerutil")
-    def test_jb_manage_not_running_no_env(self, dockerutil_mock, click_mock):
+    @patch('jbcli.cli.jb.prompt')
+    def test_jb_manage_not_running_no_env(self, prompt_mock, dockerutil_mock, click_mock):
         """When no container is running, and no --env is given, we give up."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.check_home.return_value = None
+        prompt_mock.isatty.return_value = 'istty'
         result = invoke(["manage", "test"])
         assert "Juicebox not running and no --env given" in result.output
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.subprocess")
-    def test_jb_manage_running_matching_env(self, subprocess_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.prompt')
+    def test_jb_manage_running_matching_env(self, prompt_mock, subprocess_mock, dockerutil_mock):
         """When an --env is given, and it matches a running JB container,
         we use the running container.
         """
         dockerutil_mock.is_running.return_value = Container(name="core_juicebox_1")
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
+        prompt_mock.isatty.return_value = 'istty'
 
         result = invoke(["manage", "--env", "core", "test"])
         assert subprocess_mock.mock_calls == [

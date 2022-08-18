@@ -193,7 +193,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.option(
     "--runtime",
     help="Which runtime to use, defaults to venv, the only other option is venv3"
-    "option.",
+         "option.",
     default="venv",
 )
 def remove(applications, runtime):
@@ -413,7 +413,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -429,7 +429,7 @@ def activate_ssh(environ):
 )
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -601,6 +601,7 @@ def prompt_email():
     ]
     return prompt(question)["email"]
 
+
 def prompt_user_extra():
     question = [
         {
@@ -611,6 +612,7 @@ def prompt_user_extra():
         }
     ]
     return prompt(question)["ue"]
+
 
 def check_user_email():
     print("Checking that user email exists locally")
@@ -691,7 +693,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
