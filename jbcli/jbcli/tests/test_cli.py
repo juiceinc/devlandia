@@ -874,15 +874,15 @@ class TestCli(object):
             call.up(env=ANY, ganesha=False),
         ]
         assert m.mock_calls == [
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call('/root/.config/juicebox/devlandia.toml'),
             call().__enter__(),
             call().read(),
             call().__exit__(None, None, None),
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call('/root/.config/juicebox/devlandia.toml'),
             call().__enter__(),
             call().read(),
             call().__exit__(None, None, None),
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml', 'w'),
+            call('/root/.config/juicebox/devlandia.toml', 'w'),
             call().__enter__(),
             call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
             call().__exit__(None, None, None),
@@ -963,15 +963,15 @@ class TestCli(object):
         assert result.exit_code == 0
         # We link the fruition/ directory with .env
         assert m.mock_calls == [
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call('/root/.config/juicebox/devlandia.toml'),
             call().__enter__(),
             call().read(),
             call().__exit__(None, None, None),
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call('/root/.config/juicebox/devlandia.toml'),
             call().__enter__(),
             call().read(),
             call().__exit__(None, None, None),
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml', 'w'),
+            call('/root/.config/juicebox/devlandia.toml', 'w'),
             call().__enter__(),
             call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
             call().__exit__(None, None, None),
@@ -1011,15 +1011,15 @@ class TestCli(object):
         # We ALSO link the recipe/ directory
         print(m.mock_calls)
         assert m.mock_calls == [
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call('/root/.config/juicebox/devlandia.toml'),
             call().__enter__(),
             call().read(),
             call().__exit__(None, None, None),
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call('/root/.config/juicebox/devlandia.toml'),
             call().__enter__(),
             call().read(),
             call().__exit__(None, None, None),
-            call('/Users/caseywireman/.config/juicebox/devlandia.toml', 'w'),
+            call('/root/.config/juicebox/devlandia.toml', 'w'),
             call().__enter__(),
             call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
             call().__exit__(None, None, None),
