@@ -857,18 +857,41 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.os")
     @patch("jbcli.cli.jb.auth")
-    def test_start(self, auth_mock, os_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start(self, prompt_mock, auth_mock, os_mock, dockerutil_mock):
         """Starting brings docker-compose up in the environment of the cwd."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         os_mock.path.isdir.return_value = True
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
-        result = invoke(["start", "develop-py3", "--noupgrade"])
+        prompt_mock.isatty.return_value = 'istty'
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["start", "develop-py3", "--noupgrade"])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),
             call.up(env=ANY, ganesha=False),
+        ]
+        assert m.mock_calls == [
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml'),
+            call().__enter__(),
+            call().read(),
+            call().__exit__(None, None, None),
+            call('/Users/caseywireman/.config/juicebox/devlandia.toml', 'w'),
+            call().__enter__(),
+            call().write('[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n'),
+            call().__exit__(None, None, None),
+            call('.env', 'w'),
+            call().__enter__(),
+            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
+            call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
+            call().__exit__(None, None, None)
         ]
 
     @patch("jbcli.cli.jb.dockerutil")
