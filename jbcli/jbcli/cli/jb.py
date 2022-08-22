@@ -193,7 +193,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.option(
     "--runtime",
     help="Which runtime to use, defaults to venv, the only other option is venv3"
-    "option.",
+         "option.",
     default="venv",
 )
 def remove(applications, runtime):
@@ -246,7 +246,6 @@ def watch(includejs=False, app="", reload=False):
     )
     jb_watch_proc.start()
     procs.append(jb_watch_proc)
-
     if reload:
         create_browser_instance()
 
@@ -414,7 +413,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -430,7 +429,7 @@ def activate_ssh(environ):
 )
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -438,7 +437,8 @@ def start(
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
-
+    if stash.get("users") is None:
+        _add_users()
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
@@ -553,6 +553,89 @@ def prompt_interval():
     stash.put("interval", answer)
 
 
+@cli.command()
+def add_users():
+    """Allows user to add custom users that will be created at Devlandia startup"""
+    _add_users()
+
+
+def _add_users():
+    new_users = []
+    question = [
+        {
+            "type": "input",
+            "name": "newusers",
+            "message": "How many users would you like to add?",
+        }
+    ]
+    newusers = int(prompt(question)["newusers"])
+    for _ in range(newusers):
+        temp_name = prompt_name()
+        temp_email = prompt_email()
+        temp_ue = prompt_user_extra()
+        temp_user_dict = {
+            "firstname": temp_name[0],
+            "lastname": temp_name[1],
+            "email": temp_email,
+            "user_extra": temp_ue,
+        }
+        new_users.append(temp_user_dict)
+    stash.put("users", new_users)
+
+
+def prompt_name():
+    question = [
+        {
+            "type": "input",
+            "name": "name",
+            "message": "Enter First and Last Name separted by space",
+        }
+    ]
+    answer = prompt(question)["name"]
+    name_parts = answer.split(' ')
+    return name_parts[0], name_parts[1]
+
+
+def prompt_email():
+    question = [
+        {
+            "type": "input",
+            "name": "email",
+            "message": "Enter email address to be created",
+        }
+    ]
+    return prompt(question)["email"]
+
+
+def prompt_user_extra():
+    question = [
+        {
+            "type": "input",
+            "name": "ue",
+            "message": "Enter user extra (default is {})",
+            "default": "{}"
+        }
+    ]
+    return prompt(question)["ue"]
+
+
+def check_user_email():
+    print("Checking that user email exists locally")
+    user_email = stash.get('email')
+    if user_email is None:
+        echo_warning("User email not found locally")
+        prompt_email()
+
+
+def check_user_name():
+    print("Checking that user name exists locally")
+    firstname = stash.get('firstname')
+    lastname = stash.get('lastname')
+    if firstname is None or lastname is None:
+        echo_warning("User name not found locally")
+        prompt_name()
+
+
 def check_outdated_image(env):
     print("Checking Image age")
     interval_val = 1
@@ -615,7 +698,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]

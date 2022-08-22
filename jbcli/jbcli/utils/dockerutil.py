@@ -188,7 +188,7 @@ def parse_dc_file(tag):
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
-    if not os.path.isfile(os.getcwd() + "/docker-compose.yml"):
+    if not os.path.isfile(f'{os.getcwd()}/docker-compose.yml'):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
@@ -200,9 +200,9 @@ def parse_dc_file(tag):
                     pair = [i.strip().strip('"') for i in pair]
 
                     if "controlcenter-dev" in pair[1]:
-                        full_path = base_ecr + "controlcenter-dev:"
+                        full_path = f'{base_ecr}controlcenter-dev:'
                     elif "juicebox-dev" in pair[1]:
-                        full_path = base_ecr + "juicebox-devlandia:"
+                        full_path = f'{base_ecr}juicebox-devlandia:'
 
                     full_path = full_path + (tag if tag is not None else pair[2])
                     return full_path
@@ -239,7 +239,7 @@ def pull(tag):
 
 def image_list(showall=False, print_flag=True, semantic=False):
     """Lists available tagged images"""
-    semantic_version_tag_pattern = re.compile("^\d+\.\d+\.\d+$")
+    semantic_version_tag_pattern = re.compile(r"^\d+\.\d+\.\d+$")
     imageList = []
     now = datetime.datetime.now()
     cmd = "aws ecr describe-images --registry-id 423681189101 --repository-name juicebox-devlandia"
@@ -351,7 +351,7 @@ def jb_watch(app="", should_reload=False):
         event_handler = WatchHandler(should_reload)
         observer = Observer()
 
-        observer.schedule(event_handler, path="apps/" + app, recursive=True)
+        observer.schedule(event_handler, path=f"apps/{app}", recursive=True)
         observer.start()
         try:
             while True:

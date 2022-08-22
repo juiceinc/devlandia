@@ -33,6 +33,9 @@ the local image you're working on compared to the server version and to pull the
 date.  If for whatever reason you don't want to update the Juicebox image immediately, you can call the command 
 as follows: ``jb start --noupdate``.  This has to be done every time you start if you don't want the image to update.
 
+We also now prompt you to set up a username (Format should be "FirstName LastName") and email address.  Once set we 
+automatically create users for you in each Devlandia client as a ClientRole.owner.
+
 # Authentication
 
 We need to make sure your AWS credential and config files are set up correctly.
