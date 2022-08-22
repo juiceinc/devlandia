@@ -555,12 +555,11 @@ def prompt_interval():
 
 @cli.command()
 def add_users():
+    """Allows user to add custom users that will be created at Devlandia startup"""
     _add_users()
 
 
 def _add_users():
-    if stash.get("users") is not None:
-        return
     new_users = []
     question = [
         {
