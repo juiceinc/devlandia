@@ -437,7 +437,8 @@ def start(
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
-    add_users()
+    if stash.get("users") is None:
+        _add_users()
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
@@ -552,7 +553,12 @@ def prompt_interval():
     stash.put("interval", answer)
 
 
+@cli.command()
 def add_users():
+    _add_users()
+
+
+def _add_users():
     if stash.get("users") is not None:
         return
     new_users = []
