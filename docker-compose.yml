@@ -80,7 +80,7 @@ services:
     image: "redis:4.0.14"
 
   snapshot:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:presentation"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:develop"
     volumes:
       - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
     environment:
