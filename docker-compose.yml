@@ -3,8 +3,8 @@ services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
-                /venv/bin/pip install -q -U -r requirements.txt;
-                /venv/bin/pip install -q -U -r requirements_dev.txt;
+                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements.txt;
+                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
                 if [ '${RECIPE}' = 'recipe' ] ; then
                   /venv/bin/pip install -e recipe/;
                 fi;
@@ -72,12 +72,12 @@ services:
       - JB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/
   postgres:
     environment:
-        - POSTGRES_USER=juicebox
-        - POSTGRES_PASSWORD=juicebox
-        - POSTGRES_DB=juicebox
+      - POSTGRES_USER=juicebox
+      - POSTGRES_PASSWORD=juicebox
+      - POSTGRES_DB=juicebox
     image: "postgres:12.4-alpine"
   redis:
-      image: "redis:4.0.14"
+    image: "redis:4.0.14"
 
   snapshot:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:develop"
