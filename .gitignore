@@ -93,9 +93,10 @@ ENV/
 # yo juicebox ignore
 .yo-rc.json
 
-# core local fruition symlink
 .env
 docker-compose-ssh.yml
-recipe
+# local symlinks or checkouts when running a `core` environment
 fruition
+recipe
 juicebox-snapshots-service
+ganesha

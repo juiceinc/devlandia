@@ -91,7 +91,8 @@ def up(env=None, ganesha=False):
 
 
 def run_jb(cmd, env=None, service="juicebox"):
-    docker_compose(["run", service] + cmd, env=env)
+    is_ganesha = service == "ganesha"
+    docker_compose(["run", service] + cmd, env=env, ganesha=is_ganesha)
 
 
 def destroy():
@@ -188,7 +189,7 @@ def parse_dc_file(tag):
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
-    if not os.path.isfile(f'{os.getcwd()}/docker-compose.yml'):
+    if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
@@ -200,9 +201,9 @@ def parse_dc_file(tag):
                     pair = [i.strip().strip('"') for i in pair]
 
                     if "controlcenter-dev" in pair[1]:
-                        full_path = f'{base_ecr}controlcenter-dev:'
+                        full_path = f"{base_ecr}controlcenter-dev:"
                     elif "juicebox-dev" in pair[1]:
-                        full_path = f'{base_ecr}juicebox-devlandia:'
+                        full_path = f"{base_ecr}juicebox-devlandia:"
 
                     full_path = full_path + (tag if tag is not None else pair[2])
                     return full_path
