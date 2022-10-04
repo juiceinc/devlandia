@@ -325,7 +325,7 @@ def activate_ssh(environ):
             continue
         # python's urlparse makes it difficult to just change the port, but
         # that's what we're doing here:
-        url = urlparse(environ[envvar])
+        url = urlparse(environ[envvar].decode("ascii"))
         old_netloc = url.netloc
         old_netloc_without_port = old_netloc.rsplit(":", 1)[0]
         new_netloc = f"{old_netloc_without_port}:{localport}"
