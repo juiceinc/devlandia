@@ -193,7 +193,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.option(
     "--runtime",
     help="Which runtime to use, defaults to venv, the only other option is venv3"
-         "option.",
+    "option.",
     default="venv",
 )
 def remove(applications, runtime):
@@ -413,7 +413,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-         "(core and hstm-core environments do this automatically)",
+    "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -429,7 +429,7 @@ def activate_ssh(environ):
 )
 @click.pass_context
 def start(
-        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -592,7 +592,7 @@ def prompt_name():
         }
     ]
     answer = prompt(question)["name"]
-    name_parts = answer.split(' ')
+    name_parts = answer.split(" ")
     return name_parts[0], name_parts[1]
 
 
@@ -613,7 +613,7 @@ def prompt_user_extra():
             "type": "input",
             "name": "ue",
             "message": "Enter user extra (default is {})",
-            "default": "{}"
+            "default": "{}",
         }
     ]
     return prompt(question)["ue"]
@@ -621,7 +621,7 @@ def prompt_user_extra():
 
 def check_user_email():
     print("Checking that user email exists locally")
-    user_email = stash.get('email')
+    user_email = stash.get("email")
     if user_email is None:
         echo_warning("User email not found locally")
         prompt_email()
@@ -629,8 +629,8 @@ def check_user_email():
 
 def check_user_name():
     print("Checking that user name exists locally")
-    firstname = stash.get('firstname')
-    lastname = stash.get('lastname')
+    firstname = stash.get("firstname")
+    lastname = stash.get("lastname")
     if firstname is None or lastname is None:
         echo_warning("User name not found locally")
         prompt_name()
@@ -698,7 +698,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                           f"would you like to update?",
+                f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
