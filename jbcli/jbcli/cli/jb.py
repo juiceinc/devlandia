@@ -13,8 +13,9 @@ import sys
 import time
 from collections import OrderedDict
 from multiprocessing import Process
-from subprocess import Popen
+from multiprocessing.pool import ThreadPool
 import re
+# from subprocess import Popen
 
 import click
 import docker.errors
@@ -27,6 +28,7 @@ from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.reload import create_browser_instance
 from ..utils.secrets import get_deployment_secrets
 from ..utils.storageutil import Stash
+from ..utils.subprocess import popen
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, "..", "..", ".."))
@@ -78,7 +80,7 @@ def add(applications, add_desktop, runtime):
                 app_split = app.split("@")
                 app = app_split[0]
                 branch = app_split[1]
-            app_dir = "apps/{}".format(app)
+            app_dir = f"apps/{app}"
             if os.path.isdir(app_dir):
                 # App already exists, update it.
                 echo_highlight(f"App {app} already exists.")
@@ -143,17 +145,17 @@ def clone(existing_app, new_app, init, track, runtime):
     """
     try:
         if dockerutil.is_running():
-            existing_app_dir = "apps/{}".format(existing_app)
-            new_app_dir = "apps/{}".format(new_app)
+            existing_app_dir = f"apps/{existing_app}"
+            new_app_dir = f"apps/{new_app}"
 
             if not os.path.isdir(existing_app_dir):
-                echo_warning("App {} does not exist.".format(existing_app))
+                echo_warning(f"App {existing_app} does not exist.")
                 click.get_current_context().abort()
             if os.path.isdir(new_app_dir):
-                echo_warning("App {} already exists.".format(new_app))
+                echo_warning(f"App {new_app} already exists.")
                 click.get_current_context().abort()
 
-            echo_highlight("Cloning from {} to {}...".format(existing_app, new_app))
+            echo_highlight(f"Cloning from {existing_app} to {new_app}...")
 
             try:
                 result = apps.clone(
@@ -170,13 +172,9 @@ def clone(existing_app, new_app, init, track, runtime):
                 click.get_current_context().abort()
 
             try:
-                dockerutil.run(
-                    "/{}/bin/python manage.py loadjuiceboxapp {}".format(
-                        runtime, new_app
-                    )
-                )
+                dockerutil.run(f"/{runtime}/bin/python manage.py loadjuiceboxapp {new_app}")
             except docker.errors.APIError:
-                echo_warning("Failed to load: {}.".format(new_app))
+                echo_warning(f"Failed to load: {new_app}.")
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox is not running.  Run jb start.")
@@ -205,23 +203,19 @@ def remove(applications, runtime):
 
             for app in applications:
                 try:
-                    if os.path.isdir("apps/{}".format(app)):
-                        echo_highlight("Removing {}...".format(app))
-                        shutil.rmtree("apps/{}".format(app))
-                        dockerutil.run(
-                            "/{}/bin/python manage.py deletejuiceboxapp {}".format(
-                                runtime, app
-                            )
-                        )
-                        echo_success("Successfully deleted {}".format(app))
+                    if os.path.isdir(f"apps/{app}"):
+                        echo_highlight(f"Removing {app}...")
+                        shutil.rmtree(f"apps/{app}")
+                        dockerutil.run(f"/{runtime}/bin/python manage.py deletejuiceboxapp {app}")
+                        echo_success(f"Successfully deleted {app}")
                     else:
-                        echo_warning("App {} didn't exist.".format(app))
+                        echo_warning(f"App {app} didn't exist.")
                 except docker.errors.APIError:
                     print(docker.errors.APIError.message)
                     failed_apps.append(app)
             if failed_apps:
                 click.echo()
-                echo_warning("Failed to remove: {}.".format(", ".join(failed_apps)))
+                echo_warning(f'Failed to remove: {", ".join(failed_apps)}.')
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox is not running.  Run jb start.")
@@ -427,9 +421,12 @@ def activate_ssh(environ):
     is_flag=True,
     help="Mount local juicebox-snapshots-service code into snapshots container",
 )
+@click.option('--prune/--no-prune', default=True, help="Whether to run docker system prune asynchronously during "
+                                                       "startup.  It is enabled by default.  To start without "
+                                                       "pruning, add --no-prune to your jb start command.")
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot, prune
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -528,7 +525,12 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha)
+    pool = ThreadPool(processes=2)
+    if prune:
+        pool.apply_async(popen("docker system prune -f"))
+    pool.apply_async(dockerutil.up(env=environ, ganesha=ganesha))
+    pool.close()
+    pool.join()
 
 
 @click.argument("days", nargs=1, required=False)
@@ -725,9 +727,8 @@ def get_environment_interactively(env, tag_lookup):
         tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
-    env_choices = [
-        {"name": k + " - " + tag_dict[v], "value": k} for k, v in tag_lookup.items()
-    ]
+    env_choices = [{"name": f"{k} - {tag_dict[v]}", "value": k} for k, v in tag_lookup.items()]
+
 
     questions = [
         {
@@ -846,12 +847,12 @@ def _run(args, env, service="juicebox"):
     container = dockerutil.is_running(service=service)
     try:
         if container:
-            click.echo("running command in {}".format(container.name))
+            click.echo(f"running command in {container.name}")
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
             subprocess.check_call(["docker", "exec", "-it", container.name] + cmd)
         elif env is not None:
-            click.echo("starting new {}".format(env))
+            click.echo(f"starting new {env}")
             os.chdir(DEVLANDIA_DIR)
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
         else:
@@ -861,7 +862,7 @@ def _run(args, env, service="juicebox"):
             )
             click.get_current_context().abort()
     except subprocess.CalledProcessError as e:
-        echo_warning("command exited with {}".format(e.returncode))
+        echo_warning(f"command exited with {e.returncode}")
         click.get_current_context().abort()
 
 

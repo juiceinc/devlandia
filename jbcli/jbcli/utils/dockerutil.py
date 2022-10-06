@@ -16,6 +16,8 @@ import re
 import sys
 import os
 import shutil
+import threading
+import subprocess
 
 import click
 import docker.errors
@@ -57,12 +59,12 @@ class WatchHandler(FileSystemEventHandler):
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
-                echo_success("{} was added successfully.".format(app))
+                echo_success(f"{app} was added successfully.")
                 if self.should_reload:
                     refresh_browser()
 
         else:
-            click.echo("Change to {} ignored".format(event.src_path))
+            click.echo(f"Change to {event.src_path} ignored")
 
         click.echo("Waiting for changes...")
 
@@ -125,7 +127,7 @@ def ensure_root():
     if not os.path.isdir("jbcli"):
         # We're not in the devlandia root
         echo_warning(
-            "Please run this command from inside the Devlandia root " "directory."
+            "Please run this command from inside the Devlandia root directory."
         )
         click.get_current_context().abort()
     return True
@@ -313,7 +315,7 @@ def set_tag(env, tag):
     """Set an environment to use a tagged image"""
     ensure_root()
 
-    os.chdir("./environments/{}".format(env))
+    os.chdir(f"./environments/{env}")
     changed = False
     with open("./docker-compose.yml", "rt") as dc:
         with open("out.txt", "wt") as out:
@@ -330,7 +332,7 @@ def set_tag(env, tag):
     else:
         os.remove("./out.txt")
 
-    echo_success("Environment {} is using {}".format(env, tag))
+    echo_success(f"Environment {env} is using {tag}")
     os.chdir("../..")
 
 
