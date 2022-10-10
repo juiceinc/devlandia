@@ -3,7 +3,7 @@ import sys
 from subprocess import CalledProcessError
 from .format import echo_warning
 
-__all__ = ['CalledProcessError', 'check_call', 'check_output']
+__all__ = ['CalledProcessError', 'check_call', 'check_output', 'popen']
 
 try:
     import win32api

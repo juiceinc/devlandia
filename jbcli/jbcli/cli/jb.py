@@ -15,7 +15,7 @@ from collections import OrderedDict
 from multiprocessing import Process
 from multiprocessing.pool import ThreadPool
 import re
-# from subprocess import Popen
+from subprocess import Popen
 
 import click
 import docker.errors
@@ -191,7 +191,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.option(
     "--runtime",
     help="Which runtime to use, defaults to venv, the only other option is venv3"
-    "option.",
+         "option.",
     default="venv",
 )
 def remove(applications, runtime):
@@ -407,7 +407,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -424,9 +424,11 @@ def activate_ssh(environ):
 @click.option('--prune/--no-prune', default=True, help="Whether to run docker system prune asynchronously during "
                                                        "startup.  It is enabled by default.  To start without "
                                                        "pruning, add --no-prune to your jb start command.")
+@click.option('--prune-all', is_flag=True, default=False, help="Whether to clean all images with docker system prune "
+                                                               "during startup instead of only dangling images")
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot, prune
+        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot, prune, prune_all
 ):
     """Configure the environment and start Juicebox"""
     auth.has_current_session()
@@ -527,7 +529,11 @@ def start(
         environ.update(activate_ssh(environ))
     pool = ThreadPool(processes=2)
     if prune:
-        pool.apply_async(popen("docker system prune -f"))
+        delay_length = check_delay()
+        if prune_all:
+            pool.apply_async(popen(f"sleep {delay_length} && docker system prune -a -f"))
+        else:
+            pool.apply_async(popen(f"sleep {delay_length} && docker system prune -f"))
     pool.apply_async(dockerutil.up(env=environ, ganesha=ganesha))
     pool.close()
     pool.join()
@@ -541,6 +547,40 @@ def interval(days):
         stash.put("interval", days)
     else:
         prompt_interval()
+
+
+@click.argument("delay", nargs=1, required=False)
+@cli.command()
+def delay(delay):
+    """Set a new value (in seconds) for the delay before starting docker system prune"""
+    if delay:
+        stash.put("delay", delay)
+    else:
+        prompt_delay()
+
+
+def prompt_delay():
+    question = [
+        {
+            "type": "input",
+            "name": "delay",
+            "message": "How long do you want to set the delay for docker system prune to start during JB startup (in "
+                       "seconds)?",
+        }
+    ]
+    answer = prompt(question)["delay"]
+    stash.put("delay", answer)
+    return int(answer)
+
+
+def check_delay():
+    print("Checking that delay is set")
+    delayval = int(stash.get("delay"))
+    if delayval is None:
+        echo_warning("Delay value not found locally")
+        return prompt_delay()
+    echo_highlight(f"docker system prune delay: {delayval}")
+    return delayval
 
 
 def prompt_interval():
@@ -700,7 +740,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
@@ -728,7 +768,6 @@ def get_environment_interactively(env, tag_lookup):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = [{"name": f"{k} - {tag_dict[v]}", "value": k} for k, v in tag_lookup.items()]
-
 
     questions = [
         {
