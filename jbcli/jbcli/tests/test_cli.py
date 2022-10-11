@@ -1017,7 +1017,7 @@ class TestCli(object):
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
-            ]
+        ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag='develop-py3'),
@@ -1083,7 +1083,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag='develop-py3'),
-            call.up(env={'test_secret': 'true'}, ganesha=False),
+            call.up(env=ANY, ganesha=False),
             call.up()()
         ]
         assert m.mock_calls == [
@@ -1100,17 +1100,21 @@ class TestCli(object):
     @patch("jbcli.cli.jb.auth")
     @patch("jbcli.cli.jb.check_outdated_image")
     @patch('jbcli.cli.jb.prompt')
-    def test_start_noupdate(self, prompt_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
+    @patch('jbcli.cli.jb.stash')
+    def test_start_noupdate(self, stash_mock, prompt_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         image_mock.answer = "no"
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
         result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
+        print(dockerutil_mock.mock_calls)
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.up(env=ANY, ganesha=False),
+            call.up()()
         ]
         assert result.exit_code == 0
+        assert stash_mock.mock_calls == [call.get('users'), call.get('delay'), call.get().__int__()]
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
@@ -1455,7 +1459,8 @@ class TestCli(object):
         prompt_mock.isatty.return_value = 'istty'
         with patch("builtins.open", mock_open()) as m:
             result = invoke(["run", "foo", "bar"])
-        assert subprocess_mock.mock_calls == [call.check_call(['docker', 'exec', '-it', 'stable_juicebox_1', 'foo', 'bar'])]
+        assert subprocess_mock.mock_calls == [
+            call.check_call(['docker', 'exec', '-it', 'stable_juicebox_1', 'foo', 'bar'])]
         assert result.exit_code == 0
 
     @patch("jbcli.cli.jb.click")
