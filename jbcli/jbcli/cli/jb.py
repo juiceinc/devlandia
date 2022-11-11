@@ -838,7 +838,7 @@ def run(args, env, service):
 
 
 def _run(args, env, service="juicebox"):
-    auth.has_current_session()
+    auth.set_creds()
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
