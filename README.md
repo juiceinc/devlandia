@@ -2,28 +2,55 @@
 It's Juicebox development and implementations environments... it's DEVLANDIA!
 
 # Getting Started
-First, if you don't already have it, you'll need to
-[download and install Docker (this link is for Mac users)](https://download.docker.com/mac/stable/Docker.dmg) on your 
-machine.  Documentation can be found [here](https://docs.docker.com/docker-for-mac/install/).  Windows users on anything
+First, if you don't already have it, you'll need to download and install Docker.  Follow [this link](https://docs.docker.com/docker-for-mac/install/) and follow the instructions appropriate to your machine (Intel vs Apple Silicon).  Windows users on anything
 other than Windows 10 Pro, Enterprise, or Education with a minimum build number of 10586 will need to install
 [Docker Toolbox](https://download.docker.com/win/stable/DockerToolbox.exe).  Run the full installation.
 
+# Setting up your SSH key with Github
+First, follow the Github guide on checking any existing keys you might have, and generating one if necessary.  After a
+key is setup you'll also want to setup an SSH config entry to use this key.
+
+In your ~/.ssh/config file, add a block like the one below:
+
+    Host github.com
+        Hostname ssh.github.com
+        Port 443
+        user <githubusername>
+        IdentityFile ~/.ssh/<ssh_key>
+
+The 443 port is needed because of an issue we discovered where users were unable to interact with Github while on
+the Juice VPN.
+
+# Installing Python
+Almost all the work on developing data services is done via Python. While
+Macs ship with Python installed, it's easier to manage Python versions from pyenv or homebrew to
+avoid many pitfalls.  Below are the instructions for setting up with pyenv (installed via homebrew)  The default Python 
+version that homebrew installs at the time of writing is 3.10 which may be incompatible with Devlandia:
+
+First, install homebrew if you don't already have it installed:
+
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    brew install pyenv
+    
+    pyenv install --list
+
+Choose your desired version and install it.  We don't currently have an exhaustive list of compatible versions, but 3.7.8 and 3.8.6 
+are confirmed to work as of 11/22:
+
+    pyenv install 3.8.6
+
 Create a new virtual environment for devlandia by changing to the desired directory and running ``virtualenv devlandia``.
 This can be done in a central place such as ``~/.virtualenvs`` or in your project directory.  Devlandia should 
-be using Python 3.7.8.  If you have multiple versions of Python installed and want to specify the version for 
+be using at least Python 3.7.8.  If you have multiple versions of Python installed and want to specify the version for 
 your virtual environment, run ``virtualenv -p /path/to/python/install devlandia``.  If you installed your virtual 
 environment to ``~/.virtualenvs/`` you'll need to run ``source ~/.virtualenvs/devlandia/bin/activate`` to activate it.
 Once your environment is set up and activated run ``pip install -r requirements.txt`` from the root directory of devlandia.
 
- Run ``make ecr_login``.  To automate this login step, copy the ``postactivate`` file in the scripts folder to the bin 
-directory for your devlandia virtual environment.  Be sure to edit the file to point to the root of your devlandia 
-directory.  This will automatically log you in to our private Docker registry every time you activate the virtual
-environment.
-
 Finally, you'll need to run ``jb start`` from the devlandia directory. You will see a menu that will give you options
 as to what environment you would like to run. You can instead specify an image name or other options and bypass the menu
 selection like so ``jb start master-py3``
-Docker will pull down 3 images: Postgres, Redis, and the pre-built Juicebox image.  After the images are downloaded it 
+Docker will pull down 4 images: Postgres, Redis, the pre-built Juicebox image, and the snapshot image.  After the images are downloaded it 
 will go through its initialization and will come up at ``http://localhost:8000/``.  If you're starting in a HSTM specific
 environment, go to ``http://localhost:8000/admin`` to bypass the single signon.  To add new apps, go to the root of
 Devlandia and run ``jb add <app_name>``.
