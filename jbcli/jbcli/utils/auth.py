@@ -11,39 +11,7 @@ from ..utils.format import echo_warning, echo_success
 from ..utils.storageutil import Stash
 
 
-def has_current_session():
-    if "AWS_ACCESS_KEY_ID" in os.environ:
-        echo_success("Found existing credentials.")
-        return
-    stash = Stash("~/.config/juicebox/creds.toml")
-    try:
-        access_key = stash.get("AWS_ACCESS_KEY_ID")
-        if access_key is None:
-            echo_warning(
-                "AWS Variables not found locally, you'll be prompted to reauthenticate."
-            )
-            set_creds()
-        else:
-            echo_success(
-                "Checking existing credentials to see if the session is still valid."
-            )
-            load_creds()
-            valid = check_cred_validity(
-                aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
-                aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
-                aws_session_token=os.environ["AWS_SESSION_TOKEN"],
-            )
-            if not valid:
-                set_creds()
-    except ClientError as e:
-        echo_warning(
-            f"Client error, session doesn't appear to be valid, reauthenticating: {e}"
-        )
-
-
 def set_creds():
-    if "AWS_ACCESS_KEY_ID" in os.environ:
-        return
     try:
         profile_details = []
         config = configparser.ConfigParser()
@@ -164,20 +132,7 @@ def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_to
         return False
 
 
-def load_creds():
-    echo_success("Loading cached credentials")
-    stash = Stash("~/.config/juicebox/creds.toml")
-    os.environ["AWS_ACCESS_KEY_ID"] = stash.get("AWS_ACCESS_KEY_ID")
-    os.environ["AWS_SECRET_ACCESS_KEY"] = stash.get("AWS_SECRET_ACCESS_KEY")
-    os.environ["AWS_SESSION_TOKEN"] = stash.get("AWS_SESSION_TOKEN")
-
-
 def set_and_cache_creds(output):
-    stash = Stash("~/.config/juicebox/creds.toml")
     os.environ["AWS_ACCESS_KEY_ID"] = output["Credentials"]["AccessKeyId"]
     os.environ["AWS_SECRET_ACCESS_KEY"] = output["Credentials"]["SecretAccessKey"]
     os.environ["AWS_SESSION_TOKEN"] = output["Credentials"]["SessionToken"]
-
-    stash.put("AWS_ACCESS_KEY_ID", output["Credentials"]["AccessKeyId"])
-    stash.put("AWS_SECRET_ACCESS_KEY", output["Credentials"]["SecretAccessKey"])
-    stash.put("AWS_SESSION_TOKEN", output["Credentials"]["SessionToken"])
