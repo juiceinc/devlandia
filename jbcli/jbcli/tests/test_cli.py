@@ -986,25 +986,6 @@ class TestCli(object):
         assert "Cloning from cookies to chocolate_chip" in result.output
 
     @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.subprocess")
-    @patch("jbcli.cli.jb.os")
-    def test_yo_upgrade(self, os_mock, proc_mock, dockerutil_mock):
-        dockerutil_mock.ensure_root.return_value = True
-        dockerutil_mock.ensure_virtualenv.return_value = True
-        os_mock.environ.return_value = False
-        os_mock.path.join.return_value = ""
-        os_mock.getcwd.return_value = ""
-        os_mock.path.exists.return_value = True
-        os_mock.symlink.return_value = False
-        proc_mock.check_call.return_value = "foo"
-
-        result = invoke(["yo_upgrade"])
-
-        # TODO: Improve these tests
-        assert proc_mock.mock_calls == []
-        # assert result.exit_code == 0
-
-    @patch("jbcli.cli.jb.dockerutil")
     def test_clear_cache(self, dockerutil_mock):
         dockerutil_mock.is_running.return_value = True
 
