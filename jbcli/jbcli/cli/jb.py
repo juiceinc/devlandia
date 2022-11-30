@@ -838,7 +838,6 @@ def run(args, env, service):
 
 
 def _run(args, env, service="juicebox"):
-    auth.set_creds()
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
@@ -853,6 +852,7 @@ def _run(args, env, service="juicebox"):
         elif env is not None:
             click.echo("starting new {}".format(env))
             os.chdir(DEVLANDIA_DIR)
+            auth.set_creds()
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
         else:
             echo_warning(
