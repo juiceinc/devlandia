@@ -50,17 +50,7 @@ def cli():
 
 @cli.command()
 @click.argument("applications", nargs=-1, required=True)
-@click.option(
-    "--add-desktop/--no-add-desktop",
-    default=False,
-    help="Optionally add to Github Desktop",
-)
-@click.option(
-    "--runtime",
-    default="venv",
-    help="Which runtime to use, defaults to venv, the only other option is venv3",
-)
-def add(applications, add_desktop, runtime):
+def add(applications):
     """Checkout a juicebox app (or list of apps) and load it, can check out
     a specific branch by using `appslug@branchname`
     """
@@ -73,15 +63,24 @@ def add(applications, add_desktop, runtime):
         failed_apps = []
 
         for app in applications:
-            branch = False
+            branch = None
             if "@" in app:
                 app_split = app.split("@")
                 app = app_split[0]
                 branch = app_split[1]
-            app_dir = "apps/{}".format(app)
+            app_dir = f"apps/{app}"
             if os.path.isdir(app_dir):
-                # App already exists, update it.
-                echo_highlight(f"App {app} already exists.")
+                # App already exists. We assume there's a repo here.
+                echo_highlight(f"App {app} already exists. Changing to branch {branch}.")
+                if branch is not None:
+                    os.chdir(app_dir)
+                    try:
+                        subprocess.check_call(["git", "fetch"])
+                        subprocess.check_call(["git", "checkout", branch])
+                    except subprocess.CalledProcessError:
+                        failed_apps.append(app)
+                        continue
+                    os.chdir("../..")
 
             else:
                 # App doesn't exist, clone it
@@ -102,15 +101,10 @@ def add(applications, add_desktop, runtime):
                     failed_apps.append(app)
                     continue
 
-                if add_desktop:
-                    try:
-                        subprocess.check_call(["github", app_dir])
-                    except subprocess.CalledProcessError:
-                        echo_warning(f"Failed to add {app} to Github Desktop.")
             try:
                 if not jbapiutil.load_app(app):
                     dockerutil.run(
-                        f"/{runtime}/bin/python manage.py loadjuiceboxapp {app}"
+                        f"/venv/bin/python manage.py loadjuiceboxapp {app}"
                     )
                     echo_success(f"{app} was added successfully.")
 
@@ -132,12 +126,7 @@ def add(applications, add_desktop, runtime):
 @click.argument("new_app", required=True)
 @click.option("--init/--no-init", default=True, help="Initialize VCS repository")
 @click.option("--track/--no-track", default=True, help="Track remote VCS repository")
-@click.option(
-    "--runtime",
-    help="Which runtime to use, defaults to venv, the only other option is venv3",
-    default="venv",
-)
-def clone(existing_app, new_app, init, track, runtime):
+def clone(existing_app, new_app, init, track):
     """Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
     """
@@ -171,9 +160,7 @@ def clone(existing_app, new_app, init, track, runtime):
 
             try:
                 dockerutil.run(
-                    "/{}/bin/python manage.py loadjuiceboxapp {}".format(
-                        runtime, new_app
-                    )
+                    f"/venv/bin/python manage.py loadjuiceboxapp {new_app}"
                 )
             except docker.errors.APIError:
                 echo_warning("Failed to load: {}.".format(new_app))
@@ -190,13 +177,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.confirmation_option(
     "--yes", is_flag=True, prompt="Are you sure you want to delete?"
 )
-@click.option(
-    "--runtime",
-    help="Which runtime to use, defaults to venv, the only other option is venv3"
-    "option.",
-    default="venv",
-)
-def remove(applications, runtime):
+def remove(applications):
     """Remove a juicebox app (or list of apps) from your local environment"""
     os.chdir(DEVLANDIA_DIR)
     try:
@@ -209,9 +190,7 @@ def remove(applications, runtime):
                         echo_highlight("Removing {}...".format(app))
                         shutil.rmtree("apps/{}".format(app))
                         dockerutil.run(
-                            "/{}/bin/python manage.py deletejuiceboxapp {}".format(
-                                runtime, app
-                            )
+                            f"/venv/bin/python manage.py deletejuiceboxapp {app}"
                         )
                         echo_success("Successfully deleted {}".format(app))
                     else:
