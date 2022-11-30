@@ -169,6 +169,74 @@ class TestCli(object):
     @patch("jbcli.cli.jb.apps")
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
+    def test_add_branch(
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+    ):
+        os_mock.path.isdir.return_value = False
+        apps_mock.make_github_repo_url.return_value = "git cookies"
+        dockerutil_mock.is_running.return_value = True
+        apiutil_mock.load_app.return_value = False
+        apiutil_mock.get_admin_token.return_value = None
+
+        result = invoke(["add", "cookies@main"])
+
+        assert "Adding cookies..." in result.output
+        assert "Downloading app cookies from Github." in result.output
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
+        ]
+        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR),
+            call.path.isdir("apps/cookies"),
+        ]
+        assert proc_mock.mock_calls == [
+            call.check_call(["git", "clone", "-b", "main", "git cookies", "apps/cookies"]),
+        ]
+
+
+    @patch("jbcli.cli.jb.jbapiutil")
+    @patch("jbcli.cli.jb.dockerutil")
+    @patch("jbcli.cli.jb.apps")
+    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.os")
+    def test_add_branch_app_exists(
+            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
+    ):
+        os_mock.path.isdir.return_value = True
+        apps_mock.make_github_repo_url.return_value = "git cookies"
+        dockerutil_mock.is_running.return_value = True
+        apiutil_mock.load_app.return_value = False
+        apiutil_mock.get_admin_token.return_value = None
+
+        result = invoke(["add", "cookies@main"])
+
+        assert "App cookies already exists. Changing to branch main." in result.output
+        assert "cookies was added successfully." in result.output
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
+        ]
+        assert apps_mock.mock_calls == []
+        assert os_mock.mock_calls == [
+            call.chdir(DEVLANDIA_DIR),
+            call.path.isdir("apps/cookies"),
+            call.chdir('apps/cookies'),
+            call.chdir('../..')
+        ]
+        assert proc_mock.mock_calls == [
+            call.check_call(['git', 'fetch']),
+            call.check_call(['git', 'checkout', 'main'])
+        ]
+
+    @patch("jbcli.cli.jb.jbapiutil")
+    @patch("jbcli.cli.jb.dockerutil")
+    @patch("jbcli.cli.jb.apps")
+    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.os")
     def test_add_multiple(
             self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
@@ -207,31 +275,6 @@ class TestCli(object):
     @patch("jbcli.cli.jb.subprocess.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_clone_fail(self, os_mock, proc_mock, apps_mock, dockerutil_mock):
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        proc_mock.side_effect = CalledProcessError(2, "cmd", "Ugh Cake")
-
-        result = invoke(["add", "cookies"])
-
-        assert "Adding cookies..." in result.output
-        assert "Failed to load: cookies." in result.output
-        assert result.exit_code == 1
-        assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"])
-        ]
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess.check_call")
-    @patch("jbcli.cli.jb.os")
-    def test_add_clone_fail_ugh_cake(self, os_mock, proc_mock, apps_mock, dockerutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = "git cookies"
