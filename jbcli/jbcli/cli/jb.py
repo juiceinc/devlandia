@@ -73,6 +73,9 @@ def add(applications):
                 # App already exists. We assume there's a repo here.
                 echo_highlight(f"App {app} already exists. Changing to branch {branch}.")
                 if branch is not None:
+                    # TODO: If we used pathlib we could have a context manager
+                    # here to change the path
+                    # with Path(app_dir):
                     os.chdir(app_dir)
                     try:
                         subprocess.check_call(["git", "fetch"])
