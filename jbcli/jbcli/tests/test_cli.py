@@ -101,69 +101,6 @@ class TestCli(object):
 
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
-    @patch("jbcli.cli.jb.os")
-    def test_add_single_venv3(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        result = invoke(["add", "cookies", "--runtime", "venv3"])
-
-        assert "Adding cookies..." in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp cookies"),
-        ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"])
-        ]
-        assert "Adding cookies" in result.output
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
-    @patch("jbcli.cli.jb.os")
-    def test_add_single_api_venv3(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        """Adding an app by calling the jb api"""
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        apiutil_mock.load_app.return_value = True
-        apiutil_mock.get_admin_token.return_value = "foo"
-
-        result = invoke(["add", "cookies", "--runtime", "venv3"])
-
-        assert "Adding cookies..." in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert apiutil_mock.mock_calls == [call.load_app(u"cookies")]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"])
-        ]
-        assert "Adding cookies" in result.output
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.os")
     def test_add_app_exists(self, os_mock, dockerutil_mock, apiutil_mock):
         os_mock.path.isdir.return_value = True
@@ -184,28 +121,6 @@ class TestCli(object):
             call.path.isdir("apps/cookies"),
         ]
 
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.os")
-    def test_add_app_exists_venv3(self, os_mock, dockerutil_mock, apiutil_mock):
-        os_mock.path.isdir.return_value = True
-        dockerutil_mock.is_running.return_value = True
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        result = invoke(["add", "cookies", "--runtime", "venv3"])
-
-        assert "App cookies already exists." in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp cookies"),
-        ]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-
     @patch("jbcli.cli.jb.dockerutil")
     def test_add_not_running(self, dockerutil_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
@@ -216,23 +131,12 @@ class TestCli(object):
         assert "Juicebox is not running.  Please run jb start." in result.output
         assert result.exit_code == 1
 
-    @patch("jbcli.cli.jb.dockerutil")
-    def test_add_not_running_venv3(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(DEVLANDIA_DIR)
-        dockerutil_mock.is_running.return_value = False
-
-        result = invoke(["add", "cookies", "--runtime", "venv3"])
-
-        assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert "Juicebox is not running.  Please run jb start." in result.output
-        assert result.exit_code == 1
-
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
     @patch("jbcli.cli.jb.subprocess")
     @patch("jbcli.cli.jb.os")
-    def test_add_desktop(
+    def test_add_single(
             self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
@@ -241,7 +145,7 @@ class TestCli(object):
         apiutil_mock.load_app.return_value = False
         apiutil_mock.get_admin_token.return_value = None
 
-        result = invoke(["add", "cookies", "--add-desktop"])
+        result = invoke(["add", "cookies"])
 
         assert "Adding cookies..." in result.output
         assert "Downloading app cookies from Github." in result.output
@@ -258,40 +162,6 @@ class TestCli(object):
         ]
         assert proc_mock.mock_calls == [
             call.check_call(["git", "clone", "git cookies", "apps/cookies"]),
-            call.check_call(["github", "apps/cookies"]),
-        ]
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
-    @patch("jbcli.cli.jb.os")
-    def test_add_desktop_venv3(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        os_mock.path.isdir.return_value = False
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        dockerutil_mock.is_running.return_value = True
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        result = invoke(["add", "cookies", "--add-desktop", "--runtime", "venv3"])
-
-        assert "Adding cookies..." in result.output
-        assert "Downloading app cookies from Github." in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp cookies"),
-        ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"]),
-            call.check_call(["github", "apps/cookies"]),
         ]
 
     @patch("jbcli.cli.jb.jbapiutil")
@@ -317,44 +187,6 @@ class TestCli(object):
             call.is_running(),
             call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
             call.run("/venv/bin/python manage.py loadjuiceboxapp chocolate_chip"),
-        ]
-        assert apps_mock.mock_calls == [
-            call.make_github_repo_url(u"cookies"),
-            call.make_github_repo_url(u"chocolate_chip"),
-        ]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-            call.path.isdir("apps/chocolate_chip"),
-        ]
-        assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"]),
-            call.check_call(["git", "clone", "git cookies", "apps/chocolate_chip"]),
-        ]
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
-    @patch("jbcli.cli.jb.os")
-    def test_add_multiple_venv3(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        os_mock.path.isdir.return_value = False
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        dockerutil_mock.is_running.return_value = True
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        result = invoke(["add", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert "Adding cookies..." in result.output
-        assert "Adding chocolate_chip"
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp cookies"),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp chocolate_chip"),
         ]
         assert apps_mock.mock_calls == [
             call.make_github_repo_url(u"cookies"),
@@ -399,13 +231,13 @@ class TestCli(object):
     @patch("jbcli.cli.jb.apps")
     @patch("jbcli.cli.jb.subprocess.check_call")
     @patch("jbcli.cli.jb.os")
-    def test_add_clone_fail_venv3(self, os_mock, proc_mock, apps_mock, dockerutil_mock):
+    def test_add_clone_fail_ugh_cake(self, os_mock, proc_mock, apps_mock, dockerutil_mock):
         os_mock.path.isdir.return_value = False
         dockerutil_mock.is_running.return_value = True
         apps_mock.make_github_repo_url.return_value = "git cookies"
         proc_mock.side_effect = CalledProcessError(2, "cmd", "Ugh Cake")
 
-        result = invoke(["add", "cookies", "--runtime", "venv3"])
+        result = invoke(["add", "cookies"])
 
         assert "Adding cookies..." in result.output
         assert "Failed to load: cookies." in result.output
@@ -437,6 +269,7 @@ class TestCli(object):
 
         result = invoke(["add", "cookies"])
 
+        print(result.output)
         assert "Adding cookies..." in result.output
         assert "Downloading app cookies from Github." in result.output
         assert "Failed to add cookies to the Juicebox VM" in result.output
@@ -453,112 +286,6 @@ class TestCli(object):
         assert proc_mock.mock_calls == [
             call.check_call(["git", "clone", "git cookies", "apps/cookies"])
         ]
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess.check_call")
-    @patch("jbcli.cli.jb.os")
-    def test_add_run_fail_venv3(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.run.side_effect = APIError("Fail")
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        result = invoke(["add", "cookies", "--runtime", "venv3"])
-
-        assert "Adding cookies..." in result.output
-        assert "Downloading app cookies from Github." in result.output
-        assert "Failed to add cookies to the Juicebox VM" in result.output
-        assert result.exit_code == 1
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp cookies"),
-        ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"])
-        ]
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess.check_call")
-    @patch("jbcli.cli.jb.os")
-    def test_add_desktop_fail(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        proc_mock.side_effect = [True, CalledProcessError(2, "cmd", "Ugh Cake")]
-
-        result = invoke(["add", "cookies", "--add-desktop"])
-        assert "Adding cookies..." in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
-        ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call(["git", "clone", "git cookies", "apps/cookies"]),
-            call(["github", "apps/cookies"]),
-        ]
-        assert "Failed to add cookies to Github Desktop" in result.output
-        assert "Downloading app cookies from Github" in result.output
-        assert "cookies was added successfully" in result.output
-
-    @patch("jbcli.cli.jb.jbapiutil")
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess.check_call")
-    @patch("jbcli.cli.jb.os")
-    def test_add_desktop_fail_venv3(
-            self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
-    ):
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.make_github_repo_url.return_value = "git cookies"
-        apiutil_mock.load_app.return_value = False
-        apiutil_mock.get_admin_token.return_value = None
-
-        proc_mock.side_effect = [True, CalledProcessError(2, "cmd", "Ugh Cake")]
-
-        result = invoke(["add", "cookies", "--add-desktop", "--runtime", "venv3"])
-        assert "Adding cookies..." in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp cookies"),
-        ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-        assert proc_mock.mock_calls == [
-            call(["git", "clone", "git cookies", "apps/cookies"]),
-            call(["github", "apps/cookies"]),
-        ]
-        assert "Failed to add cookies to Github Desktop" in result.output
-        assert "Downloading app cookies from Github" in result.output
-        assert "cookies was added successfully" in result.output
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.shutil")
@@ -585,49 +312,11 @@ class TestCli(object):
         ]
 
     @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.shutil")
-    @patch("jbcli.cli.jb.os")
-    def test_remove_single_venv3(self, os_mock, shutil_mock, dockerutil_mock):
-        os_mock.path.isdir.return_value = True
-        dockerutil_mock.is_running.return_value = True
-        dockerutil_mock.ensure_home.return_value = True
-
-        result = invoke(["remove", "cookies", "--yes", "--runtime", "venv3"])
-
-        assert "Removing cookies..." in result.output
-        assert "Successfully deleted cookies" in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.ensure_home(),
-            call.run("/venv3/bin/python manage.py deletejuiceboxapp cookies"),
-        ]
-        assert shutil_mock.mock_calls == [call.rmtree("apps/cookies")]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-        ]
-
-    @patch("jbcli.cli.jb.dockerutil")
     def test_remove_not_running(self, dockerutil_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = False
 
         result = invoke(["remove", "cookies", "--yes"])
-
-        assert "Juicebox is not running.  Run jb start." in result.output
-        assert result.exit_code == 1
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-        ]
-        assert result.exit_code == 1
-
-    @patch("jbcli.cli.jb.dockerutil")
-    def test_remove_not_running_venv3(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(DEVLANDIA_DIR)
-        dockerutil_mock.is_running.return_value = False
-
-        result = invoke(["remove", "cookies", "--yes", "--runtime", "venv3"])
 
         assert "Juicebox is not running.  Run jb start." in result.output
         assert result.exit_code == 1
@@ -643,19 +332,6 @@ class TestCli(object):
         dockerutil_mock.ensure_home.return_value = False
 
         result = invoke(["remove", "cookies", "--yes"])
-
-        assert "Juicebox is not running.  Run jb start." in result.output
-        assert result.exit_code == 1
-        assert dockerutil_mock.mock_calls == [call.is_running(), call.ensure_home()]
-        assert result.exit_code == 1
-
-    @patch("jbcli.cli.jb.dockerutil")
-    def test_remove_not_home_venv3(self, dockerutil_mock, monkeypatch):
-        monkeypatch.chdir(DEVLANDIA_DIR)
-        dockerutil_mock.is_running.return_value = True
-        dockerutil_mock.ensure_home.return_value = False
-
-        result = invoke(["remove", "cookies", "--yes", "--runtime", "venv3"])
 
         assert "Juicebox is not running.  Run jb start." in result.output
         assert result.exit_code == 1
@@ -682,37 +358,6 @@ class TestCli(object):
             call.ensure_home(),
             call.run("/venv/bin/python manage.py deletejuiceboxapp cookies"),
             call.run("/venv/bin/python manage.py deletejuiceboxapp cake"),
-        ]
-        assert shutil_mock.mock_calls == [
-            call.rmtree("apps/cookies"),
-            call.rmtree("apps/cake"),
-        ]
-        assert os_mock.mock_calls == [
-            call.chdir(DEVLANDIA_DIR),
-            call.path.isdir("apps/cookies"),
-            call.path.isdir("apps/cake"),
-        ]
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.shutil")
-    @patch("jbcli.cli.jb.os")
-    def test_remove_multiple_venv3(self, os_mock, shutil_mock, dockerutil_mock):
-        os_mock.path.isdir.return_value = True
-        dockerutil_mock.is_running.return_value = True
-        dockerutil_mock.ensure_home.return_value = True
-
-        result = invoke(["remove", "cookies", "cake", "--yes", "--runtime", "venv3"])
-
-        assert "Removing cookies..." in result.output
-        assert "Removing cake..." in result.output
-        assert "Successfully deleted cookies" in result.output
-        assert "Successfully deleted cake" in result.output
-        assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.ensure_home(),
-            call.run("/venv3/bin/python manage.py deletejuiceboxapp cookies"),
-            call.run("/venv3/bin/python manage.py deletejuiceboxapp cake"),
         ]
         assert shutil_mock.mock_calls == [
             call.rmtree("apps/cookies"),
@@ -1294,134 +939,6 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.run("/venv/bin/python manage.py loadjuiceboxapp chocolate_chip"),
-        ]
-        assert "Cloning from cookies to chocolate_chip" in result.output
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.os")
-    def test_clone_venv3(self, os_mock, apps_mock, dockerutil_mock):
-        os_mock.path.isdir.side_effect = [True, False]
-        apps_mock.clone.return_value = "git cookies"
-        dockerutil_mock.is_running.return_value = True
-        result = invoke(["clone", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert apps_mock.mock_calls == [
-            call.clone(
-                u"chocolate_chip",
-                "apps/cookies",
-                "apps/chocolate_chip",
-                init_vcs=True,
-                track_vcs=True,
-            )
-        ]
-        assert os_mock.mock_calls == [
-            call.path.isdir("apps/cookies"),
-            call.path.isdir("apps/chocolate_chip"),
-        ]
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp chocolate_chip"),
-        ]
-        assert result.exit_code == 0
-
-    @patch("jbcli.cli.jb.dockerutil")
-    def test_clone_running_fail_venv3(self, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = False
-
-        result = invoke(["clone", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert result.exit_code == 1
-        assert "Juicebox is not running.  Run jb start." in result.output
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.os")
-    def test_clone_from_nonexist_venv3(self, os_mock, dockerutil_mock):
-        os_mock.path.isdir.return_value = False
-        dockerutil_mock.is_running.return_value = True
-        result = invoke(["clone", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert os_mock.mock_calls == [
-            call.path.isdir("apps/cookies"),
-        ]
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-        ]
-        assert result.exit_code == 1
-        assert "App cookies does not exist." in result.output
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.os")
-    def test_clone_to_exists_venv3(self, os_mock, dockerutil_mock):
-        os_mock.path.isdir.side_effect = [True, True]
-        dockerutil_mock.is_running.return_value = True
-
-        result = invoke(["clone", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert os_mock.mock_calls == [
-            call.path.isdir("apps/cookies"),
-            call.path.isdir("apps/chocolate_chip"),
-        ]
-        assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert result.exit_code == 1
-        assert "App chocolate_chip already exists." in result.output
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.os")
-    def test_clone_failed_venv3(self, os_mock, apps_mock, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-        os_mock.path.isdir.side_effect = [True, False]
-        apps_mock.clone.side_effect = ValueError("Cake Bad")
-
-        result = invoke(["clone", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert apps_mock.mock_calls == [
-            call.clone(
-                u"chocolate_chip",
-                "apps/cookies",
-                "apps/chocolate_chip",
-                init_vcs=True,
-                track_vcs=True,
-            )
-        ]
-        assert os_mock.mock_calls == [
-            call.path.isdir("apps/cookies"),
-            call.path.isdir("apps/chocolate_chip"),
-        ]
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-        ]
-        assert result.exit_code == 1
-        assert "Cloning failed" in result.output
-
-    @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.os")
-    def test_clone_run_failed_venv3(self, os_mock, apps_mock, dockerutil_mock):
-        dockerutil_mock.is_running.return_value = True
-        apps_mock.clone.return_value = True
-        os_mock.path.isdir.side_effect = [True, False]
-
-        result = invoke(["clone", "cookies", "chocolate_chip", "--runtime", "venv3"])
-
-        assert apps_mock.mock_calls == [
-            call.clone(
-                u"chocolate_chip",
-                "apps/cookies",
-                "apps/chocolate_chip",
-                init_vcs=True,
-                track_vcs=True,
-            )
-        ]
-        assert os_mock.mock_calls == [
-            call.path.isdir("apps/cookies"),
-            call.path.isdir("apps/chocolate_chip"),
-        ]
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.run("/venv3/bin/python manage.py loadjuiceboxapp chocolate_chip"),
         ]
         assert "Cloning from cookies to chocolate_chip" in result.output
 
