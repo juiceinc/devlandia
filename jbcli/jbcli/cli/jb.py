@@ -13,16 +13,16 @@ import sys
 import time
 from collections import OrderedDict
 from multiprocessing import Process
-from subprocess import Popen
+from jbcli.utils.subprocess_1 import Popen
 import re
 
 import click
 import docker.errors
 import yaml
-from PyInquirer import prompt
+from InquirerPy import prompt
 from six.moves.urllib.parse import urlparse, urlunparse
 
-from ..utils import apps, dockerutil, jbapiutil, subprocess, auth, format
+from ..utils import apps, dockerutil, jbapiutil, auth, format, subprocess_1
 from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.reload import create_browser_instance
 from ..utils.secrets import get_deployment_secrets
@@ -71,16 +71,18 @@ def add(applications):
             app_dir = f"apps/{app}"
             if os.path.isdir(app_dir):
                 # App already exists. We assume there's a repo here.
-                echo_highlight(f"App {app} already exists. Changing to branch {branch}.")
+                echo_highlight(
+                    f"App {app} already exists. Changing to branch {branch}."
+                )
                 if branch is not None:
                     # TODO: If we used pathlib we could have a context manager
                     # here to change the path
                     # with Path(app_dir):
                     os.chdir(app_dir)
                     try:
-                        subprocess.check_call(["git", "fetch"])
-                        subprocess.check_call(["git", "checkout", branch])
-                    except subprocess.CalledProcessError:
+                        subprocess_1.check_call(["git", "fetch"])
+                        subprocess_1.check_call(["git", "checkout", branch])
+                    except subprocess_1.CalledProcessError:
                         failed_apps.append(app)
                         continue
                     os.chdir("../..")
@@ -93,22 +95,20 @@ def add(applications):
 
                 try:
                     if not branch:
-                        subprocess.check_call(
+                        subprocess_1.check_call(
                             ["git", "clone", github_repo_url, app_dir]
                         )
                     else:
-                        subprocess.check_call(
+                        subprocess_1.check_call(
                             ["git", "clone", "-b", branch, github_repo_url, app_dir]
                         )
-                except subprocess.CalledProcessError:
+                except subprocess_1.CalledProcessError:
                     failed_apps.append(app)
                     continue
 
             try:
                 if not jbapiutil.load_app(app):
-                    dockerutil.run(
-                        f"/venv/bin/python manage.py loadjuiceboxapp {app}"
-                    )
+                    dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
                     echo_success(f"{app} was added successfully.")
 
             except docker.errors.APIError as e:
@@ -162,9 +162,7 @@ def clone(existing_app, new_app, init, track):
                 click.get_current_context().abort()
 
             try:
-                dockerutil.run(
-                    f"/venv/bin/python manage.py loadjuiceboxapp {new_app}"
-                )
+                dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}")
             except docker.errors.APIError:
                 echo_warning("Failed to load: {}.".format(new_app))
                 click.get_current_context().abort()
@@ -250,7 +248,7 @@ def ls(showall=False, semantic=False):
     try:
         echo_success("The following tagged images are available:")
         dockerutil.image_list(showall=showall, semantic=semantic)
-    except subprocess.CalledProcessError:
+    except subprocess_1.CalledProcessError:
         echo_warning("You must login to the registry first.")
 
 
@@ -763,9 +761,9 @@ def upgrade(ctx):
     dockerutil.ensure_root()
 
     try:
-        subprocess.check_call(["git", "pull"])
-        subprocess.check_call(["pip", "install", "-r", "requirements.txt", "-q"])
-    except subprocess.CalledProcessError:
+        subprocess_1.check_call(["git", "pull"])
+        subprocess_1.check_call(["pip", "install", "-r", "requirements.txt", "-q"])
+    except subprocess_1.CalledProcessError:
         echo_warning("Failed to `git pull`")
         click.get_current_context().abort()
 
@@ -791,11 +789,7 @@ def pull(tag=None):
     dockerutil.pull(tag)
 
 
-@cli.command(
-    context_settings=dict(
-        ignore_unknown_options=True,
-    )
-)
+@cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to use")
 def manage(args, env):
@@ -804,11 +798,7 @@ def manage(args, env):
     return _run(cmd, env)
 
 
-@cli.command(
-    context_settings=dict(
-        ignore_unknown_options=True,
-    )
-)
+@cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to use")
 @click.option(
@@ -830,7 +820,7 @@ def _run(args, env, service="juicebox"):
             click.echo("running command in {}".format(container.name))
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
-            subprocess.check_call(["docker", "exec", "-it", container.name] + cmd)
+            subprocess_1.check_call(["docker", "exec", "-it", container.name] + cmd)
         elif env is not None:
             click.echo("starting new {}".format(env))
             os.chdir(DEVLANDIA_DIR)
@@ -842,7 +832,7 @@ def _run(args, env, service="juicebox"):
                 "Please pass --env, or start juicebox in the background first."
             )
             click.get_current_context().abort()
-    except subprocess.CalledProcessError as e:
+    except subprocess_1.CalledProcessError as e:
         echo_warning("command exited with {}".format(e.returncode))
         click.get_current_context().abort()
 

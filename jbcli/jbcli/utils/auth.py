@@ -3,12 +3,10 @@ import json
 import os
 
 import boto3
-from botocore.exceptions import ClientError
-from PyInquirer import prompt
+from InquirerPy import prompt
 
-from .subprocess import check_output
+from .subprocess_1 import check_output
 from ..utils.format import echo_warning, echo_success
-from ..utils.storageutil import Stash
 
 
 def set_creds():
@@ -116,9 +114,7 @@ def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_to
         ecr_test.describe_images(
             registryId="423681189101",
             repositoryName="juicebox-devlandia",
-            imageIds=[
-                {"imageTag": "develop-py3"},
-            ],
+            imageIds=[{"imageTag": "develop-py3"}],
         )
 
         echo_success("Credentials are valid.")

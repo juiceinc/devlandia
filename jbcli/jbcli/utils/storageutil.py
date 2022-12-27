@@ -2,14 +2,13 @@ import toml
 import os
 
 
-__all__ = ['Stash', 'stash']
+__all__ = ["Stash", "stash"]
 
 
 class Stash(object):
-    """A wrapper for storing config in a toml file.
-    """
+    """A wrapper for storing config in a toml file."""
 
-    def __init__(self, stash_filename='~/.config/juicebox/devlandia.toml'):
+    def __init__(self, stash_filename="~/.config/juicebox/devlandia.toml"):
         self.local_filename = os.path.abspath(os.path.expanduser(stash_filename))
         stash_dir = os.path.dirname(self.local_filename)
         if not os.path.exists(stash_dir):

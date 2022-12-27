@@ -20,8 +20,8 @@ import shutil
 import click
 import docker.errors
 from .jbapiutil import load_app
-from .subprocess import check_call, check_output
-from .reload import refresh_browser
+from .subprocess_1 import check_call, check_output
+from jbcli.utils.reload import refresh_browser
 
 from .format import echo_warning, echo_success, human_readable_timediff
 

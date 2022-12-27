@@ -10,10 +10,10 @@ import click
 
 from .. import conf
 from .format import echo_warning, echo_success
-from .subprocess import check_call, CalledProcessError
+from .subprocess_1 import check_call, CalledProcessError
 
 LOG = logging.getLogger(__name__)
-IGNORE_PATTERNS = shutil.ignore_patterns('*.pyc', '.git', 'tmp')
+IGNORE_PATTERNS = shutil.ignore_patterns("*.pyc", ".git", "tmp")
 
 
 def make_github_repo_url(app):
@@ -23,10 +23,9 @@ def make_github_repo_url(app):
     :param app: The Juicebox packaged application name
     :type app: str
     """
-    return 'git@github.com:{0}/{1}{2}.git'.format(
-        conf.GITHUB_ORGANIZATION,
-        conf.GITHUB_REPO_PREFIX,
-        app)
+    return "git@github.com:{0}/{1}{2}.git".format(
+        conf.GITHUB_ORGANIZATION, conf.GITHUB_REPO_PREFIX, app
+    )
 
 
 def make_github_repo_link(app):
@@ -36,10 +35,9 @@ def make_github_repo_link(app):
     :param app: The Juicebox packaged application name
     :type app: str
     """
-    return 'https://github.com/{0}/{1}{2}'.format(
-        conf.GITHUB_ORGANIZATION,
-        conf.GITHUB_REPO_PREFIX,
-        app)
+    return "https://github.com/{0}/{1}{2}".format(
+        conf.GITHUB_ORGANIZATION, conf.GITHUB_REPO_PREFIX, app
+    )
 
 
 def clone(name, source, dest, init_vcs=True, track_vcs=True):
@@ -64,11 +62,11 @@ def clone(name, source, dest, init_vcs=True, track_vcs=True):
     try:
         shutil.copytree(source, dest, ignore=IGNORE_PATTERNS)
     except shutil.ExecError:
-        echo_warning('Cloning failed on the copy step')
+        echo_warning("Cloning failed on the copy step")
         return False
 
-    replacements = {'slug:': name, 'label:': name, 'id:': str(uuid4())[:8]}
-    dest_app_yaml = os.path.join(dest, 'app.yaml')
+    replacements = {"slug:": name, "label:": name, "id:": str(uuid4())[:8]}
+    dest_app_yaml = os.path.join(dest, "app.yaml")
     replace_in_yaml(dest_app_yaml, replacements)
 
     if init_vcs:
@@ -77,7 +75,7 @@ def clone(name, source, dest, init_vcs=True, track_vcs=True):
 
 
 def perform_init_vcs(name, app_dir, track_vcs=True):
-    """ Initializes a Git repo, setups a track branch, pushes to it, and
+    """Initializes a Git repo, setups a track branch, pushes to it, and
     sets up the repo in github desktop
 
     :param name: The packaged application name
@@ -91,23 +89,23 @@ def perform_init_vcs(name, app_dir, track_vcs=True):
     github_repo_url = make_github_repo_url(name)
     github_repo_link = make_github_repo_link(name)
     try:
-        click.echo('Initializing Git repository')
+        click.echo("Initializing Git repository")
         os.chdir(app_dir)
-        check_call(['git', 'init'])
-        check_call(['git', 'add', '.'])
-        check_call(['git', 'commit', '-m', 'Initial commit'])
+        check_call(["git", "init"])
+        check_call(["git", "add", "."])
+        check_call(["git", "commit", "-m", "Initial commit"])
     except CalledProcessError as exc_info:
         click.echo()
-        echo_warning('Failed to initialize Git repository.')
+        echo_warning("Failed to initialize Git repository.")
         return
 
     if track_vcs:
         try:
-            click.echo('Setting up remote tracking branch')
-            check_call(['git', 'remote', 'add', 'origin', github_repo_url])
-            click.echo('Pushing to origin')
-            check_call(['git', 'push', '-u', 'origin', 'master'])
-            click.echo('View in a browser at {}'.format(github_repo_link))
+            click.echo("Setting up remote tracking branch")
+            check_call(["git", "remote", "add", "origin", github_repo_url])
+            click.echo("Pushing to origin")
+            check_call(["git", "push", "-u", "origin", "master"])
+            click.echo("View in a browser at {}".format(github_repo_link))
         except CalledProcessError as exc_info:
             LOG.error(str(exc_info))
             click.echo()
@@ -120,19 +118,21 @@ To connect your repo manually, you can run the following:
 $ cd {1}
 $ git remote add origin {2}
 $ git push -u origin master
-            """.format(app_dir, github_repo_link, github_repo_url)
+            """.format(
+                app_dir, github_repo_link, github_repo_url
+            )
 
             echo_warning(errmsg)
         try:
-            check_call(['github', '{}'.format(app_dir)])
+            check_call(["github", "{}".format(app_dir)])
         except (CalledProcessError, OSError) as exc_info:
             LOG.error(str(exc_info))
             click.echo()
-            echo_warning('Failed to add to github desktop')
+            echo_warning("Failed to add to github desktop")
 
 
 def replace_in_yaml(file_path, replacements):
-    """ Replaces FLAT keys in a yaml file
+    """Replaces FLAT keys in a yaml file
 
     :param file_path: Path to the file we are working on
     :type file_path: str
@@ -148,12 +148,12 @@ def replace_in_yaml(file_path, replacements):
     """
     # Create temp file
     handle, abs_path = tempfile.mkstemp()
-    with open(abs_path, 'w') as new_file:
+    with open(abs_path, "w") as new_file:
         with open(file_path) as old_file:
             for line in old_file:
                 for key in replacements.keys():
                     if key in line:
-                        line = u'{} {}\n'.format(key, replacements[key])
+                        line = "{} {}\n".format(key, replacements[key])
                 new_file.write(line)
     os.close(handle)
     # Remove original file
