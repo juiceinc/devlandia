@@ -20,6 +20,7 @@ import click
 import docker.errors
 import yaml
 from InquirerPy import prompt
+
 from six.moves.urllib.parse import urlparse, urlunparse
 
 from ..utils import apps, dockerutil, jbapiutil, auth, format, subprocess_1
@@ -135,17 +136,17 @@ def clone(existing_app, new_app, init, track):
     """
     try:
         if dockerutil.is_running():
-            existing_app_dir = "apps/{}".format(existing_app)
-            new_app_dir = "apps/{}".format(new_app)
+            existing_app_dir = f"apps/{existing_app}"
+            new_app_dir = f"apps/{new_app}"
 
             if not os.path.isdir(existing_app_dir):
-                echo_warning("App {} does not exist.".format(existing_app))
+                echo_warning(f"App {existing_app} does not exist.")
                 click.get_current_context().abort()
             if os.path.isdir(new_app_dir):
-                echo_warning("App {} already exists.".format(new_app))
+                echo_warning(f"App {new_app} already exists.")
                 click.get_current_context().abort()
 
-            echo_highlight("Cloning from {} to {}...".format(existing_app, new_app))
+            echo_highlight(f"Cloning from {existing_app} to {new_app}...")
 
             try:
                 result = apps.clone(
@@ -164,7 +165,7 @@ def clone(existing_app, new_app, init, track):
             try:
                 dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}")
             except docker.errors.APIError:
-                echo_warning("Failed to load: {}.".format(new_app))
+                echo_warning(f"Failed to load: {new_app}.")
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox is not running.  Run jb start.")
@@ -187,21 +188,21 @@ def remove(applications):
 
             for app in applications:
                 try:
-                    if os.path.isdir("apps/{}".format(app)):
-                        echo_highlight("Removing {}...".format(app))
-                        shutil.rmtree("apps/{}".format(app))
+                    if os.path.isdir(f"apps/{app}"):
+                        echo_highlight(f"Removing {app}...")
+                        shutil.rmtree(f"apps/{app}")
                         dockerutil.run(
                             f"/venv/bin/python manage.py deletejuiceboxapp {app}"
                         )
-                        echo_success("Successfully deleted {}".format(app))
+                        echo_success(f"Successfully deleted {app}")
                     else:
-                        echo_warning("App {} didn't exist.".format(app))
+                        echo_warning(f"App {app} didn't exist.")
                 except docker.errors.APIError:
                     print(docker.errors.APIError.message)
                     failed_apps.append(app)
             if failed_apps:
                 click.echo()
-                echo_warning("Failed to remove: {}.".format(", ".join(failed_apps)))
+                echo_warning(f'Failed to remove: {", ".join(failed_apps)}.')
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox is not running.  Run jb start.")
@@ -220,12 +221,11 @@ def remove(applications):
 @cli.command()
 def watch(includejs=False, app="", reload=False):
     """Watch for changes in apps and js and reload/rebuild"""
-    procs = []
     jb_watch_proc = Process(
         target=dockerutil.jb_watch, kwargs={"app": app, "should_reload": reload}
     )
     jb_watch_proc.start()
-    procs.append(jb_watch_proc)
+    procs = [jb_watch_proc]
     if reload:
         create_browser_instance()
 
@@ -706,7 +706,7 @@ def get_environment_interactively(env, tag_lookup):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = [
-        {"name": k + " - " + tag_dict[v], "value": k} for k, v in tag_lookup.items()
+        {"name": f"{k} - {tag_dict[v]}", "value": k} for k, v in tag_lookup.items()
     ]
 
     questions = [
@@ -817,12 +817,12 @@ def _run(args, env, service="juicebox"):
     container = dockerutil.is_running(service=service)
     try:
         if container:
-            click.echo("running command in {}".format(container.name))
+            click.echo(f"running command in {container.name}")
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
             subprocess_1.check_call(["docker", "exec", "-it", container.name] + cmd)
         elif env is not None:
-            click.echo("starting new {}".format(env))
+            click.echo(f"starting new {env}")
             os.chdir(DEVLANDIA_DIR)
             auth.set_creds()
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
@@ -833,7 +833,7 @@ def _run(args, env, service="juicebox"):
             )
             click.get_current_context().abort()
     except subprocess_1.CalledProcessError as e:
-        echo_warning("command exited with {}".format(e.returncode))
+        echo_warning(f"command exited with {e.returncode}")
         click.get_current_context().abort()
 
 
