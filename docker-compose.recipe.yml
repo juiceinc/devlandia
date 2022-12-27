@@ -1,0 +1,10 @@
+version: '3.8'
+services:
+  juicebox:
+    volumes:
+      - ./recipe:/code/recipe
+    command: >
+      bash -c "! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements.txt;
+               ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
+               /venv/bin/pip install -e recipe/;
+               /venv/bin/python docker/entrypoint.py"
