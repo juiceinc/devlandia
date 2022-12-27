@@ -17,7 +17,7 @@ def get_admin_token(refresh_token=False):
             echo_success("Got admin token from storage")
             return token
 
-    url = "{SERVER}/api/v1/jb/api-token-auth/".format(SERVER=SERVER)
+    url = f"{SERVER}/api/v1/jb/api-token-auth/"
     payload = {"email": JB_ADMIN_USER, "password": JB_ADMIN_PASSWORD}
     response = post(url, data=payload)
     if response.status_code in (200, 201):
@@ -62,7 +62,7 @@ def load_app(app, refresh_token=False):
     """Attempt to load an app using jb API. If successful return True."""
     admin_token = get_admin_token(refresh_token)
     if admin_token:
-        url = "{SERVER}/api/v1/app/load/{APP}/".format(SERVER=SERVER, APP=app)
+        url = f"{SERVER}/api/v1/app/load/{app}/"
         headers = {
             "Authorization": f"JWT {admin_token}",
             "Content-Type": "application-json",

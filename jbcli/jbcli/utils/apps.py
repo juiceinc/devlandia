@@ -23,8 +23,8 @@ def make_github_repo_url(app):
     :param app: The Juicebox packaged application name
     :type app: str
     """
-    return "git@github.com:{0}/{1}{2}.git".format(
-        conf.GITHUB_ORGANIZATION, conf.GITHUB_REPO_PREFIX, app
+    return (
+        f"git@github.com:{conf.GITHUB_ORGANIZATION}/{conf.GITHUB_REPO_PREFIX}{app}.git"
     )
 
 
@@ -35,8 +35,8 @@ def make_github_repo_link(app):
     :param app: The Juicebox packaged application name
     :type app: str
     """
-    return "https://github.com/{0}/{1}{2}".format(
-        conf.GITHUB_ORGANIZATION, conf.GITHUB_REPO_PREFIX, app
+    return (
+        f"https://github.com/{conf.GITHUB_ORGANIZATION}/{conf.GITHUB_REPO_PREFIX}{app}"
     )
 
 
@@ -105,26 +105,24 @@ def perform_init_vcs(name, app_dir, track_vcs=True):
             check_call(["git", "remote", "add", "origin", github_repo_url])
             click.echo("Pushing to origin")
             check_call(["git", "push", "-u", "origin", "master"])
-            click.echo("View in a browser at {}".format(github_repo_link))
+            click.echo(f"View in a browser at {github_repo_link}")
         except CalledProcessError as exc_info:
             LOG.error(str(exc_info))
             click.echo()
-            errmsg = """We had trouble connecting your repo to Github!
-Your repo is expected to be at {0}
+            errmsg = f"""We had trouble connecting your repo to Github!
+Your repo is expected to be at {app_dir}
 Please ensure you have the appropriate permissions to push.
 
 To connect your repo manually, you can run the following:
 
-$ cd {1}
-$ git remote add origin {2}
+$ cd {github_repo_link}
+$ git remote add origin {github_repo_url}
 $ git push -u origin master
-            """.format(
-                app_dir, github_repo_link, github_repo_url
-            )
+            """
 
             echo_warning(errmsg)
         try:
-            check_call(["github", "{}".format(app_dir)])
+            check_call(["github", f"{app_dir}"])
         except (CalledProcessError, OSError) as exc_info:
             LOG.error(str(exc_info))
             click.echo()
@@ -153,7 +151,7 @@ def replace_in_yaml(file_path, replacements):
             for line in old_file:
                 for key in replacements.keys():
                     if key in line:
-                        line = "{} {}\n".format(key, replacements[key])
+                        line = f"{key} {replacements[key]}\n"
                 new_file.write(line)
     os.close(handle)
     # Remove original file

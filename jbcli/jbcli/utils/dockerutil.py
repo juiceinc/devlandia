@@ -57,12 +57,12 @@ class WatchHandler(FileSystemEventHandler):
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
-                echo_success("{} was added successfully.".format(app))
+                echo_success(f"{app} was added successfully.")
                 if self.should_reload:
                     refresh_browser()
 
         else:
-            click.echo("Change to {} ignored".format(event.src_path))
+            click.echo(f"Change to {event.src_path} ignored")
 
         click.echo("Waiting for changes...")
 
