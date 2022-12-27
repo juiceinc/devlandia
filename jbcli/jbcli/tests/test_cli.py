@@ -1,8 +1,6 @@
 from __future__ import print_function
 
 from collections import namedtuple
-import os
-from io import StringIO
 from os.path import expanduser
 from subprocess import CalledProcessError
 
@@ -36,7 +34,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.os")
     def test_add_single(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -55,7 +53,7 @@ class TestCli(object):
             call.is_running(),
             call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
         ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert apps_mock.mock_calls == [call.make_github_repo_url("cookies")]
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
             call.path.isdir("apps/cookies"),
@@ -71,7 +69,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.os")
     def test_add_single_api(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -88,8 +86,8 @@ class TestCli(object):
         assert "Adding cookies..." in result.output
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert apiutil_mock.mock_calls == [call.load_app(u"cookies")]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert apiutil_mock.mock_calls == [call.load_app("cookies")]
+        assert apps_mock.mock_calls == [call.make_github_repo_url("cookies")]
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
             call.path.isdir("apps/cookies"),
@@ -134,7 +132,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.os")
     def test_add_single(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -154,20 +152,20 @@ class TestCli(object):
             call.is_running(),
             call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
         ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert apps_mock.mock_calls == [call.make_github_repo_url("cookies")]
         print(os_mock.mock_calls)
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
             call.path.isdir("apps/cookies"),
         ]
         assert proc_mock.mock_calls == [
-            call.check_call(["git", "clone", "git cookies", "apps/cookies"]),
+            call.check_call(["git", "clone", "git cookies", "apps/cookies"])
         ]
 
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.os")
     def test_add_branch(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -187,7 +185,7 @@ class TestCli(object):
             call.is_running(),
             call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
         ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert apps_mock.mock_calls == [call.make_github_repo_url("cookies")]
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
             call.path.isdir("apps/cookies"),
@@ -195,13 +193,13 @@ class TestCli(object):
         assert proc_mock.mock_calls == [
             call.check_call(
                 ["git", "clone", "-b", "main", "git cookies", "apps/cookies"]
-            ),
+            )
         ]
 
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.os")
     def test_add_branch_app_exists(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -236,7 +234,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.os")
     def test_add_multiple(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -258,8 +256,8 @@ class TestCli(object):
             call.run("/venv/bin/python manage.py loadjuiceboxapp chocolate_chip"),
         ]
         assert apps_mock.mock_calls == [
-            call.make_github_repo_url(u"cookies"),
-            call.make_github_repo_url(u"chocolate_chip"),
+            call.make_github_repo_url("cookies"),
+            call.make_github_repo_url("chocolate_chip"),
         ]
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
@@ -273,7 +271,7 @@ class TestCli(object):
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess.check_call")
+    @patch("jbcli.cli.jb.subprocess_1.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_clone_fail(self, os_mock, proc_mock, apps_mock, dockerutil_mock):
         os_mock.path.isdir.return_value = False
@@ -287,7 +285,7 @@ class TestCli(object):
         assert "Failed to load: cookies." in result.output
         assert result.exit_code == 1
         assert dockerutil_mock.mock_calls == [call.is_running()]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert apps_mock.mock_calls == [call.make_github_repo_url("cookies")]
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
             call.path.isdir("apps/cookies"),
@@ -299,7 +297,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.jbapiutil")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.apps")
-    @patch("jbcli.cli.jb.subprocess.check_call")
+    @patch("jbcli.cli.jb.subprocess_1.check_call")
     @patch("jbcli.cli.jb.os")
     def test_add_run_fail(
         self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
@@ -322,7 +320,7 @@ class TestCli(object):
             call.is_running(),
             call.run("/venv/bin/python manage.py loadjuiceboxapp cookies"),
         ]
-        assert apps_mock.mock_calls == [call.make_github_repo_url(u"cookies")]
+        assert apps_mock.mock_calls == [call.make_github_repo_url("cookies")]
         assert os_mock.mock_calls == [
             call.chdir(DEVLANDIA_DIR),
             call.path.isdir("apps/cookies"),
@@ -364,9 +362,7 @@ class TestCli(object):
 
         assert "Juicebox is not running.  Run jb start." in result.output
         assert result.exit_code == 1
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-        ]
+        assert dockerutil_mock.mock_calls == [call.is_running()]
         assert result.exit_code == 1
 
     @patch("jbcli.cli.jb.dockerutil")
@@ -561,7 +557,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=False, dev_recipe=False),
         ]
         assert m.mock_calls == [
             call(expanduser("~/.config/juicebox/devlandia.toml")),
@@ -577,14 +573,6 @@ class TestCli(object):
             call().write(
                 "[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n"
             ),
-            call().__exit__(None, None, None),
-            call(".env", "w"),
-            call().__enter__(),
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
             call().__exit__(None, None, None),
         ]
 
@@ -603,7 +591,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="potato"),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=False, dev_recipe=False),
         ]
         assert m.mock_calls == [
             call(expanduser("~/.config/juicebox/devlandia.toml")),
@@ -619,15 +607,6 @@ class TestCli(object):
             call().write(
                 "[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n"
             ),
-            call().__exit__(None, None, None),
-            call(".env", "w"),
-            call().__enter__(),
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=potato\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE"
-                "=recipereadme\nRECIPEFILE=unused\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
             call().__exit__(None, None, None),
         ]
 
@@ -646,7 +625,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="master-py3"),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=False, dev_recipe=False),
         ]
         assert m.mock_calls == [
             call(expanduser("~/.config/juicebox/devlandia.toml")),
@@ -662,15 +641,6 @@ class TestCli(object):
             call().write(
                 "[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n"
             ),
-            call().__exit__(None, None, None),
-            call(".env", "w"),
-            call().__enter__(),
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=master-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE"
-                "=recipereadme\nRECIPEFILE=unused\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
             call().__exit__(None, None, None),
         ]
 
@@ -734,7 +704,7 @@ class TestCli(object):
         with patch("builtins.open", mock_open()) as m:
             result = invoke(["start", "core", "--noupgrade"])
         assert result.exit_code == 0
-        # We link the fruition/ directory with .env
+
         assert m.mock_calls == [
             call(expanduser("~/.config/juicebox/devlandia.toml")),
             call().__enter__(),
@@ -750,20 +720,11 @@ class TestCli(object):
                 "[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n"
             ),
             call().__exit__(None, None, None),
-            call(".env", "w"),
-            call().__enter__(),
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE"
-                "=recipereadme\nRECIPEFILE=unused\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
-            call().__exit__(None, None, None),
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=True, dev_recipe=False),
         ]
 
     @patch("jbcli.cli.jb.os")
@@ -786,8 +747,7 @@ class TestCli(object):
         with patch("builtins.open", mock_open()) as m:
             result = invoke(["start", "core", "--noupgrade", "--dev-recipe"])
         assert result.exit_code == 0
-        # We link the fruition/ directory with .env
-        # We ALSO link the recipe/ directory
+
         print(m.mock_calls)
         assert m.mock_calls == [
             call(expanduser("~/.config/juicebox/devlandia.toml")),
@@ -804,19 +764,11 @@ class TestCli(object):
                 "[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n"
             ),
             call().__exit__(None, None, None),
-            call(".env", "w"),
-            call().__enter__(),
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE=recipe\nRECIPEFILE=code/recipe\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
-            call().__exit__(None, None, None),
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=True, dev_recipe=True),
         ]
 
     @patch("jbcli.cli.jb.dockerutil")
@@ -833,7 +785,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(tag="develop-py3"),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=False, dev_recipe=False),
         ]
         assert m.mock_calls == [
             call(expanduser("~/.config/juicebox/devlandia.toml")),
@@ -849,14 +801,6 @@ class TestCli(object):
             call().write(
                 "[[users]]\nfirstname = []\nlastname = []\nemail = []\nuser_extra = []\n\n"
             ),
-            call().__exit__(None, None, None),
-            call(".env", "w"),
-            call().__enter__(),
-            call().write(
-                "DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused\n"
-            ),
-            call().write("LOCAL_SNAPSHOT_DIR=./nothing\n"),
-            call().write("CONTAINER_SNAPSHOT_DIR=/nothing\n"),
             call().__exit__(None, None, None),
         ]
 
@@ -874,7 +818,7 @@ class TestCli(object):
         result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.up(env=ANY, ganesha=False),
+            call.up(env=ANY, ganesha=False, is_core=False, dev_recipe=False),
         ]
         assert result.exit_code == 0
 
@@ -901,7 +845,7 @@ class TestCli(object):
 
         assert apps_mock.mock_calls == [
             call.clone(
-                u"chocolate_chip",
+                "chocolate_chip",
                 "apps/cookies",
                 "apps/chocolate_chip",
                 init_vcs=True,
@@ -935,12 +879,8 @@ class TestCli(object):
         dockerutil_mock.is_running.return_value = True
         result = invoke(["clone", "cookies", "chocolate_chip"])
 
-        assert os_mock.mock_calls == [
-            call.path.isdir("apps/cookies"),
-        ]
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-        ]
+        assert os_mock.mock_calls == [call.path.isdir("apps/cookies")]
+        assert dockerutil_mock.mock_calls == [call.is_running()]
         assert result.exit_code == 1
         assert "App cookies does not exist." in result.output
 
@@ -972,7 +912,7 @@ class TestCli(object):
 
         assert apps_mock.mock_calls == [
             call.clone(
-                u"chocolate_chip",
+                "chocolate_chip",
                 "apps/cookies",
                 "apps/chocolate_chip",
                 init_vcs=True,
@@ -983,9 +923,7 @@ class TestCli(object):
             call.path.isdir("apps/cookies"),
             call.path.isdir("apps/chocolate_chip"),
         ]
-        assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-        ]
+        assert dockerutil_mock.mock_calls == [call.is_running()]
         assert result.exit_code == 1
         assert "Cloning failed" in result.output
 
@@ -1001,7 +939,7 @@ class TestCli(object):
 
         assert apps_mock.mock_calls == [
             call.clone(
-                u"chocolate_chip",
+                "chocolate_chip",
                 "apps/cookies",
                 "apps/chocolate_chip",
                 init_vcs=True,
@@ -1061,7 +999,7 @@ class TestCli(object):
         assert "Could not clear cache" in result.output
 
     @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.prompt")
     # @patch('jbcli.cli.jb._run')
     def test_jb_run_running_no_env(self, prompt_mock, subprocess_mock, dockerutil_mock):
@@ -1096,7 +1034,7 @@ class TestCli(object):
         assert "Juicebox not running and no --env given" in result.output
 
     @patch("jbcli.cli.jb.dockerutil")
-    @patch("jbcli.cli.jb.subprocess")
+    @patch("jbcli.cli.jb.subprocess_1")
     @patch("jbcli.cli.jb.prompt")
     def test_jb_manage_running_matching_env(
         self, prompt_mock, subprocess_mock, dockerutil_mock

@@ -429,41 +429,29 @@ def start(
 
     env = get_environment_interactively(env, tag_replacements)
 
-    core_path = "readme"
-    core_end = "unused"
     workflow = "dev"
-    recipe_path = "recipereadme"
-    recipe_end = "unused"
 
     # "core" devlandia uses editable fruition code
     is_core = "core" in env or core
     is_hstm = env.startswith("hstm-") or hstm
 
-    if is_core:
-        if os.path.exists("fruition"):
-            core_path = "fruition"
-            core_end = "code"
-            workflow = "core"
-        else:
-            print(
-                "Could not find Local Fruition Checkout, please check that it is symlinked to the top level of "
-                "Devlandia"
-            )
-            sys.exit(1)
+    if is_core and not os.path.exists("fruition"):
+        print(
+            "Could not find Local Fruition Checkout, please check that it is symlinked to the top level of "
+            "Devlandia"
+        )
+        sys.exit(1)
 
     # "dev_recipe" devlandia uses editable recipe code
     if dev_recipe:
-        if is_core:
-            if os.path.exists("recipe"):
-                recipe_path = "recipe"
-                recipe_end = "code/recipe"
-            else:
-                print(
-                    "Could not find local recipe checkout, please check that it is symlinked to the top level of "
-                    "Devlandia"
-                )
-                sys.exit(1)
-        else:
+        # Guard against some failure conditions
+        if is_core and not os.path.exists("recipe"):
+            print(
+                "Could not find local recipe checkout, please check that it is symlinked to the top level of "
+                "Devlandia"
+            )
+            sys.exit(1)
+        if not is_core:
             print("The dev-recipe flag requires running a core environment")
             sys.exit(1)
 
@@ -477,28 +465,16 @@ def start(
             noupdate = False
     if not noupgrade:
         ctx.invoke(upgrade)
-    if dev_snapshot:
-        local_snapshot_dir = "./juicebox-snapshots-service"
-        container_snapshot_dir = "/code"
-    else:
-        local_snapshot_dir = "./nothing"
-        container_snapshot_dir = "/nothing"
 
-    with open(".env", "w") as env_dot:
-        # why are we using .env instead of just putting things into the environment?
-        env_dot.write(
-            f"DEVLANDIA_PORT=8000\n"
-            f"TAG={tag}\n"
-            f"FRUITION={core_path}\n"
-            f"FILE={core_end}\n"
-            f"WORKFLOW={workflow}\n"
-            f"RECIPE={recipe_path}\n"
-            f"RECIPEFILE={recipe_end}\n"
-        )
-        env_dot.write(f"LOCAL_SNAPSHOT_DIR={local_snapshot_dir}\n")
-        env_dot.write(f"CONTAINER_SNAPSHOT_DIR={container_snapshot_dir}\n")
+    local_snapshot_dir = "./juicebox-snapshots-service" if dev_snapshot else "./nothing"
+    container_snapshot_dir = "/code" if dev_snapshot else "/nothing"
 
     environ = populate_env_with_secrets()
+
+    environ["DEVLANDIA_PORT"] = "8000"
+    environ["TAG"] = tag
+    environ["LOCAL_SNAPSHOT_DIR"] = local_snapshot_dir
+    environ["CONTAINER_SNAPSHOT_DIR"] = container_snapshot_dir
 
     if not noupdate:
         dockerutil.pull(tag=tag)
@@ -508,7 +484,7 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha)
+    dockerutil.up(env=environ, ganesha=ganesha, is_core=is_core, dev_recipe=dev_recipe)
 
 
 @click.argument("days", nargs=1, required=False)

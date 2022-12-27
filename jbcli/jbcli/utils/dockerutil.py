@@ -71,23 +71,27 @@ def _intersperse(el, l):
     return [y for x in zip([el] * len(l), l) for y in x]
 
 
-def docker_compose(args, env=None, ganesha=False):
+def docker_compose(args, env=None, ganesha=False, is_core=False, dev_recipe=False):
     # Since our docker-compose.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
     compose_files = ["docker-compose.yml"]
     compose_files.extend(glob("docker-compose-*.yml"))
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
+    if is_core:
+        compose_files.append("docker-compose.core.yml")
+    if dev_recipe:
+        compose_files.append("docker-compose.recipe.yml")
     file_args = _intersperse("-f", compose_files)
     env_name = os.path.basename(os.path.abspath("."))
     cmd = ["docker-compose", "--project-directory", ".", "--project-name", env_name]
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None, ganesha=False):
+def up(env=None, **kwargs):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml"""
-    docker_compose(["up", "--abort-on-container-exit"], env=env, ganesha=ganesha)
+    docker_compose(["up", "--abort-on-container-exit"], env=env, **kwargs)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -313,7 +317,7 @@ def set_tag(env, tag):
     """Set an environment to use a tagged image"""
     ensure_root()
 
-    os.chdir("./environments/{}".format(env))
+    os.chdir(f"./environments/{env}")
     changed = False
     with open("./docker-compose.yml", "rt") as dc:
         with open("out.txt", "wt") as out:
@@ -330,7 +334,7 @@ def set_tag(env, tag):
     else:
         os.remove("./out.txt")
 
-    echo_success("Environment {} is using {}".format(env, tag))
+    echo_success(f"Environment {env} is using {tag}")
     os.chdir("../..")
 
 
