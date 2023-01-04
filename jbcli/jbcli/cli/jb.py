@@ -282,7 +282,7 @@ def get_host_ip():
             "[get_host_ip] Couldn't get docker0 address, falling back to slow method", e
         )
         out = dockerutil.client.containers.run(
-            "ubuntu:18.04", "getent hosts host.docker.internal"
+            "ubuntu:18.04", "getent hosts host.docker.internal", remove=True
         )
         # returns output like:
         #   192.168.1.1    host.docker.internal
