@@ -71,7 +71,9 @@ def add(applications):
             app_dir = f"apps/{app}"
             if os.path.isdir(app_dir):
                 # App already exists. We assume there's a repo here.
-                echo_highlight(f"App {app} already exists. Changing to branch {branch}.")
+                echo_highlight(
+                    f"App {app} already exists. Changing to branch {branch}."
+                )
                 if branch is not None:
                     # TODO: If we used pathlib we could have a context manager
                     # here to change the path
@@ -106,9 +108,7 @@ def add(applications):
 
             try:
                 if not jbapiutil.load_app(app):
-                    dockerutil.run(
-                        f"/venv/bin/python manage.py loadjuiceboxapp {app}"
-                    )
+                    dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
                     echo_success(f"{app} was added successfully.")
 
             except docker.errors.APIError as e:
@@ -162,9 +162,7 @@ def clone(existing_app, new_app, init, track):
                 click.get_current_context().abort()
 
             try:
-                dockerutil.run(
-                    f"/venv/bin/python manage.py loadjuiceboxapp {new_app}"
-                )
+                dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}")
             except docker.errors.APIError:
                 echo_warning("Failed to load: {}.".format(new_app))
                 click.get_current_context().abort()
@@ -754,6 +752,20 @@ def stop(ctx, clean):
         echo_highlight("Juicebox is no longer running.")
     else:
         echo_highlight("Juicebox is not running")
+
+
+@cli.command()
+def kick():
+    """Restart the Juicebox process without restarting all of devlandia"""
+    container = dockerutil.is_running()
+    if not container:
+        echo_warning("kick only works when Juicebox is running")
+    # This is a little heavy-handed but it's kinda hard to figure out exactly which
+    # process we need to HUP
+    subprocess.check_call(
+        ["docker", "exec", "-it", container.name, "killall", "-HUP", "/venv/bin/python"]
+    )
+    echo_success("Juicebox has been restarted.")
 
 
 @cli.command()
