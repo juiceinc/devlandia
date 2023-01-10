@@ -760,6 +760,7 @@ def kick():
     container = dockerutil.is_running()
     if not container:
         echo_warning("kick only works when Juicebox is running")
+        return
     # This is a little heavy-handed but it's kinda hard to figure out exactly which
     # process we need to HUP
     subprocess.check_call(
