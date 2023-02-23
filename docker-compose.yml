@@ -67,6 +67,7 @@ services:
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
       - JB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/
+    restart: on-failure:10
   postgres:
     environment:
       - POSTGRES_USER=juicebox
@@ -84,3 +85,4 @@ services:
       - JB_DEBUG=true
     ports:
       - "8080:8080"
+    restart: on-failure:10
