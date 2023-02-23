@@ -17,8 +17,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.yml','up',
-                  '--abort-on-container-exit'], env=None)
+                  '-f', 'docker-compose.yml','up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -57,7 +56,6 @@ class TestDocker:
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
                 'up',
-                '--abort-on-container-exit',
             ], env=None)
         ]
 
