@@ -87,7 +87,7 @@ def docker_compose(args, env=None, ganesha=False):
 def up(env=None, ganesha=False):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml"""
-    docker_compose(["up", "--abort-on-container-exit"], env=env, ganesha=ganesha)
+    docker_compose(["up"], env=env, ganesha=ganesha)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
