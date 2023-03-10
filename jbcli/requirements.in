@@ -10,3 +10,4 @@ tablib~=0.13.0
 PyInquirer~=1.0.3
 humanize~=0.5.1
 six~=1.14.0
+awscli~=1.27.88
