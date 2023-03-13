@@ -57,7 +57,7 @@ jsonschema==2.6.0
     # via docker-compose
 paramiko==3.0.0
     # via docker
-prompt-toolkit==1.0.14
+prompt-toolkit==3.0.38
     # via pyinquirer
 pyasn1==0.4.8
     # via rsa
