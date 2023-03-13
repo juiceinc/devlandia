@@ -3,6 +3,9 @@ phases:
   install:
     runtime-versions:
       python: 3.10
+    commands:
+      - nohup /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &
+      - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
   pre_build:
     commands:
       - export NORMAL_BRANCH=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed 's/branch\///' | sed 's/pr\///')
