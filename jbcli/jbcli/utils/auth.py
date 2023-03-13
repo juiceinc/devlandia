@@ -3,7 +3,7 @@ import json
 import os
 
 import boto3
-from PyInquirer import prompt
+from InquirerPy import prompt
 
 from .subprocess import check_output
 from ..utils.format import echo_warning, echo_success
