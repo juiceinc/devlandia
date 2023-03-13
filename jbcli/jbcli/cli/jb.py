@@ -19,7 +19,7 @@ import re
 import click
 import docker.errors
 import yaml
-from PyInquirer import prompt
+from InquirerPy import prompt
 from six.moves.urllib.parse import urlparse, urlunparse
 
 from ..utils import apps, dockerutil, jbapiutil, subprocess, auth, format
