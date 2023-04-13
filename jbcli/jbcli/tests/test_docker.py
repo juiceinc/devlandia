@@ -1,28 +1,42 @@
-import os
 import json
 import time
 from collections import namedtuple
 from datetime import datetime, timedelta
 
-from mock import call, patch, ANY
+from mock import call, patch
 
-from ..utils import dockerutil
 from ..cli.jb import DEVLANDIA_DIR
+from ..utils import dockerutil
 
 
 class TestDocker:
     @patch('jbcli.utils.dockerutil.check_call')
-    def test_up(self, check_mock):
-        dockerutil.up()
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_up_x86(self, arch_mock, check_mock):
+        arch_mock.return_value = 'x86_64'
+        dockerutil.up(arch=arch_mock.return_value)
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.yml','up'], env=None)
+                  '-f', 'docker-compose.yml', 'up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
-    def test_destroy(self, check_mock):
-        dockerutil.destroy()
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_up_arm(self, arch_mock, check_mock):
+        arch_mock.return_value = 'arm'
+        dockerutil.up(arch=arch_mock.return_value)
+        assert check_mock.mock_calls == [
+            call(['docker-compose',
+                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '-f', 'docker-compose.arm.yml', 'up'], env=None)
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_destroy_x86(self, arch_mock, check_mock):
+        arch_mock.return_value = 'x86_64'
+        dockerutil.destroy(arch=arch_mock.return_value)
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
@@ -30,8 +44,21 @@ class TestDocker:
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
-    def test_halt(self, check_mock):
-        dockerutil.halt()
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_destroy_arm(self, arch_mock, check_mock):
+        arch_mock.return_value = 'arm'
+        dockerutil.destroy(arch=arch_mock.return_value)
+        assert check_mock.mock_calls == [
+            call(['docker-compose',
+                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '-f', 'docker-compose.arm.yml', 'down'], env=None)
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_halt_x86(self, arch_mock, check_mock):
+        arch_mock.return_value = 'x86_64'
+        dockerutil.halt(arch=arch_mock.return_value)
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
@@ -39,14 +66,26 @@ class TestDocker:
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_halt_arm(self, arch_mock, check_mock):
+        arch_mock.return_value = 'arm'
+        dockerutil.halt(arch=arch_mock.return_value)
+        assert check_mock.mock_calls == [
+            call(['docker-compose',
+                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '-f', 'docker-compose.arm.yml', 'stop'], env=None)
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
     @patch('jbcli.utils.dockerutil.glob')
-    def test_multiple_docker_compose_files(self, glob_mock, check_mock):
+    def test_multiple_docker_compose_files_x86(self, glob_mock, check_mock):
         """When additional `docker-compose-*.yml` files are available, they
         are passed to `docker-compose`.
         """
         glob_mock.return_value = [
             'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
-        dockerutil.up()
+
+        dockerutil.up(arch='x86_64')
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
@@ -56,7 +95,28 @@ class TestDocker:
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
                 'up',
-            ], env=None)
+            ], env=None),
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.utils.dockerutil.glob')
+    def test_multiple_docker_compose_files_arm(self, glob_mock, check_mock):
+        """When additional `docker-compose-*.yml` files are available, they
+        are passed to `docker-compose`.
+        """
+        glob_mock.return_value = [
+            'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
+        dockerutil.up(arch='arm')
+        assert check_mock.mock_calls == [
+            call([
+                'docker-compose',
+                '--project-directory', '.',
+                '--project-name', 'devlandia',
+                '-f', 'docker-compose.arm.yml',
+                '-f', 'docker-compose-coolio.yml',
+                '-f', 'docker-compose-2pac.yml',
+                'up',
+            ], env=None),
         ]
 
     @patch('jbcli.utils.dockerutil.client')
@@ -75,9 +135,8 @@ class TestDocker:
         result = dockerutil.get_state('stable_juicebox_1')
         assert 'exited' in result
 
-    @patch('jbcli.utils.dockerutil.click')
-    def test_ensure_home(self, click_mock, monkeypatch):
-        for env in ['core', 'test', 'hstm-newcore']:
+    def test_ensure_home(self, monkeypatch):
+        for _ in ['core', 'test', 'hstm-newcore']:
             monkeypatch.chdir(DEVLANDIA_DIR)
             dockerutil.ensure_home()
 
@@ -156,18 +215,18 @@ class TestDocker:
     @patch('jbcli.utils.dockerutil.check_output')
     def test_image_list(self, check_mock):
         def _make_image_details(tag, td):
-                dt = datetime.now() - td
-                ts = time.mktime(dt.timetuple())
-                return {
-                    "imageSizeInBytes": 1,
-                    "imageDigest": "sha256:abcd",
-                    "imageTags": [
-                        tag
-                    ],
-                    "registryId": "423681189101",
-                    "repositoryName": "juicebox-devlandia",
-                    "imagePushedAt": ts
-                }
+            dt = datetime.now() - td
+            ts = time.mktime(dt.timetuple())
+            return {
+                "imageSizeInBytes": 1,
+                "imageDigest": "sha256:abcd",
+                "imageTags": [
+                    tag
+                ],
+                "registryId": "423681189101",
+                "repositoryName": "juicebox-devlandia",
+                "imagePushedAt": ts
+            }
 
         check_mock.return_value = json.dumps({
             'imageDetails': [
@@ -193,7 +252,7 @@ class TestDocker:
         for o in output:
             o.pop(1)
         assert output == [
-            [u'master', '30 seconds ago', 4, False, u'3.22.1'], 
+            [u'master', '30 seconds ago', 4, False, u'3.22.1'],
             [u'3.22.1', '3 months ago', 2, True, None]
         ]
 

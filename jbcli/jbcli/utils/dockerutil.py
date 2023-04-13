@@ -57,12 +57,12 @@ class WatchHandler(FileSystemEventHandler):
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
-                echo_success("{} was added successfully.".format(app))
+                echo_success(f"{app} was added successfully.")
                 if self.should_reload:
                     refresh_browser()
 
         else:
-            click.echo("Change to {} ignored".format(event.src_path))
+            click.echo(f"Change to {event.src_path} ignored")
 
         click.echo("Waiting for changes...")
 
@@ -71,10 +71,14 @@ def _intersperse(el, l):
     return [y for x in zip([el] * len(l), l) for y in x]
 
 
-def docker_compose(args, env=None, ganesha=False):
+def docker_compose(args, env=None, ganesha=False, arch=None):
     # Since our docker-compose.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
-    compose_files = ["docker-compose.yml"]
+    compose_files = []
+    if arch == "x86_64":
+        compose_files = ["docker-compose.yml"]
+    elif arch == "arm":
+        compose_files = ["docker-compose.arm.yml"]
     compose_files.extend(glob("docker-compose-*.yml"))
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
@@ -84,10 +88,10 @@ def docker_compose(args, env=None, ganesha=False):
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None, ganesha=False):
+def up(env=None, ganesha=False, arch=None):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml"""
-    docker_compose(["up"], env=env, ganesha=ganesha)
+    docker_compose(["up"], env=env, ganesha=ganesha, arch=arch)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -95,14 +99,14 @@ def run_jb(cmd, env=None, service="juicebox"):
     docker_compose(["run", service] + cmd, env=env, ganesha=is_ganesha)
 
 
-def destroy():
+def destroy(arch=None):
     """Removes all containers and networks defined in docker-compose.yml"""
-    docker_compose(["down"])
+    docker_compose(["down"], arch=arch)
 
 
-def halt():
+def halt(arch=None):
     """Halts all containers defined in docker-compose file."""
-    docker_compose(["stop"])
+    docker_compose(["stop"], arch=arch)
 
 
 def is_running(service="juicebox"):
@@ -205,8 +209,7 @@ def parse_dc_file(tag):
                     elif "juicebox-dev" in pair[1]:
                         full_path = f"{base_ecr}juicebox-devlandia:"
 
-                    full_path = full_path + (tag if tag is not None else pair[2])
-                    return full_path
+                    return full_path + (tag if tag is not None else pair[2])
 
 
 def pull(tag):
@@ -264,7 +267,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
                 meets_semantic_criteria = (semantic and is_semantic_tag) or not semantic
                 # Use if showall is true, return all tags, otherwise return just last 30 days
                 meets_time_criteria = showall or (
-                    pushed >= now - datetime.timedelta(days=30)
+                        pushed >= now - datetime.timedelta(days=30)
                 )
 
                 if meets_semantic_criteria and meets_time_criteria:
@@ -313,7 +316,7 @@ def set_tag(env, tag):
     """Set an environment to use a tagged image"""
     ensure_root()
 
-    os.chdir("./environments/{}".format(env))
+    os.chdir(f"./environments/{env}")
     changed = False
     with open("./docker-compose.yml", "rt") as dc:
         with open("out.txt", "wt") as out:
@@ -330,7 +333,7 @@ def set_tag(env, tag):
     else:
         os.remove("./out.txt")
 
-    echo_success("Environment {} is using {}".format(env, tag))
+    echo_success(f"Environment {env} is using {tag}")
     os.chdir("../..")
 
 

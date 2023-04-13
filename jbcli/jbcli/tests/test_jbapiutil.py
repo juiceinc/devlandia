@@ -1,5 +1,5 @@
-from mock import call, patch
 import requests_mock
+from mock import patch
 
 from ..utils import jbapiutil
 

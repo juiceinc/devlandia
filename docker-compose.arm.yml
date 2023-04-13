@@ -23,11 +23,9 @@ services:
     depends_on:
       - "redis"
       - "postgres"
-      - "snapshot"
     links:
       - postgres
       - redis
-      - snapshot
     environment:
       - ENVIRONMENT=docker
       - DJANGO_SETTINGS_MODULE=fruition.settings.contained
@@ -76,13 +74,3 @@ services:
     image: "postgres:12.4-alpine"
   redis:
     image: "redis:4.0.14"
-
-  snapshot:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:develop"
-    volumes:
-      - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
-    environment:
-      - JB_DEBUG=true
-    ports:
-      - "8080:8080"
-    restart: on-failure:10

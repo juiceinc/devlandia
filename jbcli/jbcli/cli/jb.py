@@ -13,6 +13,7 @@ import sys
 import time
 from collections import OrderedDict
 from multiprocessing import Process
+import platform
 from subprocess import Popen
 import re
 
@@ -393,7 +394,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -409,10 +410,11 @@ def activate_ssh(environ):
 )
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
 ):
     """Configure the environment and start Juicebox"""
     auth.set_creds()
+    arch = determine_arch()
     if dockerutil.is_running():
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
@@ -508,7 +510,7 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha)
+    dockerutil.up(env=environ, ganesha=ganesha, arch=arch)
 
 
 @click.argument("days", nargs=1, required=False)
@@ -678,7 +680,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
@@ -873,3 +875,7 @@ def dc(args, ganesha):
 def activate_hstm():
     with open(".env", "a") as env_dot:
         env_dot.write("\nJB_HSTM=on")
+
+
+def determine_arch():
+    return platform.processor()

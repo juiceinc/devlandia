@@ -1,3 +1,4 @@
+import contextlib
 import toml
 import os
 
@@ -25,10 +26,8 @@ class Stash(object):
 
     def get(self, name, default=None):
         """Get a secret directly from the local file."""
-        try:
+        with contextlib.suppress(IOError):
             return self.data.get(name, default)
-        except IOError:
-            pass
 
     def put(self, name, value):
         data = self.data
