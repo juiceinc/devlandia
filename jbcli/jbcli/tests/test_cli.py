@@ -1040,13 +1040,16 @@ class TestCli(object):
     @patch("jbcli.cli.jb.auth")
     @patch("jbcli.cli.jb.check_outdated_image")
     @patch('jbcli.cli.jb.determine_arch')
-    def test_start_noupdate_arm(self, arch_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start_noupdate_arm(self, prompt_mock, arch_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
+        prompt_mock.isatty.return_value = 'istty'
         image_mock.answer = "no"
         arch_mock.return_value = 'arm'
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
-        result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.up(arch="arm", env=ANY, ganesha=False),
