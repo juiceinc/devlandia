@@ -630,12 +630,12 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
     @patch('jbcli.cli.jb.prompt')
-    @patch('jbcli.cli.jb.start')
-    def test_start_with_custom_tag(self, start_mock, prompt_mock, auth_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_start_with_custom_tag(self, arch_mock, prompt_mock, auth_mock, dockerutil_mock):
         """Starting can occur with any tag."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
-        start_mock.arch.return_value = 'arm'
+        arch_mock.return_value = 'arm'
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
         prompt_mock.isatty.return_value = 'istty'
         with patch("builtins.open", mock_open()) as m:
@@ -1020,13 +1020,16 @@ class TestCli(object):
     @patch("jbcli.cli.jb.auth")
     @patch("jbcli.cli.jb.check_outdated_image")
     @patch('jbcli.cli.jb.determine_arch')
-    def test_start_noupdate_x86(self, arch_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
+    @patch('jbcli.cli.jb.prompt')
+    def test_start_noupdate_x86(self, prompt_mock, arch_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         image_mock.answer = "no"
         arch_mock.return_value = 'x86_64'
+        prompt_mock.isatty.return_value = 'istty'
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
-        result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
+        with patch("builtins.open", mock_open()) as m:
+            result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.up(arch="x86_64", env=ANY, ganesha=False),
