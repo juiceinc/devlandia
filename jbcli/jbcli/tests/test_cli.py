@@ -749,11 +749,12 @@ class TestCli(object):
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
         ]
+
     @patch("jbcli.cli.jb.os")
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
     @patch('jbcli.cli.jb.prompt')
-    @patch('jbcli.cli.jb.start')
+    @patch('jbcli.cli.jb.determine_arch')
     def test_start_core_without_fruitiondir_x86(self, arch_mock, prompt_mock, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = False

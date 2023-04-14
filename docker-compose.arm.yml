@@ -1,7 +1,7 @@
 version: '3.2'
 services:
   juicebox:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:${TAG}"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
                 ! sha1sum --check /code/requirements_checksum.txt;
                 ! sha1sum --check /code/requirements_checksum.txt;
@@ -12,8 +12,8 @@ services:
     volumes:
       - ./apps:/code/apps
       - ~/.config/juicebox:/root/.config/juicebox:ro
-      - ./${FRUITION}:/${FILE}
-      - ./${RECIPE}:/${RECIPEFILE}
+      - ./fruition:/code
+      - ./recipe:/code/recipe
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
@@ -64,7 +64,6 @@ services:
       - JB_HSTM
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
-      - JB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/
     restart: on-failure:10
   postgres:
     environment:

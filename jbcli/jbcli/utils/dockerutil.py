@@ -2,6 +2,7 @@
 """
 from __future__ import print_function
 
+import platform
 from glob import glob
 import json
 import time
@@ -193,21 +194,32 @@ def parse_dc_file(tag):
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
-    if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
-        return
+    pull_file = None
+    if platform.processor() == "x86_64":
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
+            return
+        else:
+            pull_file = "docker-compose.yml"
+    elif platform.processor() == "arm":
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        else:
+            pull_file = "docker-compose.arm.yml"
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
-    with open("docker-compose.yml") as dc:
+    with open(pull_file) as dc:
         for line in dc:
             if base_ecr in line:
                 dc_list.append(line.split(":"))
                 for pair in dc_list:
                     pair = [i.strip().strip('"') for i in pair]
-
                     if "controlcenter-dev" in pair[1]:
                         full_path = f"{base_ecr}controlcenter-dev:"
                     elif "juicebox-dev" in pair[1]:
-                        full_path = f"{base_ecr}juicebox-devlandia:"
+                        if platform.processor() == "x86_64":
+                            full_path = f"{base_ecr}juicebox-devlandia:"
+                        elif platform.processor() == "arm":
+                            full_path = f"{base_ecr}juicebox-devlandia-arm:"
 
                     return full_path + (tag if tag is not None else pair[2])
 

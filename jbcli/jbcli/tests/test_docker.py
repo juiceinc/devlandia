@@ -192,8 +192,10 @@ class TestDocker:
 
     @patch('jbcli.utils.dockerutil.check_call')
     @patch('jbcli.utils.dockerutil.check_output')
-    def test_pull(self, check_output_mock, check_mock, monkeypatch):
+    @patch('platform.processor')
+    def test_pull_x86(self, platform_mock, check_output_mock, check_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
+        platform_mock.return_value = 'x86_64'
 
         def check_output(args):
             assert args == [
@@ -210,6 +212,30 @@ class TestDocker:
             call([b"do", b"a", b"thing!"]),
             call(['docker', 'pull',
                   '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:latest'])
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.utils.dockerutil.check_output')
+    @patch('platform.processor')
+    def test_pull_arm(self, platform_mock, check_output_mock, check_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
+        platform_mock.return_value = 'arm'
+
+        def check_output(args):
+            assert args == [
+                'aws', 'ecr', 'get-login',
+                '--registry-ids', '423681189101', '976661725066',
+                '--no-include-email']
+            return b"do a thing!"
+
+        check_output_mock.side_effect = check_output
+
+        dockerutil.pull('latest')
+
+        assert check_mock.mock_calls == [
+            call([b"do", b"a", b"thing!"]),
+            call(['docker', 'pull',
+                  '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:latest'])
         ]
 
     @patch('jbcli.utils.dockerutil.check_output')

@@ -12,8 +12,8 @@ services:
     volumes:
       - ./apps:/code/apps
       - ~/.config/juicebox:/root/.config/juicebox:ro
-      - ./${FRUITION}:/${FILE}
-      - ./${RECIPE}:/${RECIPEFILE}
+      - ./fruition:/code
+      - ./recipe:/code/recipe
     ports:
       - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
