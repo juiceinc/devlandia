@@ -3,8 +3,8 @@ services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
-                ! sha1sum --check /code/requirements_checksum.txt;
-                ! sha1sum --check /code/requirements_checksum.txt;
+                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements.txt;
+                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
                 if [ '${RECIPE}' = 'recipe' ] ; then
                   /venv/bin/pip install -e recipe/;
                 fi;
