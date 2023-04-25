@@ -205,6 +205,12 @@ def parse_dc_file(tag):
             return
         else:
             pull_file = "docker-compose.arm.yml"
+    elif platform.processor() == "i386":
+        check_call(["$env", "/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        else:
+            pull_file = "docker-compose.arm.yml"
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
     with open(pull_file) as dc:
