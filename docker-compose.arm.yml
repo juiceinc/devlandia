@@ -76,7 +76,7 @@ services:
   redis:
     image: "redis:4.0.14"
   snapshot:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot-arm:develop"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot-arm:prod"
     volumes:
       - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
     environment:
