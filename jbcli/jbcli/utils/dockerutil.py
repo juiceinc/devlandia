@@ -39,6 +39,10 @@ class WatchHandler(FileSystemEventHandler):
         else:
             path = event.src_path.split("/")
 
+        while path and path[0] != 'devlandia':
+            path.pop(0)
+        path.pop(0)
+
         # Path looks like
         # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
         app = path[1]
@@ -56,6 +60,7 @@ class WatchHandler(FileSystemEventHandler):
                     refresh_browser(5)
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
+                echo_warning(f"{app} is loading...")
                 if not load_app(app):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
                 echo_success(f"{app} was added successfully.")
