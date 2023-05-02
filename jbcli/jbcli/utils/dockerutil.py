@@ -39,9 +39,10 @@ class WatchHandler(FileSystemEventHandler):
         else:
             path = event.src_path.split("/")
 
-        while path and path[0] != 'devlandia':
+        if platform.processor() == "arm":
+            while path and path[0] != 'devlandia':
+                path.pop(0)
             path.pop(0)
-        path.pop(0)
 
         # Path looks like
         # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
