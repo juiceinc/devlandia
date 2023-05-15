@@ -52,17 +52,7 @@ def cli():
 
 @cli.command()
 @click.argument("applications", nargs=-1, required=True)
-@click.option(
-    "--add-desktop/--no-add-desktop",
-    default=False,
-    help="Optionally add to Github Desktop",
-)
-@click.option(
-    "--runtime",
-    default="venv",
-    help="Which runtime to use, defaults to venv, the only other option is venv3",
-)
-def add(applications, add_desktop, runtime):
+def add(applications):
     """Checkout a juicebox app (or list of apps) and load it, can check out
     a specific branch by using `appslug@branchname`
     """
@@ -75,15 +65,29 @@ def add(applications, add_desktop, runtime):
         failed_apps = []
 
         for app in applications:
-            branch = False
+            branch = None
             if "@" in app:
                 app_split = app.split("@")
                 app = app_split[0]
                 branch = app_split[1]
             app_dir = f"apps/{app}"
             if os.path.isdir(app_dir):
-                # App already exists, update it.
-                echo_highlight(f"App {app} already exists.")
+                # App already exists. We assume there's a repo here.
+                echo_highlight(
+                    f"App {app} already exists. Changing to branch {branch}."
+                )
+                if branch is not None:
+                    # TODO: If we used pathlib we could have a context manager
+                    # here to change the path
+                    # with Path(app_dir):
+                    os.chdir(app_dir)
+                    try:
+                        subprocess.check_call(["git", "fetch"])
+                        subprocess.check_call(["git", "checkout", branch])
+                    except subprocess.CalledProcessError:
+                        failed_apps.append(app)
+                        continue
+                    os.chdir("../..")
 
             else:
                 # App doesn't exist, clone it
@@ -104,16 +108,9 @@ def add(applications, add_desktop, runtime):
                     failed_apps.append(app)
                     continue
 
-                if add_desktop:
-                    try:
-                        subprocess.check_call(["github", app_dir])
-                    except subprocess.CalledProcessError:
-                        echo_warning(f"Failed to add {app} to Github Desktop.")
             try:
                 if not jbapiutil.load_app(app):
-                    dockerutil.run(
-                        f"/{runtime}/bin/python manage.py loadjuiceboxapp {app}"
-                    )
+                    dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
                     echo_success(f"{app} was added successfully.")
 
             except docker.errors.APIError as e:
@@ -134,12 +131,7 @@ def add(applications, add_desktop, runtime):
 @click.argument("new_app", required=True)
 @click.option("--init/--no-init", default=True, help="Initialize VCS repository")
 @click.option("--track/--no-track", default=True, help="Track remote VCS repository")
-@click.option(
-    "--runtime",
-    help="Which runtime to use, defaults to venv, the only other option is venv3",
-    default="venv",
-)
-def clone(existing_app, new_app, init, track, runtime):
+def clone(existing_app, new_app, init, track):
     """Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
     """
@@ -172,7 +164,7 @@ def clone(existing_app, new_app, init, track, runtime):
                 click.get_current_context().abort()
 
             try:
-                dockerutil.run(f"/{runtime}/bin/python manage.py loadjuiceboxapp {new_app}")
+                dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}")
             except docker.errors.APIError:
                 echo_warning(f"Failed to load: {new_app}.")
                 click.get_current_context().abort()
@@ -188,13 +180,7 @@ def clone(existing_app, new_app, init, track, runtime):
 @click.confirmation_option(
     "--yes", is_flag=True, prompt="Are you sure you want to delete?"
 )
-@click.option(
-    "--runtime",
-    help="Which runtime to use, defaults to venv, the only other option is venv3"
-         "option.",
-    default="venv",
-)
-def remove(applications, runtime):
+def remove(applications):
     """Remove a juicebox app (or list of apps) from your local environment"""
     os.chdir(DEVLANDIA_DIR)
     try:
@@ -294,7 +280,7 @@ def get_host_ip():
             "[get_host_ip] Couldn't get docker0 address, falling back to slow method", e
         )
         out = dockerutil.client.containers.run(
-            "ubuntu:18.04", "getent hosts host.docker.internal"
+            "ubuntu:18.04", "getent hosts host.docker.internal", remove=True
         )
         # returns output like:
         #   192.168.1.1    host.docker.internal
@@ -431,7 +417,7 @@ def start(
         ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot, prune, prune_all
 ):
     """Configure the environment and start Juicebox"""
-    auth.has_current_session()
+    auth.set_creds()
     if dockerutil.is_running():
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
@@ -815,6 +801,21 @@ def stop(ctx, clean):
 
 
 @cli.command()
+def kick():
+    """Restart the Juicebox process without restarting all of devlandia"""
+    container = dockerutil.is_running()
+    if not container:
+        echo_warning("kick only works when Juicebox is running")
+        return
+    # This is a little heavy-handed but it's kinda hard to figure out exactly which
+    # process we need to HUP
+    subprocess.check_call(
+        ["docker", "exec", "-it", container.name, "killall", "-HUP", "/venv/bin/python"]
+    )
+    echo_success("Juicebox has been restarted.")
+
+
+@cli.command()
 @click.pass_context
 def upgrade(ctx):
     """Attempt to upgrade jb command line"""
@@ -878,7 +879,6 @@ def run(args, env, service):
 
 
 def _run(args, env, service="juicebox"):
-    auth.has_current_session()
     cmd = list(args)
     if env is None:
         env = dockerutil.check_home()
@@ -893,6 +893,7 @@ def _run(args, env, service="juicebox"):
         elif env is not None:
             click.echo(f"starting new {env}")
             os.chdir(DEVLANDIA_DIR)
+            auth.set_creds()
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
         else:
             echo_warning(
@@ -907,14 +908,11 @@ def _run(args, env, service="juicebox"):
 
 @cli.command()
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
-@click.option("--env", help="Which environment to run docker-compose for")
 @click.option("--ganesha", default=False, is_flag=True, help="Enable ganesha")
-def dc(args, env, ganesha):
+def dc(args, ganesha):
     """Run docker-compose in a particular environment"""
     cmd = list(args)
-    if env is None:
-        env = dockerutil.check_home()
-    os.chdir(os.path.join(DEVLANDIA_DIR, "environments", env))
+    os.chdir(DEVLANDIA_DIR)
     dockerutil.docker_compose(cmd, ganesha=ganesha)
 
 
