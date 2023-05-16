@@ -86,6 +86,8 @@ def docker_compose(args, env=None, ganesha=False, arch=None):
         compose_files = ["docker-compose.yml"]
     elif arch == "arm":
         compose_files = ["docker-compose.arm.yml"]
+    elif arch == "i386":
+        compose_files = ["docker-compose.arm.yml"]
     compose_files.extend(glob("docker-compose-*.yml"))
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
@@ -211,12 +213,12 @@ def parse_dc_file(tag):
             return
         else:
             pull_file = "docker-compose.arm.yml"
-    # elif platform.processor() == "i386":
-    #     check_call(["$env", "/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
-    #     if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
-    #         return
-    #     else:
-    #         pull_file = "docker-compose.arm.yml"
+    elif platform.processor() == "i386":
+        check_call(["/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        else:
+            pull_file = "docker-compose.arm.yml"
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
     with open(pull_file) as dc:
@@ -231,6 +233,8 @@ def parse_dc_file(tag):
                         if platform.processor() == "x86_64":
                             full_path = f"{base_ecr}juicebox-devlandia:"
                         elif platform.processor() == "arm":
+                            full_path = f"{base_ecr}juicebox-devlandia-arm:"
+                        elif platform.processor() == "i386":
                             full_path = f"{base_ecr}juicebox-devlandia-arm:"
 
                     return full_path + (tag if tag is not None else pair[2])
