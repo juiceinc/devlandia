@@ -192,7 +192,7 @@ def remove(applications):
                     if os.path.isdir(f"apps/{app}"):
                         echo_highlight(f"Removing {app}...")
                         shutil.rmtree(f"apps/{app}")
-                        dockerutil.run(f"/{runtime}/bin/python manage.py deletejuiceboxapp {app}")
+                        dockerutil.run(f"/venv/bin/python manage.py deletejuiceboxapp {app}")
                         echo_success(f"Successfully deleted {app}")
                     else:
                         echo_warning(f"App {app} didn't exist.")
