@@ -89,6 +89,8 @@ def docker_compose(args, env=None, ganesha=False, arch=None):
     elif arch == "i386":
         compose_files = ["docker-compose.arm.yml"]
     compose_files.extend(glob("docker-compose-*.yml"))
+    if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
+        compose_files.remove("docker-compose-ssh.yml")
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
     file_args = _intersperse("-f", compose_files)
