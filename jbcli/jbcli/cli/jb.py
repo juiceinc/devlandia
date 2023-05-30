@@ -13,8 +13,9 @@ import sys
 import time
 from collections import OrderedDict
 from multiprocessing import Process
-from subprocess import Popen
+from multiprocessing.pool import ThreadPool
 import re
+from subprocess import Popen
 
 import click
 import docker.errors
@@ -27,6 +28,7 @@ from ..utils.format import echo_highlight, echo_warning, echo_success
 from ..utils.reload import create_browser_instance
 from ..utils.secrets import get_deployment_secrets
 from ..utils.storageutil import Stash
+from ..utils.subprocess import popen
 
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, "..", "..", ".."))
@@ -135,17 +137,17 @@ def clone(existing_app, new_app, init, track):
     """
     try:
         if dockerutil.is_running():
-            existing_app_dir = "apps/{}".format(existing_app)
-            new_app_dir = "apps/{}".format(new_app)
+            existing_app_dir = f"apps/{existing_app}"
+            new_app_dir = f"apps/{new_app}"
 
             if not os.path.isdir(existing_app_dir):
-                echo_warning("App {} does not exist.".format(existing_app))
+                echo_warning(f"App {existing_app} does not exist.")
                 click.get_current_context().abort()
             if os.path.isdir(new_app_dir):
-                echo_warning("App {} already exists.".format(new_app))
+                echo_warning(f"App {new_app} already exists.")
                 click.get_current_context().abort()
 
-            echo_highlight("Cloning from {} to {}...".format(existing_app, new_app))
+            echo_highlight(f"Cloning from {existing_app} to {new_app}...")
 
             try:
                 result = apps.clone(
@@ -164,7 +166,7 @@ def clone(existing_app, new_app, init, track):
             try:
                 dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}")
             except docker.errors.APIError:
-                echo_warning("Failed to load: {}.".format(new_app))
+                echo_warning(f"Failed to load: {new_app}.")
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox is not running.  Run jb start.")
@@ -187,21 +189,19 @@ def remove(applications):
 
             for app in applications:
                 try:
-                    if os.path.isdir("apps/{}".format(app)):
-                        echo_highlight("Removing {}...".format(app))
-                        shutil.rmtree("apps/{}".format(app))
-                        dockerutil.run(
-                            f"/venv/bin/python manage.py deletejuiceboxapp {app}"
-                        )
-                        echo_success("Successfully deleted {}".format(app))
+                    if os.path.isdir(f"apps/{app}"):
+                        echo_highlight(f"Removing {app}...")
+                        shutil.rmtree(f"apps/{app}")
+                        dockerutil.run(f"/venv/bin/python manage.py deletejuiceboxapp {app}")
+                        echo_success(f"Successfully deleted {app}")
                     else:
-                        echo_warning("App {} didn't exist.".format(app))
+                        echo_warning(f"App {app} didn't exist.")
                 except docker.errors.APIError:
                     print(docker.errors.APIError.message)
                     failed_apps.append(app)
             if failed_apps:
                 click.echo()
-                echo_warning("Failed to remove: {}.".format(", ".join(failed_apps)))
+                echo_warning(f'Failed to remove: {", ".join(failed_apps)}.')
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox is not running.  Run jb start.")
@@ -393,7 +393,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -407,9 +407,14 @@ def activate_ssh(environ):
     is_flag=True,
     help="Mount local juicebox-snapshots-service code into snapshots container",
 )
+@click.option('--prune/--no-prune', default=True, help="Whether to run docker system prune asynchronously during "
+                                                       "startup.  It is enabled by default.  To start without "
+                                                       "pruning, add --no-prune to your jb start command.")
+@click.option('--prune-all', is_flag=True, default=False, help="Whether to clean all images with docker system prune "
+                                                               "during startup instead of only dangling images")
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot
+        ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot, prune, prune_all
 ):
     """Configure the environment and start Juicebox"""
     auth.set_creds()
@@ -508,7 +513,16 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha)
+    pool = ThreadPool(processes=2)
+    if prune:
+        delay_length = check_delay()
+        if prune_all:
+            pool.apply_async(popen(f"sleep {delay_length} && docker system prune -a -f"))
+        else:
+            pool.apply_async(popen(f"sleep {delay_length} && docker system prune -f"))
+    pool.apply_async(dockerutil.up(env=environ, ganesha=ganesha))
+    pool.close()
+    pool.join()
 
 
 @click.argument("days", nargs=1, required=False)
@@ -519,6 +533,40 @@ def interval(days):
         stash.put("interval", days)
     else:
         prompt_interval()
+
+
+@click.argument("delay", nargs=1, required=False)
+@cli.command()
+def delay(delay):
+    """Set a new value (in seconds) for the delay before starting docker system prune"""
+    if delay:
+        stash.put("delay", delay)
+    else:
+        prompt_delay()
+
+
+def prompt_delay():
+    question = [
+        {
+            "type": "input",
+            "name": "delay",
+            "message": "How long do you want to set the delay for docker system prune to start during JB startup (in "
+                       "seconds)?",
+        }
+    ]
+    answer = prompt(question)["delay"]
+    stash.put("delay", answer)
+    return int(answer)
+
+
+def check_delay():
+    print("Checking that delay is set")
+    delayval = int(stash.get("delay"))
+    if delayval is None:
+        echo_warning("Delay value not found locally")
+        return prompt_delay()
+    echo_highlight(f"docker system prune delay: {delayval}")
+    return delayval
 
 
 def prompt_interval():
@@ -678,7 +726,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
@@ -705,9 +753,7 @@ def get_environment_interactively(env, tag_lookup):
         tag, pushed, human_readable, tag_priority, is_semantic_tag, stable_version = row
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
-    env_choices = [
-        {"name": k + " - " + tag_dict[v], "value": k} for k, v in tag_lookup.items()
-    ]
+    env_choices = [{"name": f"{k} - {tag_dict[v]}", "value": k} for k, v in tag_lookup.items()]
 
     questions = [
         {
@@ -840,12 +886,12 @@ def _run(args, env, service="juicebox"):
     container = dockerutil.is_running(service=service)
     try:
         if container:
-            click.echo("running command in {}".format(container.name))
+            click.echo(f"running command in {container.name}")
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
             subprocess.check_call(["docker", "exec", "-it", container.name] + cmd)
         elif env is not None:
-            click.echo("starting new {}".format(env))
+            click.echo(f"starting new {env}")
             os.chdir(DEVLANDIA_DIR)
             auth.set_creds()
             dockerutil.run_jb(cmd, env=populate_env_with_secrets(), service=service)
@@ -856,7 +902,7 @@ def _run(args, env, service="juicebox"):
             )
             click.get_current_context().abort()
     except subprocess.CalledProcessError as e:
-        echo_warning("command exited with {}".format(e.returncode))
+        echo_warning(f"command exited with {e.returncode}")
         click.get_current_context().abort()
 
 
