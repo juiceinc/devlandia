@@ -37,7 +37,7 @@ def refresh_browser(timeout=None):
 
     else:
         echo_highlight('Checking server status...')
-        for i in range(5):
+        for _ in range(5):
             time.sleep(timeout)
             try:
                 response = get('http://localhost:8000/health_check')

@@ -33,11 +33,10 @@ def get_all_from_paths(paths, SSM):
         try:
             result = SSM.get_parameter(Name=name, WithDecryption=True)
         except botocore.exceptions.ClientError as e:
-            if e.response["Error"]["Code"] == "AccessDeniedException":
-                print("skipping parameter that we don't have access to", name)
-                continue
-            else:
+            if e.response["Error"]["Code"] != "AccessDeniedException":
                 raise
+            print("skipping parameter that we don't have access to", name)
+            continue
         bare_name = result["Parameter"]["Name"].rsplit("/", 1)[-1]
         env_vars[bare_name] = result["Parameter"]["Value"].encode("ascii")
 

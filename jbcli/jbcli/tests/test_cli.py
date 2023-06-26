@@ -833,7 +833,7 @@ class TestCli(object):
     @patch("jbcli.cli.jb.auth")
     @patch("jbcli.cli.jb.check_outdated_image")
     @patch('jbcli.cli.jb.prompt')
-    def test_start_noupdate(self, prompt_mock, image_mock, auth_mock, dockerutil_mock, monkeypatch):
+    def test_start_noupdate(self, image_mock, auth_mock, dockerutil_mock, monkeypatch):
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.ensure_home.return_value = True
         image_mock.answer = "no"
@@ -1039,7 +1039,7 @@ class TestCli(object):
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
         prompt_mock.isatty.return_value = 'istty'
-        with patch("builtins.open", mock_open()) as m:
+        with patch("builtins.open", mock_open()):
             result = invoke(["run", "foo", "bar"])
         assert subprocess_mock.mock_calls == [call.check_call(['docker', 'exec', '-it', 'stable_juicebox_1', 'foo', 'bar'])]
         assert result.exit_code == 0
@@ -1047,12 +1047,12 @@ class TestCli(object):
     @patch("jbcli.cli.jb.click")
     @patch("jbcli.cli.jb.dockerutil")
     @patch('jbcli.cli.jb.prompt')
-    def test_jb_manage_not_running_no_env(self, prompt_mock, dockerutil_mock, click_mock):
+    def test_jb_manage_not_running_no_env(self, prompt_mock, dockerutil_mock):
         """When no container is running, and no --env is given, we give up."""
         dockerutil_mock.is_running.return_value = False
         dockerutil_mock.check_home.return_value = None
         prompt_mock.isatty.return_value = 'istty'
-        with patch("builtins.open", mock_open()) as m:
+        with patch("builtins.open", mock_open()):
             result = invoke(["manage", "test"])
         assert "Juicebox not running and no --env given" in result.output
 
@@ -1067,7 +1067,7 @@ class TestCli(object):
         dockerutil_mock.check_home.return_value = None
         subprocess_mock.check_call.return_value = None
         prompt_mock.isatty.return_value = 'istty'
-        with patch("builtins.open", mock_open()) as m:
+        with patch("builtins.open", mock_open()):
             result = invoke(["manage", "--env", "core", "test"])
         assert subprocess_mock.mock_calls == [
             call.check_call(

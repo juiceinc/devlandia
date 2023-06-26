@@ -76,8 +76,8 @@ class TestDocker:
         assert 'exited' in result
 
     @patch('jbcli.utils.dockerutil.click')
-    def test_ensure_home(self, click_mock, monkeypatch):
-        for env in ['core', 'test', 'hstm-newcore']:
+    def test_ensure_home(self, monkeypatch):
+        for _ in ['core', 'test', 'hstm-newcore']:
             monkeypatch.chdir(DEVLANDIA_DIR)
             dockerutil.ensure_home()
 
