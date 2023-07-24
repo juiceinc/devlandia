@@ -41,16 +41,19 @@ def human_readable_timediff(dt):
     """
     return naturaltime(datetime.now() - dt)
 
-def compare_human_readable(old, new):
+def compare_human_readable(old_time, new_time):
     """ Compare the difference in age between 2 human readable times
 
-    :param new: human readable diff sliced into list to be [ number, date operand ]
-    :param old: same as param new but older
+    :param new_time: human readable diff sliced into list to be [ number, date operand ]
+    :param old_time: same as param new but older
     """
     now = datetime.now()
-    if new[1] == 'months':
-        new[1] = 'weeks'
-        new[0] = int(new[0])/4
-    old_date = now - timedelta(**{old[1]:int(old[0])})
-    new_date = now - timedelta(**{new[1]: int(new[0])})
+    if new_time[1] == 'months':
+        new_time[1] = 'weeks'
+        new_time[0] = int(new_time[0]) / 4
+    if old_time[1] == 'months':
+        old_time[1] = 'weeks'
+        old_time[0] = int(old_time[0]) / 4
+    old_date = now - timedelta(**{old_time[1]:int(old_time[0])})
+    new_date = now - timedelta(**{new_time[1]: int(new_time[0])})
     return abs(old_date - new_date)

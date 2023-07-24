@@ -577,7 +577,7 @@ class TestCli(object):
             call().__exit__(None, None, None),
             call('.env', 'w'),
             call().__enter__(),
-            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused1\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused2\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
@@ -615,8 +615,8 @@ class TestCli(object):
             call().__exit__(None, None, None),
             call('.env', 'w'),
             call().__enter__(),
-            call().write('DEVLANDIA_PORT=8000\nTAG=potato\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE'
-                         '=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('DEVLANDIA_PORT=8000\nTAG=potato\nFRUITION=readme\nFILE=unused1\nWORKFLOW=dev\nRECIPE'
+                         '=recipereadme\nRECIPEFILE=unused2\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
@@ -654,8 +654,8 @@ class TestCli(object):
             call().__exit__(None, None, None),
             call('.env', 'w'),
             call().__enter__(),
-            call().write('DEVLANDIA_PORT=8000\nTAG=master-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE'
-                         '=recipereadme\nRECIPEFILE=unused\n'),
+            call().write('DEVLANDIA_PORT=8000\nTAG=master-py3\nFRUITION=readme\nFILE=unused1\nWORKFLOW=dev\nRECIPE'
+                         '=recipereadme\nRECIPEFILE=unused2\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
@@ -732,7 +732,7 @@ class TestCli(object):
             call('.env', 'w'),
             call().__enter__(),
             call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition\nFILE=code\nWORKFLOW=core\nRECIPE'
-                         '=recipereadme\nRECIPEFILE=unused\n'),
+                         '=recipereadme\nRECIPEFILE=unused2\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
@@ -823,7 +823,7 @@ class TestCli(object):
             call('.env', 'w'),
             call().__enter__(),
             call().write(
-                'DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused\n'),
+                'DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=readme\nFILE=unused1\nWORKFLOW=dev\nRECIPE=recipereadme\nRECIPEFILE=unused2\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
@@ -840,8 +840,7 @@ class TestCli(object):
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
         result = invoke(["start", "develop-py3", "--noupdate", "--noupgrade"])
         assert dockerutil_mock.mock_calls == [
-            call.is_running(),
-            call.up(env=ANY, ganesha=False),
+            call.set_creds(),
         ]
         assert result.exit_code == 0
 
@@ -1044,7 +1043,6 @@ class TestCli(object):
         assert subprocess_mock.mock_calls == [call.check_call(['docker', 'exec', '-it', 'stable_juicebox_1', 'foo', 'bar'])]
         assert result.exit_code == 0
 
-    @patch("jbcli.cli.jb.click")
     @patch("jbcli.cli.jb.dockerutil")
     @patch('jbcli.cli.jb.prompt')
     def test_jb_manage_not_running_no_env(self, prompt_mock, dockerutil_mock):
