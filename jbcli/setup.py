@@ -16,8 +16,6 @@ requirements = [
 # wrapper scripts.
 entry_points = '''[console_scripts]
 jb=jbcli.cli.jb:cli
-jb-admin=jbcli.cli.jb_admin:cli
-jb-manage=jbcli.cli.jb_manage:cli
 '''
 
 setup(

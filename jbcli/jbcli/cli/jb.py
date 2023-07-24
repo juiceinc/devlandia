@@ -436,10 +436,10 @@ def start(
     env = get_environment_interactively(env, tag_replacements)
 
     core_path = "readme"
-    core_end = "unused"
+    core_end = "unused1"
     workflow = "dev"
     recipe_path = "recipereadme"
-    recipe_end = "unused"
+    recipe_end = "unused2"
 
     # "core" devlandia uses editable fruition code
     is_core = "core" in env or core
