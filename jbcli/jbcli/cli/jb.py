@@ -1,7 +1,5 @@
 """This is the code for the jb cli command."""
 
-from __future__ import print_function
-
 import atexit
 import errno
 import fcntl
@@ -406,15 +404,20 @@ def activate_ssh(environ):
     is_flag=True,
     help="Mount local juicebox-snapshots-service code into snapshots container",
 )
-@click.option(
-    "--custom",
-    default=False,
-    is_flag=True,
-    help="",
-)
+@click.option("--custom", default=False, is_flag=True, help="Start up the custom image")
 @click.pass_context
 def start(
-    ctx, env, noupdate, noupgrade, ssh, ganesha, hstm, core, dev_recipe, dev_snapshot, custom
+    ctx,
+    env,
+    noupdate,
+    noupgrade,
+    ssh,
+    ganesha,
+    hstm,
+    core,
+    dev_recipe,
+    dev_snapshot,
+    custom,
 ):
     """Configure the environment and start Juicebox"""
     auth.set_creds()
@@ -432,7 +435,6 @@ def start(
     tag_replacements["stable"] = "master-py3"
     tag_replacements["hstm-dev"] = "hstm-qa"
 
-
     env = get_environment_interactively(env, tag_replacements)
 
     core_path = "readme"
@@ -444,9 +446,17 @@ def start(
     # "core" devlandia uses editable fruition code
     is_core = "core" in env or core
     is_hstm = env.startswith("hstm-") or hstm
+    is_custom = custom or env == "core-custom"
 
+    print("My flags are")
+    print(f"core: {is_core}")
+    print(f"hstm: {is_hstm}")
+    print(f"dev_recipe: {dev_recipe}")
+    print(f"dev_snapshot: {dev_snapshot}")
+    print(f"is_custom: {is_custom}")
+    print(f"env: {env}")
     if is_core:
-        if custom:
+        if is_custom:
             if os.path.exists("fruition_custom"):
                 core_path = "fruition_custom"
                 core_end = "code"
@@ -467,6 +477,7 @@ def start(
                 "Devlandia"
             )
             sys.exit(1)
+
     # "dev_recipe" devlandia uses editable recipe code
     if dev_recipe:
         if is_core:
@@ -722,8 +733,7 @@ def get_environment_interactively(env, tag_lookup):
         tag_dict[tag] = f"({tag}) published {human_readable}"
 
     env_choices = [
-        {"name": f"{k} - {tag_dict[v]}", "value": k}
-        for k, v in tag_lookup.items()
+        {"name": f"{k} - {tag_dict[v]}", "value": k} for k, v in tag_lookup.items()
     ]
 
     questions = [
@@ -821,11 +831,7 @@ def pull(tag=None):
     dockerutil.pull(tag)
 
 
-@cli.command(
-    context_settings=dict(
-        ignore_unknown_options=True,
-    )
-)
+@cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to use")
 def manage(args, env):
@@ -834,11 +840,7 @@ def manage(args, env):
     return _run(cmd, env)
 
 
-@cli.command(
-    context_settings=dict(
-        ignore_unknown_options=True,
-    )
-)
+@cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to use")
 @click.option(
