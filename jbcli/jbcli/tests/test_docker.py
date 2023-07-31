@@ -17,7 +17,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.yml','up'], env=None)
+                  '-f', 'docker-compose.selfserve.yml','up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -26,7 +26,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.yml', 'down'], env=None)
+                  '-f', 'docker-compose.selfserve.yml', 'down'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -35,7 +35,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.yml', 'stop'], env=None)
+                  '-f', 'docker-compose.selfserve.yml', 'stop'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -52,7 +52,7 @@ class TestDocker:
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
-                '-f', 'docker-compose.yml',
+                '-f', 'docker-compose.selfserve.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
                 'up',
@@ -88,7 +88,7 @@ class TestDocker:
         os_mock.path.isdir.return_value = False
         dockerutil.ensure_home()
         assert os_mock.mock_calls == [
-            call.path.isfile('docker-compose.yml'),
+            call.path.isfile('docker-compose.selfserve.yml'),
             call.path.isdir('apps'),
         ]
         assert click_mock.mock_calls == [
@@ -102,7 +102,7 @@ class TestDocker:
         os_mock.path.isfile.return_value = False
         dockerutil.ensure_home()
         assert os_mock.mock_calls == [
-            call.path.isfile('docker-compose.yml'),
+            call.path.isfile('docker-compose.selfserve.yml'),
         ]
         assert click_mock.mock_calls == [
             call.get_current_context(),
