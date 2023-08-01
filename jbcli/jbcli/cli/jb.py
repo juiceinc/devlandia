@@ -424,7 +424,7 @@ def start(
     if dockerutil.is_running():
         echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
-        return
+        pass
     if stash.get("users") is None:
         _add_users()
     # A dictionary of environment names and tags to use
@@ -535,7 +535,7 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha)
+    dockerutil.up(env=environ, ganesha=ganesha, custom=is_custom)
 
 
 @click.argument("days", nargs=1, required=False)
@@ -882,11 +882,12 @@ def _run(args, env, service="juicebox"):
 @cli.command()
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--ganesha", default=False, is_flag=True, help="Enable ganesha")
-def dc(args, ganesha):
+@click.option("--custom", default=False, is_flag=True, help="Enable custom")
+def dc(args, ganesha, custom):
     """Run docker-compose in a particular environment"""
     cmd = list(args)
     os.chdir(DEVLANDIA_DIR)
-    dockerutil.docker_compose(cmd, ganesha=ganesha)
+    dockerutil.docker_compose(cmd, ganesha=ganesha, custom=custom)
 
 
 def activate_hstm():

@@ -17,7 +17,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.selfserve.yml','up'], env=None)
+                  '-f', 'common-services.yml', '-f', 'docker-compose.selfserve.yml','up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -26,7 +26,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.selfserve.yml', 'down'], env=None)
+                  '-f', 'common-services.yml', '-f', 'docker-compose.selfserve.yml', 'down'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -35,7 +35,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.selfserve.yml', 'stop'], env=None)
+                  '-f', 'common-services.yml', '-f', 'docker-compose.selfserve.yml', 'stop'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -52,9 +52,10 @@ class TestDocker:
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
-                '-f', 'docker-compose.selfserve.yml',
+                '-f', 'common-services.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
+                '-f', 'docker-compose.selfserve.yml',
                 'up',
             ], env=None)
         ]

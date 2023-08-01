@@ -1,0 +1,72 @@
+version: '3.9'
+services:
+  juicebox_selfserve:
+    networks:
+      - juice_net
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:OPS-2432-prod-separation-py3"
+    command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
+                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements.txt;
+                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
+                if [ '${RECIPE}' = 'recipe' ] ; then
+                  /venv/bin/pip install -e recipe/;
+                fi;
+            fi ; /venv/bin/python docker/entrypoint.py"
+    volumes:
+      - ./apps:/code/apps
+      - ~/.config/juicebox:/root/.config/juicebox:ro
+      - ./${FRUITION}:/${FILE}
+      - ./${RECIPE}:/${RECIPEFILE}
+    ports:
+      - "8000:8000"
+      - "8888:8888"
+      - "9001:9001"
+      - "2222:22"
+      - "5678:5678"
+    depends_on:
+      - "redis"
+      - "postgres"
+      - "snapshot"
+    links:
+      - postgres
+      - redis
+      - snapshot
+    environment:
+      - ENVIRONMENT=docker
+      - DJANGO_SETTINGS_MODULE=fruition.settings.contained
+      - REGION=us-east-1
+      - AWS_DEFAULT_REGION=us-east-1
+      - FONTAWESOME_NPM_AUTH_TOKEN
+      - JB_DB_NAME=juicebox
+      - JB_DB_USERNAME=juicebox
+      - JB_DB_PASSWORD=juicebox
+      - JB_DB_HOST=postgres
+      - JB_REDIS_LOCATION=redis:6379
+      - DJANGO_DEBUG=on
+      - JB_INSECURE_COOKIES=yes
+      - JB_REDIS_DB=1
+
+      - JB_DEVLANDIA=on
+      - JB_UPLOAD_WITH_DJANGO=on
+      - JB_LOGS_STDOUT=off
+      - JB_DEBUG_LOGGING=on
+      - JB_APPADMIN_SERVICE=https://manage-dev.juiceboxdata.com
+      - JB_ADDITIONAL_ALLOWED_HOSTS=*,devlandia_juicebox_1
+
+      - APP_ID=1ec756a5-e04a-4885-87ad-3325bbdd4872
+
+      # Variables which are passed through to allow users to set them
+      - AWS_ACCESS_KEY_ID
+      - AWS_SECRET_ACCESS_KEY
+      - AWS_SECURITY_TOKEN
+      - AWS_SESSION_TOKEN
+      - JB_GCLOUD_PRIVKEY
+      - JB_GITHUB_FETCHAPP_CREDS
+      - JB_HIPAA
+      - JB_HSTM_REDSHIFT_CONNECTION
+      - JB_PREVERITY_REDSHIFT_CONNECTION
+      - JB_REDSHIFT_CONNECTION
+      - JB_HSTM
+      - JB_DEFAULT_USERS_FILE
+      - AWS_PROFILE
+      - JB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/
+    restart: on-failure:10

@@ -71,23 +71,28 @@ def _intersperse(el, l):
     return [y for x in zip([el] * len(l), l) for y in x]
 
 
-def docker_compose(args, env=None, ganesha=False):
-    # Since our docker-compose.yml file is the first one we pass,
+def docker_compose(args, env=None, ganesha=False, custom=False):
+    # Since our docker-compose.selfserve.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
-    compose_files = ["docker-compose.yml"]
+    compose_files = ["common-services.yml"]
     compose_files.extend(glob("docker-compose-*.yml"))
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
+    if custom:
+        compose_files.append("docker-compose.custom.yml")
+    else:
+        compose_files.append("docker-compose.selfserve.yml")
     file_args = _intersperse("-f", compose_files)
+    print(f"Running docker-compose with {file_args} files")
     env_name = os.path.basename(os.path.abspath("."))
     cmd = ["docker-compose", "--project-directory", ".", "--project-name", env_name]
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None, ganesha=False):
+def up(env=None, ganesha=False, custom=False):
     """Starts and optionally creates a Docker environment based on
-    docker-compose.yml"""
-    docker_compose(["up"], env=env, ganesha=ganesha)
+    docker-compose.selfserve.yml"""
+    docker_compose(["up"], env=env, ganesha=ganesha, custom=custom)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -96,7 +101,7 @@ def run_jb(cmd, env=None, service="juicebox"):
 
 
 def destroy():
-    """Removes all containers and networks defined in docker-compose.yml"""
+    """Removes all containers and networks defined in docker-compose.selfserve.yml"""
     docker_compose(["down"])
 
 
@@ -105,7 +110,7 @@ def halt():
     docker_compose(["stop"])
 
 
-def is_running(service="juicebox"):
+def is_running(service="juicebox", custom=False):
     """Checks whether or not a Juicebox container is currently running.
 
     :rtype: ``bool``
@@ -113,6 +118,7 @@ def is_running(service="juicebox"):
     click.echo("Checking to see if Juicebox is running...")
     containers = client.containers.list()
     for container in containers:
+        print(f"Checking images: {container.name}")
         if service in container.name:
             return container
 
@@ -158,7 +164,7 @@ def ensure_home():
 
 
 def check_home():
-    if os.path.isfile("docker-compose.yml") and os.path.isdir("apps"):
+    if os.path.isfile("docker-compose.selfserve.yml") and os.path.isdir("apps"):
         return os.path.dirname(os.path.abspath(os.path.curdir))
 
 
@@ -182,18 +188,18 @@ def run(command):
 
 
 def parse_dc_file(tag):
-    """Parse the docker-compose.yml file to build a full path for image
+    """Parse the docker-compose.selfserve.yml file to build a full path for image
     based on current environment and tag.
 
     :param tag: The tag of the image we want to pull down
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
-    if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
+    if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
-    with open("docker-compose.yml") as dc:
+    with open("docker-compose.selfserve.yml") as dc:
         for line in dc:
             if base_ecr in line:
                 dc_list.append(line.split(":"))
@@ -314,7 +320,7 @@ def set_tag(env, tag):
 
     os.chdir(f"./environments/{env}")
     changed = False
-    with open("./docker-compose.yml", "rt") as dc:
+    with open("./docker-compose.selfserve.yml", "rt") as dc:
         with open("out.txt", "wt") as out:
             for line in dc:
                 if "juicebox-devlandia:" in line:
@@ -325,7 +331,7 @@ def set_tag(env, tag):
                 else:
                     out.write(line)
     if changed:
-        shutil.move("./out.txt", "./docker-compose.yml")
+        shutil.move("./out.txt", "./docker-compose.selfserve.yml")
     else:
         os.remove("./out.txt")
 
