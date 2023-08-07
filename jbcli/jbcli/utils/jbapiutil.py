@@ -4,7 +4,7 @@ import time
 from .storageutil import stash
 from .format import *
 
-SERVER = "http://localhost:8000"
+SERVER = "http://localhost:8001"
 JB_ADMIN_USER = os.environ.get("JB_ADMIN_USER", "chris@juice.com")
 JB_ADMIN_PASSWORD = os.environ.get("JB_ADMIN_PASSWORD", "cremacuban0!")
 
@@ -20,16 +20,14 @@ def get_admin_token(refresh_token=False):
     url = "{SERVER}/api/v1/jb/api-token-auth/".format(SERVER=SERVER)
     payload = {"email": JB_ADMIN_USER, "password": JB_ADMIN_PASSWORD}
     response = post(url, data=payload)
-    if response.status_code in (200, 201):
+    if response.status_code in {200, 201}:
         token = response.json()["token"]
         echo_success("New admin token acquired.")
         stash.put('token', token)
         return token
 
     else:
-        echo_warning(
-            "Could not fetch admin token, status {}".format(response.status_code)
-        )
+        echo_warning(f"Could not fetch admin token, status {response.status_code}")
         return None
 
 
@@ -51,7 +49,7 @@ def echo_result(result):
     for log in logs:
         level = log.pop('level', 'unknown')
         event = log.pop('event', 'unknown')
-        content = u'{:10s}{}\n\n'.format('[' + level + ']', event)
+        content = u'{:10s}{}\n\n'.format(f'[{level}]', event)
         for k in sorted(log.keys()):
             content += u'{:>20}: {}\n'.format(k, log[k])
         if level in ('error', 'warning'):
@@ -66,7 +64,7 @@ def load_app(app, refresh_token=False):
     if admin_token:
         url = "{SERVER}/api/v1/app/load/{APP}/".format(SERVER=SERVER, APP=app)
         headers = {
-            "Authorization": "JWT {}".format(admin_token),
+            "Authorization": f"JWT {admin_token}",
             "Content-Type": "application-json",
         }
         retry_cnt = 0

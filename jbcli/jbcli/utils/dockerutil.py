@@ -29,10 +29,11 @@ client = docker.from_env()
 
 
 class WatchHandler(FileSystemEventHandler):
-    def __init__(self, should_reload=False):
+    def __init__(self, should_reload=False, custom=False):
         self.should_reload = should_reload
+        self.custom = custom
 
-    def on_modified(self, event):
+    def on_modified(self, event, env=None):
         if sys.platform == "win32":
             path = re.split(r"[\\/]", event.src_path)
         else:
@@ -40,6 +41,9 @@ class WatchHandler(FileSystemEventHandler):
 
         # Path looks like
         # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
+        while path and path[0] != 'devlandia':
+            path.pop(0)
+        path.pop(0)
         app = path[1]
         filename = path[-1]
         is_python_change = filename.endswith(".py") and isinstance(
@@ -56,7 +60,7 @@ class WatchHandler(FileSystemEventHandler):
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
-                    run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
+                    run(f"/venv/bin/python manage.py loadjuiceboxapp {app}", env=env)
                 echo_success(f"{app} was added successfully.")
                 if self.should_reload:
                     refresh_browser()
@@ -100,27 +104,31 @@ def run_jb(cmd, env=None, service="juicebox"):
     docker_compose(["run", service] + cmd, env=env, ganesha=is_ganesha)
 
 
-def destroy():
+def destroy(custom=False):
     """Removes all containers and networks defined in docker-compose.selfserve.yml"""
-    docker_compose(["down"])
+    docker_compose(["down"], custom=custom)
 
 
-def halt():
+def halt(custom=False):
     """Halts all containers defined in docker-compose file."""
-    docker_compose(["stop"])
+    docker_compose(["stop"], custom=custom)
 
 
-def is_running(service="juicebox", custom=False):
+def is_running():
     """Checks whether or not a Juicebox container is currently running.
 
     :rtype: ``bool``
     """
+    custom, selfserve = False, False
     click.echo("Checking to see if Juicebox is running...")
     containers = client.containers.list()
     for container in containers:
         print(f"Checking images: {container.name}")
-        if service in container.name:
-            return container
+        if "juicebox_custom" in container.name:
+            custom = True
+        elif "juicebox_selfserve" in container.name:
+            selfserve = True
+    return [custom, selfserve]
 
 
 def ensure_root():
@@ -168,24 +176,19 @@ def check_home():
         return os.path.dirname(os.path.abspath(os.path.curdir))
 
 
-def run(command):
+def run(command, env):
     """Runs a command directly in the docker container."""
     print("running command", command)
-    containers = client.containers.list()
-    for container in containers:
-        # changed here to allow support for hstm environments too, just gets
-        #  any juicebox container
-        if "juicebox" in container.name:
-            juicebox = client.containers.get(container.name)
-            command_run = juicebox.exec_run(command, stream=True)
-            for output in command_run:
-                if isinstance(output, types.GeneratorType):
-                    for o in output:
-                        if o is not None:
-                            print(o)
-                elif output is not None:
-                    print(output)
-
+    if env is not None:
+        juicebox = client.containers.get(f"devlandia_juicebox_{env}_1")
+        command_run = juicebox.exec_run(command, stream=True)
+        for output in command_run:
+            if isinstance(output, types.GeneratorType):
+                for o in output:
+                    if o is not None:
+                        print(o)
+            elif output is not None:
+                print(output)
 
 def parse_dc_file(tag):
     """Parse the docker-compose.selfserve.yml file to build a full path for image
@@ -349,33 +352,45 @@ def get_state(container_name):
     return client.containers.get(container_name).status
 
 
-def jb_watch(app="", should_reload=False):
+def jb_watch(app="", should_reload=False, custom=False):
     """Run the Juicebox project watcher"""
-    if is_running() and ensure_home():
-        click.echo("I'm watching you Wazowski...always watching...always.")
-
-        event_handler = WatchHandler(should_reload)
-        observer = Observer()
-
-        observer.schedule(event_handler, path=f"apps/{app}", recursive=True)
-        observer.start()
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            observer.stop()
-        observer.join()
+    running = is_running()
+    if custom and running[0] and ensure_home():
+        handle_event(should_reload, custom, app)
+    elif not custom and running[1] and ensure_home():
+        handle_event(should_reload, custom, app)
     else:
         echo_warning("Failed to start project watcher.")
         click.get_current_context().abort()
 
 
-def js_watch():
-    if is_running() and ensure_home():
-        run(
-            "./node_modules/.bin/webpack --mode=development --progress --colors --watch"
-        )
+def handle_event(should_reload, custom, app):
+    click.echo("I'm watching you Wazowski...always watching...always.")
 
+    event_handler = WatchHandler(should_reload, custom=custom)
+    observer_setup(event_handler, app, custom)
+
+
+def observer_setup(event_handler, app, custom=False):
+    observer = Observer()
+    directory = "fruition_custom" if custom else "fruition"
+    print()
+    observer.schedule(event_handler, path=f"apps/{app}", recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+
+def js_watch(custom=False):
+    running = is_running()
+    if running[0] and custom and ensure_home():
+        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch")
+    elif running[1] and not custom and ensure_home():
+        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch")
 
 def list_local():
     return check_output(["docker", "image", "list"])
