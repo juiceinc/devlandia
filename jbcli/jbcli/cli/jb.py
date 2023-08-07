@@ -873,9 +873,9 @@ def manage(args, env, custom):
 @click.option("--env", help="Which environment to use")
 @click.option("--service", help="Which service to run the command in", default="juicebox")
 @click.option("--custom", default=False, is_flag=True, help="Which environment to run the command in.")
-def run(args, env, service):
+def run(args, env, service, custom):
     """Run an arbitrary command in the JB container"""
-    return _run(args, env, service)
+    return _run(args, env, service, custom=custom)
 
 
 def _run(args, env, service="juicebox", custom=False):
@@ -885,18 +885,23 @@ def _run(args, env, service="juicebox", custom=False):
         env = dockerutil.check_home()
 
     running = dockerutil.is_running()
-    if running[0] and custom:
+    print(running)
+    if not running[0] and custom:
         echo_warning("Juicebox Custom instance is not running.  Run jb start with the --custom flag.")
         return
-    elif running[1] and not custom:
+    elif not running[1] and not custom:
         echo_warning("Juicebox Selfserve instance is not running.  Run jb start.")
         return
+    elif running[0] and custom:
+        container = "devlandia_juicebox_custom_1"
+    else:
+        container = "devlandia_juicebox_selfserve_1"
     try:
         if container:
-            click.echo(f"running command in {container.name}")
+            click.echo(f"running command in {container}")
             # we don't use docker-py for this because it doesn't support the equivalent of
             # "--interactive --tty"
-            subprocess.check_call(["docker", "exec", "-it", container.name] + cmd)
+            subprocess.check_call(["docker", "exec", "-it", container] + cmd)
         elif env is not None:
             click.echo(f"starting new {env}")
             os.chdir(DEVLANDIA_DIR)
