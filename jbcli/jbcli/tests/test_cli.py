@@ -87,7 +87,7 @@ class TestCli(object):
             call.is_running()
         ]
         assert apps_mock.mock_calls == []
-        assert os_mock.mock_calls == [call.chdir('/Users/casey/projects/devlandia')]
+        assert os_mock.mock_calls == [call.chdir(DEVLANDIA_DIR)]
         assert proc_mock.mock_calls == []
         assert "Juicebox Custom is not running.  Please run jb start with the --custom flag" in result.output
 
