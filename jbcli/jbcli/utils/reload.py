@@ -31,6 +31,7 @@ def refresh_browser(timeout=None, custom=False):
     """Refreshes browser-sync browser instance if
     Django server is ready
 
+    :param custom:
     :param timeout: Optional timeout duration before checking
     server status
     """    

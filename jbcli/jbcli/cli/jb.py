@@ -106,7 +106,7 @@ def add(applications):
                     continue
 
             try:
-                if not jbapiutil.load_app(app):
+                if not jbapiutil.load_app(app, custom=True):
                     dockerutil.run  (f"/venv/bin/python manage.py loadjuiceboxapp {app}", env='custom')
                     echo_success(f"{app} was added successfully.")
 
@@ -128,12 +128,14 @@ def add(applications):
 @click.argument("new_app", required=True)
 @click.option("--init/--no-init", default=True, help="Initialize VCS repository")
 @click.option("--track/--no-track", default=True, help="Track remote VCS repository")
-def clone(existing_app, new_app, init, track):
+@click.option("--custom", is_flag=True, default=False, help="Use custom instance")
+def clone(existing_app, new_app, init, track, custom):
     """Clones an existing application to a new one. Make sure you have a
     Github repo setup for the new app.
     """
     try:
-        if dockerutil.is_running():
+        running = dockerutil.is_running()
+        if running[0] and custom:
             existing_app_dir = f"apps/{existing_app}"
             new_app_dir = f"apps/{new_app}"
 
@@ -153,6 +155,7 @@ def clone(existing_app, new_app, init, track):
                     new_app_dir,
                     init_vcs=init,
                     track_vcs=track,
+                    custom=custom,
                 )
             except (OSError, ValueError):
                 echo_warning("Cloning failed")
@@ -161,12 +164,12 @@ def clone(existing_app, new_app, init, track):
                 click.get_current_context().abort()
 
             try:
-                dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}")
+                dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}", env='custom')
             except docker.errors.APIError:
                 echo_warning(f"Failed to load: {new_app}.")
                 click.get_current_context().abort()
         else:
-            echo_warning("Juicebox is not running.  Run jb start.")
+            echo_warning("Juicebox Custom is not running.  Run jb start with the --custom flag.")
             click.get_current_context().abort()
     except docker.errors.APIError as de:
         echo_warning(de.message)
@@ -182,24 +185,27 @@ def remove(applications):
     os.chdir(DEVLANDIA_DIR)
     try:
         running = dockerutil.is_running()
-        if running[0] and dockerutil.ensure_home():
-            failed_apps = []
-
-            for app in applications:
-                try:
-                    if os.path.isdir(f"apps/{app}"):
-                        echo_highlight(f"Removing {app}...")
-                        shutil.rmtree(f"apps/{app}")
-                        dockerutil.run(f"/venv/bin/python manage.py deletejuiceboxapp {app}", env="custom")
-                        echo_success(f"Successfully deleted {app}")
-                    else:
-                        echo_warning(f"App {app} didn't exist.")
-                except docker.errors.APIError:
-                    print(docker.errors.APIError.message)
-                    failed_apps.append(app)
-            if failed_apps:
-                click.echo()
-                echo_warning(f'Failed to remove: {", ".join(failed_apps)}.')
+        if running[0]:
+            if dockerutil.ensure_home():
+                failed_apps = []
+                for app in applications:
+                    try:
+                        if os.path.isdir(f"apps/{app}"):
+                            echo_highlight(f"Removing {app}...")
+                            shutil.rmtree(f"apps/{app}")
+                            dockerutil.run(f"/venv/bin/python manage.py deletejuiceboxapp {app}", env="custom")
+                            echo_success(f"Successfully deleted {app}")
+                        else:
+                            echo_warning(f"App {app} didn't exist.")
+                    except docker.errors.APIError:
+                        print(docker.errors.APIError.message)
+                        failed_apps.append(app)
+                if failed_apps:
+                    click.echo()
+                    echo_warning(f'Failed to remove: {", ".join(failed_apps)}.')
+                    click.get_current_context().abort()
+            else:
+                echo_warning("Please run this command from inside the desired environment in Devlandia.")
                 click.get_current_context().abort()
         else:
             echo_warning("Juicebox Custom is not running.  Run jb start with the --custom flag.")
@@ -242,7 +248,7 @@ def watch(includejs=False, app="", reload=False, custom=False):
 def ls(showall=False, semantic=False):
     """List available containers"""
     try:
-        auth.login()
+        auth.set_creds()
         echo_success("The following tagged images are available:")
         dockerutil.image_list(showall=showall, semantic=semantic)
     except subprocess.CalledProcessError:

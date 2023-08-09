@@ -42,7 +42,7 @@ def make_github_repo_link(app):
         app)
 
 
-def clone(name, source, dest, init_vcs=True, track_vcs=True):
+def clone(name, source, dest, init_vcs=True, track_vcs=True, custom=False):
     """Create a Juicebox packaged application
 
     :param name: The packaged application name

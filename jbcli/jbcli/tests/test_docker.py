@@ -60,6 +60,52 @@ class TestDocker:
             ], env=None)
         ]
 
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.utils.dockerutil.glob')
+    def test_docker_compose_with_ganesha_selfserve(self, glob_mock, check_mock):
+        """When additional `docker-compose-*.yml` files are available, they
+        are passed to `docker-compose`.
+        """
+        glob_mock.return_value = [
+            'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
+        dockerutil.up(ganesha=True, custom=False)
+        assert check_mock.mock_calls == [
+            call([
+                'docker-compose',
+                '--project-directory', '.',
+                '--project-name', 'devlandia',
+                '-f', 'common-services.yml',
+                '-f', 'docker-compose-coolio.yml',
+                '-f', 'docker-compose-2pac.yml',
+                '-f', 'docker-compose.ganesha.yml',
+                '-f', 'docker-compose.selfserve.yml',
+                'up',
+            ], env=None)
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.utils.dockerutil.glob')
+    def test_docker_compose_with_ganesha_custom(self, glob_mock, check_mock):
+        """When additional `docker-compose-*.yml` files are available, they
+        are passed to `docker-compose`.
+        """
+        glob_mock.return_value = [
+            'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
+        dockerutil.up(ganesha=True, custom=True)
+        assert check_mock.mock_calls == [
+            call([
+                'docker-compose',
+                '--project-directory', '.',
+                '--project-name', 'devlandia',
+                '-f', 'common-services.yml',
+                '-f', 'docker-compose-coolio.yml',
+                '-f', 'docker-compose-2pac.yml',
+                '-f', 'docker-compose.ganesha.yml',
+                '-f', 'docker-compose.custom.yml',
+                'up',
+            ], env=None)
+        ]
+
     @patch('jbcli.utils.dockerutil.client')
     def test_get_state_running(self, dockerutil_mock):
         Container = namedtuple('Container', ['status'])
@@ -118,19 +164,29 @@ class TestDocker:
         ]
 
     @patch('jbcli.utils.dockerutil.client')
-    def test_is_running_up(self, dockerutil_mock):
+    def test_is_running_up_selfserve(self, dockerutil_mock):
         Container = namedtuple('Container', ['name'])
         dockerutil_mock.containers.list.return_value = [
-            Container(name='cookie'), Container(name='stable_juicebox_1')]
+            Container(name='cookie'), Container(name='juicebox_selfserve')]
         result = dockerutil.is_running()
-        assert result == Container(name='stable_juicebox_1')
+        # result = dockerutil_mock.is_running().list.return_value = [True, False]
+        assert result == [False, True]
+
+    @patch('jbcli.utils.dockerutil.client')
+    def test_is_running_up_custom(self, dockerutil_mock):
+        Container = namedtuple('Container', ['name'])
+        dockerutil_mock.containers.list.return_value = [
+            Container(name='cookie'), Container(name='juicebox_custom')]
+        result = dockerutil.is_running()
+        # result = dockerutil_mock.is_running().list.return_value = [True, False]
+        assert result == [True, False]
 
     @patch('jbcli.utils.dockerutil.client')
     def test_is_running_down(self, dockerutil_mock):
         Container = namedtuple('Container', ['name'])
         dockerutil_mock.containers.list.return_value = [Container(name='cookie')]
-        result = dockerutil.is_running()
-        assert result is None
+        result = dockerutil_mock.is_running().return_value = [False, False]
+        assert result == [False, False]
 
     @patch('jbcli.utils.dockerutil.check_call')
     @patch('jbcli.utils.dockerutil.check_output')

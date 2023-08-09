@@ -1,9 +1,11 @@
 from mock import call, patch
 
 from ..utils.format import (
-    echo_success, echo_warning, echo_highlight, human_readable_timediff
+    echo_success, echo_warning, echo_highlight, human_readable_timediff, compare_human_readable,
 )
 from datetime import datetime, timedelta
+
+from freezegun import freeze_time
 
 
 class TestFormat:

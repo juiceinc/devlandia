@@ -4,13 +4,14 @@ import time
 from .storageutil import stash
 from .format import *
 
-SERVER = "http://localhost:8001"
+SERVER = None
 JB_ADMIN_USER = os.environ.get("JB_ADMIN_USER", "chris@juice.com")
 JB_ADMIN_PASSWORD = os.environ.get("JB_ADMIN_PASSWORD", "cremacuban0!")
 
 
-def get_admin_token(refresh_token=False):
+def get_admin_token(refresh_token=False, custom=False):
     """Get an admin user token. """
+    SERVER = "http://localhost:8001" if custom else "http://localhost:8000"
     if not refresh_token:
         token = stash.get('token')
         if token:
@@ -58,9 +59,10 @@ def echo_result(result):
             echo_success(content)
 
 
-def load_app(app, refresh_token=False):
+def load_app(app, refresh_token=False, custom=False):
     """Attempt to load an app using jb API. If successful return True. """
-    admin_token = get_admin_token(refresh_token)
+    SERVER = "http://localhost:8001" if custom else "http://localhost:8000"
+    admin_token = get_admin_token(refresh_token, custom=custom)
     if admin_token:
         url = "{SERVER}/api/v1/app/load/{APP}/".format(SERVER=SERVER, APP=app)
         headers = {

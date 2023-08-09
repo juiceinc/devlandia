@@ -56,14 +56,14 @@ class WatchHandler(FileSystemEventHandler):
                 # We don't need to reload the app just refresh
                 # the browser after juicebox service restarts
                 if self.should_reload:
-                    refresh_browser(5)
+                    refresh_browser(5, custom=self.custom)
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
                 if not load_app(app):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}", env=env)
                 echo_success(f"{app} was added successfully.")
                 if self.should_reload:
-                    refresh_browser()
+                    refresh_browser(custom=self.custom)
 
         else:
             click.echo(f"Change to {event.src_path} ignored")
