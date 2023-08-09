@@ -5,8 +5,6 @@ from ..utils.format import (
 )
 from datetime import datetime, timedelta
 
-from freezegun import freeze_time
-
 
 class TestFormat:
 
