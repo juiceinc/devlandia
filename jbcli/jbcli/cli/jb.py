@@ -573,6 +573,7 @@ def start(
             environ.update(activate_ssh(environ))
         else:
             print("Can't activate ssh on selfserve yet.")
+            sys.exit(1)
     dockerutil.up(env=environ, ganesha=ganesha, custom=is_custom)
 
 
