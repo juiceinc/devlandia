@@ -56,7 +56,9 @@ def add(applications):
     try:
         running = dockerutil.is_running()
         if not running[0]:
-            echo_warning("Juicebox Custom is not running.  Please run jb start with the --custom flag..")
+            echo_warning(
+                "Juicebox Custom is not running.  Please run jb start with the --custom flag.."
+            )
             click.get_current_context().abort()
 
         failed_apps = []
@@ -107,7 +109,10 @@ def add(applications):
 
             try:
                 if not jbapiutil.load_app(app, custom=True):
-                    dockerutil.run  (f"/venv/bin/python manage.py loadjuiceboxapp {app}", env='custom')
+                    dockerutil.run(
+                        f"/venv/bin/python manage.py loadjuiceboxapp {app}",
+                        env="custom",
+                    )
                     echo_success(f"{app} was added successfully.")
 
             except docker.errors.APIError as e:
@@ -164,12 +169,17 @@ def clone(existing_app, new_app, init, track, custom):
                 click.get_current_context().abort()
 
             try:
-                dockerutil.run(f"/venv/bin/python manage.py loadjuiceboxapp {new_app}", env='custom')
+                dockerutil.run(
+                    f"/venv/bin/python manage.py loadjuiceboxapp {new_app}",
+                    env="custom",
+                )
             except docker.errors.APIError:
                 echo_warning(f"Failed to load: {new_app}.")
                 click.get_current_context().abort()
         else:
-            echo_warning("Juicebox Custom is not running.  Run jb start with the --custom flag.")
+            echo_warning(
+                "Juicebox Custom is not running.  Run jb start with the --custom flag."
+            )
             click.get_current_context().abort()
     except docker.errors.APIError as de:
         echo_warning(de.message)
@@ -193,7 +203,10 @@ def remove(applications):
                         if os.path.isdir(f"apps/{app}"):
                             echo_highlight(f"Removing {app}...")
                             shutil.rmtree(f"apps/{app}")
-                            dockerutil.run(f"/venv/bin/python manage.py deletejuiceboxapp {app}", env="custom")
+                            dockerutil.run(
+                                f"/venv/bin/python manage.py deletejuiceboxapp {app}",
+                                env="custom",
+                            )
                             echo_success(f"Successfully deleted {app}")
                         else:
                             echo_warning(f"App {app} didn't exist.")
@@ -205,26 +218,37 @@ def remove(applications):
                     echo_warning(f'Failed to remove: {", ".join(failed_apps)}.')
                     click.get_current_context().abort()
             else:
-                echo_warning("Please run this command from inside the desired environment in Devlandia.")
+                echo_warning(
+                    "Please run this command from inside the desired environment in Devlandia."
+                )
                 click.get_current_context().abort()
         else:
-            echo_warning("Juicebox Custom is not running.  Run jb start with the --custom flag.")
+            echo_warning(
+                "Juicebox Custom is not running.  Run jb start with the --custom flag."
+            )
             click.get_current_context().abort()
     except docker.errors.APIError:
         click.echo()
-        echo_warning("Juicebox Custom is not running.  Run jb start with the --custom flag.")
+        echo_warning(
+            "Juicebox Custom is not running.  Run jb start with the --custom flag."
+        )
         click.get_current_context().abort()
 
 
 @click.option("--includejs", default=False, help="Watch for js changes", is_flag=True)
 @click.option("--app", default="", help="Watch a specific app.")
-@click.option("--reload", default=False, help="Refresh browser after file changes.", is_flag=True)
-@click.option("--custom", default=False, is_flag=True, help="Use the Juicebox Custom environment")
+@click.option(
+    "--reload", default=False, help="Refresh browser after file changes.", is_flag=True
+)
+@click.option(
+    "--custom", default=False, is_flag=True, help="Use the Juicebox Custom environment"
+)
 @cli.command()
 def watch(includejs=False, app="", reload=False, custom=False):
     """Watch for changes in apps and js and reload/rebuild"""
     jb_watch_proc = Process(
-        target=dockerutil.jb_watch, kwargs={"app": app, "should_reload": reload, "custom": custom}
+        target=dockerutil.jb_watch,
+        kwargs={"app": app, "should_reload": reload, "custom": custom},
     )
     jb_watch_proc.start()
     procs = [jb_watch_proc]
@@ -351,7 +375,7 @@ def activate_ssh(environ):
     content = {
         "version": "3.2",
         "services": {
-            "juicebox": {
+            "juicebox_custom": {
                 "extra_hosts": [
                     f"{url.hostname}:{host_addr}" for (url, _, _) in redshifts.values()
                 ],
@@ -545,7 +569,10 @@ def start(
         print("Activating HSTM")
     cleanup_ssh()
     if ssh:
-        environ.update(activate_ssh(environ))
+        if custom:
+            environ.update(activate_ssh(environ))
+        else:
+            print("Can't activate ssh on selfserve yet.")
     dockerutil.up(env=environ, ganesha=ganesha, custom=is_custom)
 
 
@@ -778,10 +805,7 @@ def activate_snapshot():
     is_flag=True,
 )
 @click.option(
-    "--custom",
-    default=False,
-    help="Select custom docker image to stop",
-    is_flag=True,
+    "--custom", default=False, help="Select custom docker image to stop", is_flag=True
 )
 @click.pass_context
 def stop(ctx, clean, custom):
@@ -799,7 +823,12 @@ def stop(ctx, clean, custom):
 
 
 @cli.command()
-@click.option("--custom", default=False, is_flag=True, help="Which environment to run the command in.")
+@click.option(
+    "--custom",
+    default=False,
+    is_flag=True,
+    help="Which environment to run the command in.",
+)
 def kick(custom=False):
     """Restart the Juicebox process without restarting all of devlandia"""
     running = dockerutil.is_running()
@@ -832,7 +861,12 @@ def upgrade(ctx):
 
 
 @cli.command()
-@click.option("--custom", default=False, is_flag=True, help="Which environment to run the command in.")
+@click.option(
+    "--custom",
+    default=False,
+    is_flag=True,
+    help="Which environment to run the command in.",
+)
 def clear_cache(custom):
     """Clears cache"""
     try:
@@ -841,16 +875,24 @@ def clear_cache(custom):
             if running[0]:
                 dockerutil.run("/venv/bin/python manage.py clear_cache", env="custom")
             else:
-                echo_warning("Custom flag was passed but an instance of Juicebox Custom not running.  Run jb start with the --custom flag.")
+                echo_warning(
+                    "Custom flag was passed but an instance of Juicebox Custom not running.  Run jb start with the --custom flag."
+                )
                 click.get_current_context().abort()
         elif not custom:
             if running[1]:
-                dockerutil.run("/venv/bin/python manage.py clear_cache", env="selfserve")
+                dockerutil.run(
+                    "/venv/bin/python manage.py clear_cache", env="selfserve"
+                )
             else:
-                echo_warning("The custom flag was not passed so we attempted to run the command in a selfserve instance, but a Juicebox Selfserve instance is not running.Run jb start.")
+                echo_warning(
+                    "The custom flag was not passed so we attempted to run the command in a selfserve instance, but a Juicebox Selfserve instance is not running.Run jb start."
+                )
                 click.get_current_context().abort()
         else:
-            echo_warning("Juicebox not running.  Run jb start.  If you want to run a custom instance be sure to pass the --custom flag.")
+            echo_warning(
+                "Juicebox not running.  Run jb start.  If you want to run a custom instance be sure to pass the --custom flag."
+            )
             click.get_current_context().abort()
     except docker.errors.APIError:
         echo_warning("Could not clear cache")
@@ -867,7 +909,12 @@ def pull(tag=None):
 @cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to use")
-@click.option("--custom", default=False, is_flag=True, help="Which environment to run the command in.")
+@click.option(
+    "--custom",
+    default=False,
+    is_flag=True,
+    help="Which environment to run the command in.",
+)
 def manage(args, env, custom):
     """Run an arbitrary manage.py command in the JB container"""
     cmd = ["/venv/bin/python", "manage.py"] + list(args)
@@ -877,8 +924,15 @@ def manage(args, env, custom):
 @cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("args", nargs=-1, type=click.UNPROCESSED)
 @click.option("--env", help="Which environment to use")
-@click.option("--service", help="Which service to run the command in", default="juicebox")
-@click.option("--custom", default=False, is_flag=True, help="Which environment to run the command in.")
+@click.option(
+    "--service", help="Which service to run the command in", default="juicebox"
+)
+@click.option(
+    "--custom",
+    default=False,
+    is_flag=True,
+    help="Which environment to run the command in.",
+)
 def run(args, env, service, custom):
     """Run an arbitrary command in the JB container"""
     return _run(args, env, service, custom=custom)
@@ -893,7 +947,9 @@ def _run(args, env, service="juicebox", custom=False):
     running = dockerutil.is_running()
     print(running)
     if not running[0] and custom:
-        echo_warning("Juicebox Custom instance is not running.  Run jb start with the --custom flag.")
+        echo_warning(
+            "Juicebox Custom instance is not running.  Run jb start with the --custom flag."
+        )
         return
     elif not running[1] and not custom:
         echo_warning("Juicebox Selfserve instance is not running.  Run jb start.")
