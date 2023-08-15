@@ -565,8 +565,13 @@ def start(
     if not noupdate:
         dockerutil.pull(tag=tag)
     if is_hstm:
-        activate_hstm()
-        print("Activating HSTM")
+        if custom:
+            activate_hstm()
+            print("Activating HSTM")
+        else:
+            print("Can't activate hstm on selfserve.")
+            sys.exit(1)
+
     cleanup_ssh()
     if ssh:
         if custom:
@@ -813,11 +818,16 @@ def stop(ctx, clean, custom):
     """Stop a running juicebox in this environment"""
     os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
-    running = dockerutil.is_running()
+    running_custom, running_selfserve = dockerutil.is_running()
     if clean:
         dockerutil.destroy(custom=custom)
-    elif running[0] or running[1]:
-        dockerutil.halt(custom=custom)
+    elif running_custom or running_selfserve:
+        # Stop both custom and selfserve if they are running
+        # because we're stopping common services
+        if running_selfserve:
+            dockerutil.halt(custom=False)
+        if running_custom:
+            dockerutil.halt(custom=True)
         echo_highlight("Juicebox is no longer running.")
     else:
         echo_highlight("Juicebox is not running")
