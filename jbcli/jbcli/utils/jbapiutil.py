@@ -1,8 +1,10 @@
-from requests import post, ConnectionError, ConnectTimeout
 import os
 import time
-from .storageutil import stash
+
+from requests import post, ConnectionError
+
 from .format import *
+from .storageutil import stash
 
 SERVER = None
 JB_ADMIN_USER = os.environ.get("JB_ADMIN_USER", "chris@juice.com")

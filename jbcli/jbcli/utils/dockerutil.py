@@ -2,6 +2,7 @@
 """
 from __future__ import print_function
 
+import platform
 from glob import glob
 import json
 import time
@@ -39,11 +40,13 @@ class WatchHandler(FileSystemEventHandler):
         else:
             path = event.src_path.split("/")
 
+        if path[0] != 'apps':
+            while path and path[0] != 'devlandia':
+                path.pop(0)
+            path.pop(0)
+
         # Path looks like
         # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
-        while path and path[0] != 'devlandia':
-            path.pop(0)
-        path.pop(0)
         app = path[1]
         filename = path[-1]
         is_python_change = filename.endswith(".py") and isinstance(
@@ -59,6 +62,7 @@ class WatchHandler(FileSystemEventHandler):
                     refresh_browser(5, custom=self.custom)
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
+                echo_warning(f"{app} is loading...")
                 if not load_app(app):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}", env=env)
                 echo_success(f"{app} was added successfully.")
@@ -78,8 +82,15 @@ def _intersperse(el, l):
 def docker_compose(args, env=None, ganesha=False, custom=False):
     # Since our docker-compose.selfserve.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
+    compose_files = []
+    if arch in ["arm", "i386"]:
+        compose_files = ["docker-compose.arm.yml"]
+    elif arch == "x86_64":
+        compose_files = ["docker-compose.yml"]
     compose_files = ["common-services.yml"]
     compose_files.extend(glob("docker-compose-*.yml"))
+    if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
+        compose_files.remove("docker-compose-ssh.yml")
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
     if custom:
@@ -93,10 +104,10 @@ def docker_compose(args, env=None, ganesha=False, custom=False):
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None, ganesha=False, custom=False):
+def up(env=None, ganesha=False, arch=None, custom=False):
     """Starts and optionally creates a Docker environment based on
-    docker-compose.selfserve.yml"""
-    docker_compose(["up"], env=env, ganesha=ganesha, custom=custom)
+    docker-compose.yml"""
+    docker_compose(["up"], env=env, ganesha=ganesha, arch=arch, custom=custom)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -104,14 +115,16 @@ def run_jb(cmd, env=None, service="juicebox"):
     docker_compose(["run", service] + cmd, env=env, ganesha=is_ganesha)
 
 
-def destroy(custom=False):
+def destroy(arch=None, custom=False):
+    """Removes all containers and networks defined in docker-compose.yml"""
     """Removes all containers and networks defined in docker-compose.selfserve.yml"""
-    docker_compose(["down"], custom=custom)
+    docker_compose(["down"], arch=arch, custom=custom)
 
 
+def halt(arch=None, custom=False):
 def halt(custom=False):
     """Halts all containers defined in docker-compose file."""
-    docker_compose(["stop"], custom=custom)
+    docker_compose(["stop"], custom=custom, arch=arch)
 
 
 def is_running():
@@ -198,21 +211,42 @@ def parse_dc_file(tag):
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
+    pull_file = None
+    if platform.processor() == "x86_64":
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
+            return
+        else:
+            pull_file = "docker-compose.yml"
+    elif platform.processor() == "arm":
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        else:
+            pull_file = "docker-compose.arm.yml"
+    elif platform.processor() == "i386":
+        check_call(["/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        else:
+            pull_file = "docker-compose.arm.yml"
     if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
-    with open("docker-compose.selfserve.yml") as dc:
+    with open(pull_file) as dc:
         for line in dc:
             if base_ecr in line:
                 dc_list.append(line.split(":"))
                 for pair in dc_list:
                     pair = [i.strip().strip('"') for i in pair]
-
                     if "controlcenter-dev" in pair[1]:
                         full_path = f"{base_ecr}controlcenter-dev:"
                     elif "juicebox-dev" in pair[1]:
-                        full_path = f"{base_ecr}juicebox-devlandia:"
+                        if platform.processor() == "x86_64":
+                            full_path = f"{base_ecr}juicebox-devlandia:"
+                        elif platform.processor() == "arm":
+                            full_path = f"{base_ecr}juicebox-devlandia-arm:"
+                        elif platform.processor() == "i386":
+                            full_path = f"{base_ecr}juicebox-devlandia-arm:"
 
                     return full_path + (tag if tag is not None else pair[2])
 
@@ -272,7 +306,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
                 meets_semantic_criteria = (semantic and is_semantic_tag) or not semantic
                 # Use if showall is true, return all tags, otherwise return just last 30 days
                 meets_time_criteria = showall or (
-                    pushed >= now - datetime.timedelta(days=30)
+                        pushed >= now - datetime.timedelta(days=30)
                 )
 
                 if meets_semantic_criteria and meets_time_criteria:

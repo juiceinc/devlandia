@@ -1,5 +1,7 @@
 """This is the code for the jb cli command."""
 
+from __future__ import print_function
+
 import atexit
 import errno
 import fcntl
@@ -11,6 +13,7 @@ import sys
 import time
 from collections import OrderedDict
 from multiprocessing import Process
+import platform
 from subprocess import Popen
 import re
 
@@ -396,7 +399,7 @@ def activate_ssh(environ):
     default=False,
     is_flag=True,
     help="Use local fruition checkout with this image "
-    "(core and hstm-core environments do this automatically)",
+         "(core and hstm-core environments do this automatically)",
 )
 @click.option(
     "--dev-recipe",
@@ -434,6 +437,9 @@ def start(
         return
     elif running[1] and not custom:
         echo_warning("An instance of Juicebox Selfserve is already running")
+    arch = determine_arch()
+    if dockerutil.is_running():
+        echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
     if stash.get("users") is None:
@@ -546,7 +552,7 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha, custom=is_custom)
+    dockerutil.up(env=environ, ganesha=ganesha, arch=arch, custom=is_custom)
 
 
 @click.argument("days", nargs=1, required=False)
@@ -716,7 +722,7 @@ def check_outdated_image(env):
                 "type": "list",
                 "name": "age_diff",
                 "message": f"local image is {age_diff} older than remote image, "
-                f"would you like to update?",
+                           f"would you like to update?",
                 "choices": ["no", "yes"],
             }
         ]
@@ -824,7 +830,7 @@ def upgrade(ctx):
     dockerutil.ensure_root()
 
     try:
-        # subprocess.check_call(["git", "pull"])
+        subprocess.check_call(["git", "pull"])
         subprocess.check_call(["pip", "install", "-r", "requirements.txt", "-q"])
     except subprocess.CalledProcessError:
         echo_warning("Failed to `git pull`")
@@ -938,3 +944,7 @@ def dc(args, ganesha, custom):
 def activate_hstm():
     with open(".env", "a") as env_dot:
         env_dot.write("\nJB_HSTM=on")
+
+
+def determine_arch():
+    return platform.processor()

@@ -96,7 +96,7 @@ def perform_init_vcs(name, app_dir, track_vcs=True):
         check_call(['git', 'init'])
         check_call(['git', 'add', '.'])
         check_call(['git', 'commit', '-m', 'Initial commit'])
-    except CalledProcessError as exc_info:
+    except CalledProcessError:
         click.echo()
         echo_warning('Failed to initialize Git repository.')
         return

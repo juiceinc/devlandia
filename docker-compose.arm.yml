@@ -1,12 +1,10 @@
-version: '3.9'
+version: '3.2'
 services:
-  juicebox_selfserve:
-    networks:
-      - juice_net
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:OPS-2432-prod-separation-py3"
+  juicebox:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
-                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements.txt;
-                ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
+      ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements-arm.txt;
+      ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
                 if [ '${RECIPE}' = 'recipe' ] ; then
                   /venv/bin/pip install -e recipe/;
                 fi;
@@ -17,7 +15,7 @@ services:
       - ./fruition:/code
       - ./recipe:/code/recipe
     ports:
-      - "8000:8000"
+      - "${DEVLANDIA_PORT}:8000"
       - "8888:8888"
       - "9001:9001"
       - "2222:22"
@@ -36,6 +34,7 @@ services:
       - REGION=us-east-1
       - AWS_DEFAULT_REGION=us-east-1
       - FONTAWESOME_NPM_AUTH_TOKEN
+
       - JB_DB_NAME=juicebox
       - JB_DB_USERNAME=juicebox
       - JB_DB_PASSWORD=juicebox
@@ -43,7 +42,6 @@ services:
       - JB_REDIS_LOCATION=redis:6379
       - DJANGO_DEBUG=on
       - JB_INSECURE_COOKIES=yes
-      - JB_REDIS_DB=1
 
       - JB_DEVLANDIA=on
       - JB_UPLOAD_WITH_DJANGO=on
@@ -68,5 +66,21 @@ services:
       - JB_HSTM
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
-      - JB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/
+    restart: on-failure:10
+  postgres:
+    environment:
+      - POSTGRES_USER=juicebox
+      - POSTGRES_PASSWORD=juicebox
+      - POSTGRES_DB=juicebox
+    image: "postgres:12.4-alpine"
+  redis:
+    image: "redis:4.0.14"
+  snapshot:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot-arm:prod"
+    volumes:
+      - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
+    environment:
+      - JB_DEBUG=true
+    ports:
+      - "8080:8080"
     restart: on-failure:10

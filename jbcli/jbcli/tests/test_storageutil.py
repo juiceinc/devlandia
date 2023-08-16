@@ -1,5 +1,6 @@
 from mock import call, patch, ANY, mock_open
-from ..utils.storageutil import Stash, stash
+
+from ..utils.storageutil import Stash
 
 
 class TestStash:
@@ -21,7 +22,7 @@ class TestStash:
 
         # Custom file
         os_mock.reset_mock()
-        s = Stash("foo.toml")
+        Stash("foo.toml")
         assert os_mock.mock_calls == [
             call.path.expanduser("foo.toml"),
             call.path.abspath(ANY),
