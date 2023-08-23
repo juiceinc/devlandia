@@ -10,3 +10,4 @@ PyInquirer~=1.0.3
 humanize~=4.6.0
 pyyaml~=5.0
 six~=1.14.0
+structlog~=23.1.0
