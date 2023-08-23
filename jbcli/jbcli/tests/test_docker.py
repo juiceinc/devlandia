@@ -15,10 +15,10 @@ class TestDocker:
     @patch('jbcli.cli.jb.determine_arch')
     def test_up_x86(self, arch_mock, check_mock):
         arch_mock.return_value = 'x86_64'
-        dockerutil.up(arch=arch_mock.return_value)
+        dockerutil.up(arch='x86_64')
         assert check_mock.mock_calls == [
             call(['docker-compose',
-                  '--project-directory', '.', '--project-name', 'devlandia',
+                  '--project-directory', '.', '--project-name', "devlandia",
                   '-f', 'common-services.yml', '-f', 'docker-compose.selfserve.yml','up'], env=None)
         ]
 
@@ -26,11 +26,11 @@ class TestDocker:
     @patch('jbcli.cli.jb.determine_arch')
     def test_up_arm(self, arch_mock, check_mock):
         arch_mock.return_value = 'arm'
-        dockerutil.up(arch=arch_mock.return_value)
+        dockerutil.up(arch="arm", custom=False)
         assert check_mock.mock_calls == [
             call(['docker-compose',
-                  '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.arm.yml', 'up'], env=None)
+                  '--project-directory', '.', '--project-name', "devlandia",
+                  '-f', 'common-services.yml', '-f', 'docker-compose.arm.yml', 'up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -48,11 +48,11 @@ class TestDocker:
     @patch('jbcli.cli.jb.determine_arch')
     def test_destroy_arm(self, arch_mock, check_mock):
         arch_mock.return_value = 'arm'
-        dockerutil.destroy(arch=arch_mock.return_value)
+        dockerutil.destroy(arch='arm', custom=False)
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.arm.yml', 'down'], env=None)
+                  '-f', 'common-services.yml', '-f', 'docker-compose.arm.yml', 'down'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -70,11 +70,11 @@ class TestDocker:
     @patch('jbcli.cli.jb.determine_arch')
     def test_halt_arm(self, arch_mock, check_mock):
         arch_mock.return_value = 'arm'
-        dockerutil.halt(arch=arch_mock.return_value)
+        dockerutil.halt(arch='arm')
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'docker-compose.arm.yml', 'stop'], env=None)
+                  '-f', 'common-services.yml', '-f', 'docker-compose.arm.yml', 'stop'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -86,16 +86,16 @@ class TestDocker:
         glob_mock.return_value = [
             'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
 
-        dockerutil.up(arch='x86_64')
+        dockerutil.up(arch='x86_64', env=ANY, ganesha=False, custom=False)
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
                 '-f', 'common-services.yml',
+                '-f', 'docker-compose.selfserve.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
-                '-f', 'docker-compose.selfserve.yml',
                 'up',
             ], env=None)
         ]
@@ -108,17 +108,17 @@ class TestDocker:
         """
         glob_mock.return_value = [
             'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
-        dockerutil.up(ganesha=True, custom=False)
+        dockerutil.up(arch='x86_64', ganesha=True, custom=False, env=None)
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
                 '-f', 'common-services.yml',
+                '-f', 'docker-compose.selfserve.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
                 '-f', 'docker-compose.ganesha.yml',
-                '-f', 'docker-compose.selfserve.yml',
                 'up',
             ], env=None)
         ]
@@ -131,17 +131,17 @@ class TestDocker:
         """
         glob_mock.return_value = [
             'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
-        dockerutil.up(ganesha=True, custom=True)
+        dockerutil.up(arch='x86_64', env=None, custom=True, ganesha=True)
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
                 '-f', 'common-services.yml',
+                '-f', 'docker-compose.custom.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
                 '-f', 'docker-compose.ganesha.yml',
-                '-f', 'docker-compose.custom.yml',
                 'up',
             ], env=None),
         ]
@@ -154,12 +154,13 @@ class TestDocker:
         """
         glob_mock.return_value = [
             'docker-compose-coolio.yml', 'docker-compose-2pac.yml']
-        dockerutil.up(arch='arm')
+        dockerutil.up(arch='arm', custom=False, ganesha=False, env=None)
         assert check_mock.mock_calls == [
             call([
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
+                '-f', 'common-services.yml',
                 '-f', 'docker-compose.arm.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
@@ -203,6 +204,53 @@ class TestDocker:
             call.get_current_context().abort()
         ]
 
+    @patch('jbcli.utils.dockerutil.os')
+    def test_ensure_root_dir_exists(self, os_mock):
+        os_mock.path.isdir.return_value = True
+        root_val = dockerutil.ensure_root()
+        assert os_mock.mock_calls == [
+            call.path.isdir('jbcli'),
+        ]
+        assert root_val == True
+
+    @patch('jbcli.utils.dockerutil.click')
+    @patch('jbcli.utils.dockerutil.os')
+    def test_ensure_root_dir_not_exists(self, os_mock, click_mock):
+        os_mock.path.isdir.return_value = False
+        root_val = dockerutil.ensure_root()
+        assert os_mock.mock_calls == [
+            call.path.isdir('jbcli')
+        ]
+        assert click_mock.mock_calls == [
+            call.get_current_context(),
+            call.get_current_context().abort()
+        ]
+
+    @patch('jbcli.utils.dockerutil.click')
+    @patch('jbcli.utils.dockerutil.os')
+    def test_ensure_virtualenv_false(self, os_mock, click_mock):
+        os_mock.environ.get.return_value = None
+        root_val = dockerutil.ensure_virtualenv()
+        assert os_mock.mock_calls == [
+            call.environ.get('VIRTUAL_ENV', None),
+        ]
+        assert click_mock.mock_calls == [
+            call.get_current_context(),
+            call.get_current_context().abort()
+        ]
+
+    @patch('jbcli.utils.dockerutil.click')
+    @patch('jbcli.utils.dockerutil.os')
+    def test_ensure_virtualenv_true(self, os_mock, click_mock):
+        os_mock.environ.get.return_value = 'devlandia_venv'
+        venv_val = dockerutil.ensure_virtualenv()
+        assert os_mock.mock_calls == [
+            call.environ.get('VIRTUAL_ENV', None),
+        ]
+        assert click_mock.mock_calls == [
+
+        ]
+
     @patch('jbcli.utils.dockerutil.click')
     @patch('jbcli.utils.dockerutil.os')
     def test_ensure_home_missing_dc_file(self, os_mock, click_mock):
@@ -218,9 +266,9 @@ class TestDocker:
 
     @patch('jbcli.utils.dockerutil.run')
     def test_run(self, run_mock):
-        dockerutil.run('COOKIES!')
+        dockerutil.run('COOKIES!', env='selfserve')
         assert run_mock.mock_calls == [
-            call('COOKIES!')
+            call('COOKIES!', env='selfserve')
         ]
 
     @patch('jbcli.utils.dockerutil.client')
@@ -229,7 +277,6 @@ class TestDocker:
         dockerutil_mock.containers.list.return_value = [
             Container(name='cookie'), Container(name='juicebox_selfserve')]
         result = dockerutil.is_running()
-        # result = dockerutil_mock.is_running().list.return_value = [True, False]
         assert result == [False, True]
 
     @patch('jbcli.utils.dockerutil.client')
@@ -238,7 +285,6 @@ class TestDocker:
         dockerutil_mock.containers.list.return_value = [
             Container(name='cookie'), Container(name='juicebox_custom')]
         result = dockerutil.is_running()
-        # result = dockerutil_mock.is_running().list.return_value = [True, False]
         assert result == [True, False]
 
     @patch('jbcli.utils.dockerutil.client')
@@ -270,6 +316,31 @@ class TestDocker:
             call([b"do", b"a", b"thing!"]),
             call(['docker', 'pull',
                   '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:latest'])
+        ]
+
+    @patch('jbcli.utils.dockerutil.check_call')
+    @patch('jbcli.utils.dockerutil.check_output')
+    @patch('platform.processor')
+    def test_pull_i386(self, platform_mock, check_output_mock, check_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
+        platform_mock.return_value = 'i386'
+
+        def check_output(args):
+            assert args == [
+                'aws', 'ecr', 'get-login',
+                '--registry-ids', '423681189101', '976661725066',
+                '--no-include-email']
+            return b"do a thing!"
+
+        check_output_mock.side_effect = check_output
+
+        dockerutil.pull('latest')
+
+        assert check_mock.mock_calls == [
+            call(['/usr/bin/arch', '-arm64', '/bin/zsh', '--login']),
+            call([b"do", b"a", b"thing!"]),
+            call(['docker', 'pull',
+                  '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:latest'])
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')

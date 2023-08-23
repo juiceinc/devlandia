@@ -16,6 +16,7 @@ from multiprocessing import Process
 import platform
 from subprocess import Popen
 import re
+import structlog
 
 import click
 import docker.errors
@@ -32,6 +33,8 @@ from ..utils.storageutil import Stash
 MY_DIR = os.path.abspath(os.path.dirname(__file__))
 DEVLANDIA_DIR = os.path.abspath(os.path.join(MY_DIR, "..", "..", ".."))
 JBCLI_DIR = os.path.abspath(os.path.join(DEVLANDIA_DIR, "jbcli"))
+
+toplog = structlog.get_logger()
 
 stash = Stash("~/.config/juicebox/devlandia.toml")
 
@@ -55,6 +58,8 @@ def add(applications):
     """Checkout a juicebox app (or list of apps) and load it, can check out
     a specific branch by using `appslug@branchname`
     """
+    log = toplog.bind(function="add")
+    # log.info("Normalizing", name=name)
     os.chdir(DEVLANDIA_DIR)
     try:
         running = dockerutil.is_running()
@@ -414,6 +419,7 @@ def activate_ssh(environ):
     help="Mount local juicebox-snapshots-service code into snapshots container",
 )
 @click.option("--custom", default=False, is_flag=True, help="Start up the custom image")
+@click.option("--emulate", default=False, is_flag=True, help="If you're unable to pull an ARM image, this flag will let you fall back and get a normal devlandia image to run in emulation.  This isn't foolproof, and there's no guarantee it will run, just for additional compatability.")
 @click.pass_context
 def start(
     ctx,
@@ -427,9 +433,13 @@ def start(
     dev_recipe,
     dev_snapshot,
     custom,
+    emulate
 ):
     """Configure the environment and start Juicebox"""
+    log = toplog.bind(function="start")
+    log.info("Starting")
     auth.set_creds()
+    arch = determine_arch()
     running = dockerutil.is_running()
     if running[0] and custom:
         echo_warning("An instance of Juicebox Custom is already running")
@@ -437,11 +447,9 @@ def start(
         return
     elif running[1] and not custom:
         echo_warning("An instance of Juicebox Selfserve is already running")
-    arch = determine_arch()
-    if dockerutil.is_running():
-        echo_warning("An instance of Juicebox is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
+
     if stash.get("users") is None:
         _add_users()
     # A dictionary of environment names and tags to use
@@ -465,13 +473,14 @@ def start(
     is_hstm = env.startswith("hstm-") or hstm
     is_custom = custom or env == "core-custom"
 
-    print("My flags are")
-    print(f"core: {is_core}")
-    print(f"hstm: {is_hstm}")
-    print(f"dev_recipe: {dev_recipe}")
-    print(f"dev_snapshot: {dev_snapshot}")
-    print(f"is_custom: {is_custom}")
-    print(f"env: {env}")
+    log.info("Running with these flags:",
+        is_core=is_core,
+        is_hstm=is_hstm,
+        dev_recipe=dev_recipe,
+        dev_snapshot=dev_snapshot,
+        is_custom=is_custom,
+        env=env,
+    )
     if is_core:
         if is_custom:
             if os.path.exists("fruition_custom"):
@@ -552,7 +561,7 @@ def start(
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
-    dockerutil.up(env=environ, ganesha=ganesha, arch=arch, custom=is_custom)
+    dockerutil.up(env=environ, ganesha=ganesha, arch=arch, custom=is_custom, emulate=emulate)
 
 
 @click.argument("days", nargs=1, required=False)

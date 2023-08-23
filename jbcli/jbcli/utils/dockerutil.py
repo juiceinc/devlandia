@@ -79,24 +79,26 @@ def _intersperse(el, l):
     return [y for x in zip([el] * len(l), l) for y in x]
 
 
-def docker_compose(args, env=None, ganesha=False, custom=False):
+def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emulate=False):
     # Since our docker-compose.selfserve.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
-    compose_files = []
-    if arch in ["arm", "i386"]:
-        compose_files = ["docker-compose.arm.yml"]
-    elif arch == "x86_64":
-        compose_files = ["docker-compose.yml"]
     compose_files = ["common-services.yml"]
+    if arch in ["arm", "i386"]:
+        if not emulate:
+            compose_files.append("docker-compose.arm.yml")
+        else:
+            compose_files.append("docker-compose.selfserve.yml")
+    elif arch == "x86_64":
+        if custom:
+            compose_files.append("docker-compose.custom.yml")
+        else:
+            compose_files.append("docker-compose.selfserve.yml")
+
     compose_files.extend(glob("docker-compose-*.yml"))
     if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
         compose_files.remove("docker-compose-ssh.yml")
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
-    if custom:
-        compose_files.append("docker-compose.custom.yml")
-    else:
-        compose_files.append("docker-compose.selfserve.yml")
     file_args = _intersperse("-f", compose_files)
     print(f"Running docker-compose with {file_args} files")
     env_name = os.path.basename(os.path.abspath("."))
@@ -104,10 +106,10 @@ def docker_compose(args, env=None, ganesha=False, custom=False):
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None, ganesha=False, arch=None, custom=False):
+def up(env=None, ganesha=False, arch=None, custom=False, emulate=False):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml"""
-    docker_compose(["up"], env=env, ganesha=ganesha, arch=arch, custom=custom)
+    docker_compose(["up"], env=env, ganesha=ganesha, arch=arch, custom=custom, emulate=emulate)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -116,13 +118,11 @@ def run_jb(cmd, env=None, service="juicebox"):
 
 
 def destroy(arch=None, custom=False):
-    """Removes all containers and networks defined in docker-compose.yml"""
     """Removes all containers and networks defined in docker-compose.selfserve.yml"""
     docker_compose(["down"], arch=arch, custom=custom)
 
 
 def halt(arch=None, custom=False):
-def halt(custom=False):
     """Halts all containers defined in docker-compose file."""
     docker_compose(["stop"], custom=custom, arch=arch)
 
@@ -135,11 +135,12 @@ def is_running():
     custom, selfserve = False, False
     click.echo("Checking to see if Juicebox is running...")
     containers = client.containers.list()
+    print(containers)
     for container in containers:
         print(f"Checking images: {container.name}")
         if "juicebox_custom" in container.name:
             custom = True
-        elif "juicebox_selfserve" in container.name:
+        if "juicebox_selfserve" in container.name:
             selfserve = True
     return [custom, selfserve]
 
@@ -152,7 +153,7 @@ def ensure_root():
     if not os.path.isdir("jbcli"):
         # We're not in the devlandia root
         echo_warning(
-            "Please run this command from inside the Devlandia root " "directory."
+            "Please run this command from inside the Devlandia root directory."
         )
         click.get_current_context().abort()
     return True
@@ -213,10 +214,10 @@ def parse_dc_file(tag):
     """
     pull_file = None
     if platform.processor() == "x86_64":
-        if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
             return
         else:
-            pull_file = "docker-compose.yml"
+            pull_file = "docker-compose.selfserve.yml"
     elif platform.processor() == "arm":
         if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
             return
@@ -408,7 +409,6 @@ def handle_event(should_reload, custom, app):
 def observer_setup(event_handler, app, custom=False):
     observer = Observer()
     directory = "fruition_custom" if custom else "fruition"
-    print()
     observer.schedule(event_handler, path=f"apps/{app}", recursive=True)
     observer.start()
     try:
@@ -422,9 +422,9 @@ def observer_setup(event_handler, app, custom=False):
 def js_watch(custom=False):
     running = is_running()
     if running[0] and custom and ensure_home():
-        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch")
+        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch", env='custom')
     elif running[1] and not custom and ensure_home():
-        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch")
+        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch", env='selfserve')
 
 def list_local():
     return check_output(["docker", "image", "list"])

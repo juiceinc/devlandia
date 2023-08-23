@@ -28,28 +28,29 @@ class TestReload():
         ]
 
     @patch('jbcli.utils.reload.get', return_value=Mock(status_code=200, json=Mock('{mock response}')))
+    @patch('jbcli.utils.reload.echo_warning')
+    @patch('jbcli.utils.reload.echo_highlight')
     @patch('time.sleep', return_value=None)
     @patch('jbcli.utils.reload.check_output')
-    def test_refresh_browser_with_timeout_selfserve(self, output_mock, sleep_mock, get_mock):
+    def test_refresh_browser_with_timeout_selfserve(self, output_mock, sleep_mock, highlight_mock, warning_mock, get_mock):
         refresh_browser(custom=False, timeout=1)
         assert output_mock.mock_calls == [
             call(['../../node_modules/.bin/browser-sync','reload'])
         ]
+        assert highlight_mock.mock_calls == [call('Checking server status...')]
+        assert warning_mock.mock_calls == []
 
     @patch('jbcli.utils.reload.get', return_value=Mock(status_code=200, json=Mock('{mock response}')))
+    @patch('jbcli.utils.reload.echo_warning')
     @patch('jbcli.utils.reload.echo_highlight')
     @patch('time.sleep', return_value=None)
     @patch('jbcli.utils.reload.check_output')
-    def test_refresh_browser_with_timeout_custom(self, output_mock, sleep_mock, highlight_mock, get_mock):
-        # get_mock.status_code = 200
-        # get_mock.return_value.json.return_value = 'mock response'
+    def test_refresh_browser_with_timeout_custom(self, output_mock, sleep_mock, highlight_mock, warning_mock, get_mock):
         refresh_browser(custom=True, timeout=1)
-        assert output_mock.mock_calls == [
-            call(['../../node_modules/.bin/browser-sync', 'reload'])
-        ]
-        assert highlight_mock.mock_calls == [
-            call('Checking server status...')
-                ]
+        assert output_mock.mock_calls == [call(['../../node_modules/.bin/browser-sync', 'reload'])]
+        assert highlight_mock.mock_calls == [call('Checking server status...')]
+        assert warning_mock.mock_calls == []
+
 
     @patch('jbcli.utils.reload.get')
     @patch('jbcli.utils.reload.echo_highlight')

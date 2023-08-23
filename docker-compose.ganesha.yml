@@ -1,6 +1,6 @@
 # This is a "mixin" file that enables a local ganesha server
 # Whatever environment you apply this to has to have a symlink to a local ganesha checkout
-version: '3.2'
+version: '3.9'
 services:
   juicebox:
     environment:
