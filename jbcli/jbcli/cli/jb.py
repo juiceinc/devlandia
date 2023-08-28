@@ -59,10 +59,10 @@ def add(applications):
     a specific branch by using `appslug@branchname`
     """
     log = toplog.bind(function="add")
-    # log.info("Normalizing", name=name)
     os.chdir(DEVLANDIA_DIR)
     try:
         running = dockerutil.is_running()
+
         if not running[0]:
             echo_warning("Juicebox Custom is not running.  Please run jb start with the --custom flag..")
             click.get_current_context().abort()
@@ -403,7 +403,7 @@ def activate_ssh(environ):
     "--core",
     default=False,
     is_flag=True,
-    help="Use local fruition checkout with this image "
+    help="Use local fruition checkout with this image"
          "(core and hstm-core environments do this automatically)",
 )
 @click.option(
@@ -480,6 +480,7 @@ def start(
         dev_snapshot=dev_snapshot,
         is_custom=is_custom,
         env=env,
+        emulate=emulate
     )
     if is_core:
         if is_custom:
@@ -554,7 +555,7 @@ def start(
     environ = populate_env_with_secrets()
 
     if not noupdate:
-        dockerutil.pull(tag=tag)
+        dockerutil.pull(tag=tag, emulate=emulate)
     if is_hstm:
         activate_hstm()
         print("Activating HSTM")
@@ -804,10 +805,11 @@ def stop(ctx, clean, custom):
     os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
     running = dockerutil.is_running()
+    arch = platform.processor()
     if clean:
-        dockerutil.destroy(custom=custom)
+        dockerutil.destroy(custom=custom, arch=arch)
     elif running[0] or running[1]:
-        dockerutil.halt(custom=custom)
+        dockerutil.halt(custom=custom, arch=arch)
         echo_highlight("Juicebox is no longer running.")
     else:
         echo_highlight("Juicebox is not running")

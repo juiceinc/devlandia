@@ -634,53 +634,61 @@ class TestCli(object):
 
         assert result.exit_code == 0
 
+    @patch("jbcli.cli.jb.platform")
     @patch("jbcli.cli.jb.dockerutil")
-    def test_stop_custom(self, dockerutil_mock, monkeypatch):
+    def test_stop_custom(self, dockerutil_mock, platform_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = [True, False]
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.halt.return_value = None
+        platform_mock.processor.return_value = 'x86_64'
         result = invoke(["stop", "--custom"])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.ensure_home(),
             call.is_running(),
-            call.halt(custom=True),
+            call.halt(arch='x86_64', custom=True),
         ]
 
+    @patch("jbcli.cli.jb.platform")
     @patch("jbcli.cli.jb.dockerutil")
-    def test_stop_selfserve(self, dockerutil_mock, monkeypatch):
+    def test_stop_selfserve(self, dockerutil_mock, platform_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = [False, True]
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.halt.return_value = None
+        platform_mock.processor.return_value = 'x86_64'
         result = invoke(["stop"])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.ensure_home(),
             call.is_running(),
-            call.halt(custom=False),
+            call.halt(arch='x86_64', custom=False),
         ]
 
+    @patch("jbcli.cli.jb.platform")
     @patch("jbcli.cli.jb.dockerutil")
-    def test_stop_clean_custom(self, dockerutil_mock, monkeypatch):
+    def test_stop_clean_custom(self, dockerutil_mock, platform_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = [True, False]
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.destroy.return_value = None
+        platform_mock.processor.return_value = 'x86_64'
         result = invoke(["stop", "--clean", "--custom"])
         assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(custom=True)]
+        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(arch='x86_64', custom=True)]
 
+    @patch("jbcli.cli.jb.platform")
     @patch("jbcli.cli.jb.dockerutil")
-    def test_stop_clean_selfserve(self, dockerutil_mock, monkeypatch):
+    def test_stop_clean_selfserve(self, dockerutil_mock, platform_mock, monkeypatch):
         monkeypatch.chdir(DEVLANDIA_DIR)
         dockerutil_mock.is_running.return_value = [False, True]
         dockerutil_mock.ensure_home.return_value = True
         dockerutil_mock.destroy.return_value = None
+        platform_mock.processor.return_value = 'x86_64'
         result = invoke(["stop", "--clean"])
         assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(custom=False)]
+        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(arch='x86_64', custom=False)]
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.os")
@@ -698,7 +706,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(env=ANY, ganesha=False, custom=False, arch='arm', emulate=False),
         ]
         assert m.mock_calls == [
@@ -742,7 +750,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(arch='x86_64', env=ANY, ganesha=False, custom=False, emulate=False),
         ]
         assert m.mock_calls == [
@@ -768,12 +776,39 @@ class TestCli(object):
             call().__exit__(None, None, None)
         ]
 
-    # @patch("jbcli.cli.jb.dockerutil")
-    # @patch("jbcli.cli.jb.os")
-    # @patch("jbcli.cli.jb.auth")
-    # @patch('jbcli.cli.jb.prompt')
-    # @patch('jbcli.cli.jb.determine_arch')
-    # def test_start_arm(self, arch_mock, prompt_mock, auth_mock, os_mock, dockerutil_mock):
+    @patch("jbcli.cli.jb.dockerutil")
+    @patch("jbcli.cli.jb.os")
+    @patch("jbcli.cli.jb.auth")
+    @patch('jbcli.cli.jb.prompt')
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_start_arm(self, arch_mock, prompt_mock, auth_mock, os_mock, dockerutil_mock):
+        arch_mock.return_value = 'arm'
+        dockerutil_mock.is_running.return_value = [False, False]
+        prompt_mock.isatty.return_value = 'istty'
+        result = invoke(["start", "develop-py3", "--noupgrade"])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.pull(emulate=False, tag="develop-py3"),
+            call.up(arch='arm', env=ANY, ganesha=False, custom=False, emulate=False),
+        ]
+
+    @patch("jbcli.cli.jb.dockerutil")
+    @patch("jbcli.cli.jb.os")
+    @patch("jbcli.cli.jb.auth")
+    @patch('jbcli.cli.jb.prompt')
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_start_arm_emulate(self, arch_mock, prompt_mock, auth_mock, os_mock, dockerutil_mock):
+        arch_mock.return_value = 'arm'
+        dockerutil_mock.is_running.return_value = [False, False]
+        prompt_mock.isatty.return_value = 'istty'
+        result = invoke(["start", "master-py3", "--noupgrade", "--emulate"])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [
+            call.is_running(),
+            call.pull(emulate=True, tag="master-py3"),
+            call.up(arch='arm', env=ANY, ganesha=False, custom=False, emulate=True),
+        ]
 
     @patch("jbcli.cli.jb.determine_arch")
     @patch("jbcli.cli.jb.dockerutil")
@@ -793,7 +828,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(env=ANY, ganesha=False, custom=True, arch='x86_64', emulate=False),
         ]
         assert m.mock_calls == [
@@ -835,7 +870,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="potato"),
+            call.pull(emulate=False, tag="potato"),
             call.up(arch='arm', env=ANY, ganesha=False, custom=False, emulate=False),
         ]
         assert m.mock_calls == [
@@ -876,7 +911,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="master-py3"),
+            call.pull(emulate=False, tag="master-py3"),
             call.up(arch='arm', env=ANY, ganesha=False, custom=False, emulate=False),
         ]
         assert m.mock_calls == [
@@ -917,7 +952,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="master-py3"),
+            call.pull(emulate=False, tag="master-py3"),
             call.up(arch='x86_64', env=ANY, ganesha=False, custom=False, emulate=False),
         ]
         assert m.mock_calls == [
@@ -1096,7 +1131,7 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(arch="x86_64", env=ANY, ganesha=False, custom=False, emulate=False),
         ]
 
@@ -1148,7 +1183,7 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(arch="x86_64", env=ANY, ganesha=False, custom=False, emulate=False),
         ]
 
@@ -1195,7 +1230,7 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(env=ANY, ganesha=False, custom=True, arch='arm', emulate=False),
         ]
 
@@ -1247,7 +1282,7 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(arch="arm", env=ANY, ganesha=False, custom=False, emulate=False),
         ]
 
@@ -1266,7 +1301,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate= False, tag="develop-py3"),
             call.up(arch="x86_64", env=ANY, ganesha=False, custom=False, emulate=False),
         ]
 
@@ -1398,7 +1433,7 @@ class TestCli(object):
         ]
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(env=ANY, ganesha=False, custom=True, arch='x86_64', emulate=False),
         ]
         assert m.mock_calls == [
@@ -1439,7 +1474,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(arch="arm", env=ANY, ganesha=False, custom=False, emulate=False),
         ]
         assert m.mock_calls == [
@@ -1480,7 +1515,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(env=ANY, ganesha=False, custom=False, arch='x86_64', emulate=False),
         ]
         assert m.mock_calls == [
@@ -1520,7 +1555,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(arch="arm", env=ANY, ganesha=False, custom=False, emulate=False),
         ]
         assert m.mock_calls == [
@@ -1560,7 +1595,7 @@ class TestCli(object):
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
-            call.pull(tag="develop-py3"),
+            call.pull(emulate=False, tag="develop-py3"),
             call.up(env=ANY, ganesha=False, custom=True, arch="x86_64", emulate=False),
         ]
         assert m.mock_calls == [

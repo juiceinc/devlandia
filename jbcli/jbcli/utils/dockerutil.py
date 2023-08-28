@@ -5,6 +5,7 @@ from __future__ import print_function
 import platform
 from glob import glob
 import json
+import structlog
 import time
 import types
 from operator import itemgetter
@@ -27,7 +28,7 @@ from .reload import refresh_browser
 from .format import echo_warning, echo_success, human_readable_timediff
 
 client = docker.from_env()
-
+toplog = structlog.get_logger()
 
 class WatchHandler(FileSystemEventHandler):
     def __init__(self, should_reload=False, custom=False):
@@ -82,17 +83,23 @@ def _intersperse(el, l):
 def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emulate=False):
     # Since our docker-compose.selfserve.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
-    compose_files = ["common-services.yml"]
-    if arch in ["arm", "i386"]:
-        if not emulate:
-            compose_files.append("docker-compose.arm.yml")
-        else:
-            compose_files.append("docker-compose.selfserve.yml")
-    elif arch == "x86_64":
+    log = toplog.bind(function="docker-compose")
+    log.info(f"Running docker-compose with {args}")
+    compose_files = []
+    if arch == "x86_64":
+        compose_files = ["common-services.yml"]
         if custom:
             compose_files.append("docker-compose.custom.yml")
         else:
             compose_files.append("docker-compose.selfserve.yml")
+    elif arch in ["arm", "i386"]:
+        compose_files = ["common-services.arm.yml"]
+        if emulate:
+            compose_files.append("docker-compose.selfserve.yml")
+        else:
+            compose_files.append("docker-compose.arm.yml")
+        if custom and 'docker-compose.selfserve.yml' not in compose_files:
+            compose_files.append("docker-compose.arm.custom.yml")
 
     compose_files.extend(glob("docker-compose-*.yml"))
     if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
@@ -100,7 +107,7 @@ def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emula
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
     file_args = _intersperse("-f", compose_files)
-    print(f"Running docker-compose with {file_args} files")
+    log.info(f"Running docker-compose with {file_args} files")
     env_name = os.path.basename(os.path.abspath("."))
     cmd = ["docker-compose", "--project-directory", ".", "--project-name", env_name]
     return check_call(cmd + file_args + args, env=env)
@@ -204,26 +211,35 @@ def run(command, env):
             elif output is not None:
                 print(output)
 
-def parse_dc_file(tag):
+def parse_dc_file(tag, emulate=False, custom=False):
     """Parse the docker-compose.selfserve.yml file to build a full path for image
     based on current environment and tag.
 
+    :param emulate: boolean to indicate if we want to download an x86 image even if we're on an arm prcocessor
     :param tag: The tag of the image we want to pull down
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
+    log = toplog.bind(function="parse_dc_file")
     pull_file = None
-    if platform.processor() == "x86_64":
+
+    processor = platform.processor()
+    log.info(f"{processor} architecture detected.")
+    if processor == "x86_64":
         if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
             return
         else:
             pull_file = "docker-compose.selfserve.yml"
-    elif platform.processor() == "arm":
+    elif processor == "arm":
         if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
             return
+        if emulate:
+            pull_file = "docker-compose.selfserve.yml"
+        if custom:
+            pull_file = "docker-compose.arm.custom.yml"
         else:
             pull_file = "docker-compose.arm.yml"
-    elif platform.processor() == "i386":
+    elif processor == "i386":
         check_call(["/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
         if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
             return
@@ -233,33 +249,36 @@ def parse_dc_file(tag):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
+    log.info(f"{pull_file} selected")
     with open(pull_file) as dc:
         for line in dc:
             if base_ecr in line:
                 dc_list.append(line.split(":"))
                 for pair in dc_list:
                     pair = [i.strip().strip('"') for i in pair]
-                    if "controlcenter-dev" in pair[1]:
-                        full_path = f"{base_ecr}controlcenter-dev:"
-                    elif "juicebox-dev" in pair[1]:
+                    if "juicebox-dev" in pair[1]:
                         if platform.processor() == "x86_64":
                             full_path = f"{base_ecr}juicebox-devlandia:"
                         elif platform.processor() == "arm":
-                            full_path = f"{base_ecr}juicebox-devlandia-arm:"
+                            if emulate:
+                                full_path = f"{base_ecr}juicebox-devlandia:"
+                            else:
+                                full_path = f"{base_ecr}juicebox-devlandia-arm:"
                         elif platform.processor() == "i386":
                             full_path = f"{base_ecr}juicebox-devlandia-arm:"
 
                     return full_path + (tag if tag is not None else pair[2])
 
 
-def pull(tag):
+def pull(tag, emulate=False):
     """Pulls down latest image of the tag that's passed
 
+    :param emulate: flag for changing behavior on arm processors
     :param tag: Tag of image to download from the current environment
     """
     if ensure_home() is not True:
         return
-    full_path = parse_dc_file(tag=tag)
+    full_path = parse_dc_file(tag=tag, emulate=emulate)
     abs_path = os.path.abspath(os.getcwd())
     os.chdir("../..")
     docker_login = check_output(

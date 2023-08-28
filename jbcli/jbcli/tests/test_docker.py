@@ -30,7 +30,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', "devlandia",
-                  '-f', 'common-services.yml', '-f', 'docker-compose.arm.yml', 'up'], env=None)
+                  '-f', 'common-services.arm.yml', '-f', 'docker-compose.arm.yml', 'up'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -52,7 +52,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'common-services.yml', '-f', 'docker-compose.arm.yml', 'down'], env=None)
+                  '-f', 'common-services.arm.yml', '-f', 'docker-compose.arm.yml', 'down'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -74,7 +74,7 @@ class TestDocker:
         assert check_mock.mock_calls == [
             call(['docker-compose',
                   '--project-directory', '.', '--project-name', 'devlandia',
-                  '-f', 'common-services.yml', '-f', 'docker-compose.arm.yml', 'stop'], env=None)
+                  '-f', 'common-services.arm.yml', '-f', 'docker-compose.arm.yml', 'stop'], env=None)
         ]
 
     @patch('jbcli.utils.dockerutil.check_call')
@@ -160,7 +160,7 @@ class TestDocker:
                 'docker-compose',
                 '--project-directory', '.',
                 '--project-name', 'devlandia',
-                '-f', 'common-services.yml',
+                '-f', 'common-services.arm.yml',
                 '-f', 'docker-compose.arm.yml',
                 '-f', 'docker-compose-coolio.yml',
                 '-f', 'docker-compose-2pac.yml',
@@ -363,8 +363,7 @@ class TestDocker:
 
         assert check_mock.mock_calls == [
             call([b"do", b"a", b"thing!"]),
-            call(['docker', 'pull',
-                  '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:latest'])
+            call(['docker', 'pull', '423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:latest'])
         ]
 
     @patch('jbcli.utils.dockerutil.check_output')

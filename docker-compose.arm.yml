@@ -1,4 +1,4 @@
-version: '3.9'
+version: '3.3'
 services:
   juicebox:
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:${TAG}"
@@ -15,7 +15,7 @@ services:
       - ./fruition:/code
       - ./recipe:/code/recipe
     ports:
-      - "${DEVLANDIA_PORT}:8000"
+      - "8000:8000"
       - "8888:8888"
       - "9001:9001"
       - "2222:22"
@@ -66,21 +66,4 @@ services:
       - JB_HSTM
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
-    restart: on-failure:10
-  postgres:
-    environment:
-      - POSTGRES_USER=juicebox
-      - POSTGRES_PASSWORD=juicebox
-      - POSTGRES_DB=juicebox
-    image: "postgres:12.4-alpine"
-  redis:
-    image: "redis:4.0.14"
-  snapshot:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot-arm:prod"
-    volumes:
-      - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
-    environment:
-      - JB_DEBUG=true
-    ports:
-      - "8080:8080"
     restart: on-failure:10

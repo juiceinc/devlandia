@@ -1,9 +1,9 @@
-version: '3.9'
+version: '3.3'
 services:
   juicebox_selfserve:
     networks:
       - juice_net
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:OPS-2432-prod-separation-py3"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
                 ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements.txt;
                 ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements_dev' && /venv/bin/pip install -q -U -r requirements_dev.txt;
