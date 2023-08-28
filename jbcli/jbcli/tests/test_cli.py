@@ -694,20 +694,22 @@ class TestCli(object):
     @patch("jbcli.cli.jb.os")
     @patch("jbcli.cli.jb.auth")
     @patch('jbcli.cli.jb.prompt')
-    def test_start_selfserve(self, prompt_mock, auth_mock, os_mock, dockerutil_mock):
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_start_selfserve(self, arch_mock, prompt_mock, auth_mock, os_mock, dockerutil_mock):
         """Starting brings docker-compose up in the environment of the cwd."""
         dockerutil_mock.is_running.return_value = [False, False]
         dockerutil_mock.ensure_home.return_value = True
         os_mock.path.isdir.return_value = True
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
         prompt_mock.isatty.return_value = 'istty'
+        arch_mock.return_value = 'x86_64'
         with patch("builtins.open", mock_open()) as m:
             result = invoke(["start", "develop-py3", "--noupgrade"])
         assert result.exit_code == 0
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(emulate=False, tag="develop-py3"),
-            call.up(env=ANY, ganesha=False, custom=False, arch='arm', emulate=False),
+            call.up(env=ANY, ganesha=False, custom=False, arch='x86_64', emulate=False),
         ]
         assert m.mock_calls == [
             call(expanduser('~/.config/juicebox/devlandia.toml')),
@@ -1191,7 +1193,8 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.auth")
     @patch('jbcli.cli.jb.prompt')
-    def test_start_core_with_fruitiondir_custom(self, prompt_mock, auth_mock, dockerutil_mock, os_mock):
+    @patch('jbcli.cli.jb.determine_arch')
+    def test_start_core_with_fruitiondir_custom(self, arch_mock, prompt_mock, auth_mock, dockerutil_mock, os_mock):
         """Starting core requires a fruition directory."""
         dockerutil_mock.is_running.return_value = [False, False]
         dockerutil_mock.ensure_home.return_value = True
@@ -1201,6 +1204,7 @@ class TestCli(object):
         os_mock.path.exists.return_value = True
         os_mock.symlink.return_value = False
         prompt_mock.isatty.return_value = 'istty'
+        arch_mock.return_value = 'x86_64'
 
         auth_mock.deduped_mfas = ["arn:aws:iam::423681189101:mfa/TestMFA"]
         with patch("builtins.open", mock_open()) as m:
@@ -1231,7 +1235,7 @@ class TestCli(object):
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
             call.pull(emulate=False, tag="develop-py3"),
-            call.up(env=ANY, ganesha=False, custom=True, arch='arm', emulate=False),
+            call.up(env=ANY, ganesha=False, custom=True, arch='x86_64', emulate=False),
         ]
 
     @patch("jbcli.cli.jb.os")
