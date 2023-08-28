@@ -359,7 +359,7 @@ def activate_ssh(environ):
     content = {
         "version": "3.2",
         "services": {
-            "juicebox": {
+            "juicebox_custom": {
                 "extra_hosts": [
                     f"{url.hostname}:{host_addr}" for (url, _, _) in redshifts.values()
                 ],
@@ -557,8 +557,13 @@ def start(
     if not noupdate:
         dockerutil.pull(tag=tag, emulate=emulate)
     if is_hstm:
-        activate_hstm()
-        print("Activating HSTM")
+        if custom:
+            activate_hstm()
+            print("Activating HSTM")
+        else:
+            print("Can't activate hstm on selfserve.")
+            sys.exit(1)
+
     cleanup_ssh()
     if ssh:
         environ.update(activate_ssh(environ))
@@ -794,22 +799,24 @@ def activate_snapshot():
     is_flag=True,
 )
 @click.option(
-    "--custom",
-    default=False,
-    help="Select custom docker image to stop",
-    is_flag=True,
+    "--custom", default=False, help="Select custom docker image to stop", is_flag=True
 )
 @click.pass_context
 def stop(ctx, clean, custom):
     """Stop a running juicebox in this environment"""
     os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
-    running = dockerutil.is_running()
+    running_custom, running_selfserve = dockerutil.is_running()
     arch = platform.processor()
     if clean:
         dockerutil.destroy(custom=custom, arch=arch)
-    elif running[0] or running[1]:
-        dockerutil.halt(custom=custom, arch=arch)
+    elif running_custom or running_selfserve:
+        # Stop both custom and selfserve if they are running
+        # because we're stopping common services
+        if running_selfserve:
+            dockerutil.halt(custom=False, arch=arch)
+        if running_custom:
+            dockerutil.halt(custom=True, arch=arch)
         echo_highlight("Juicebox is no longer running.")
     else:
         echo_highlight("Juicebox is not running")
