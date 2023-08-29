@@ -357,7 +357,7 @@ def activate_ssh(environ):
     compose_fn = os.path.join(DEVLANDIA_DIR, "docker-compose-ssh.yml")
     host_addr = get_host_ip()
     content = {
-        "version": "3.2",
+        "version": "3.3",
         "services": {
             "juicebox_custom": {
                 "extra_hosts": [
