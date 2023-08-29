@@ -76,7 +76,7 @@ def load_app(app, refresh_token=False, custom=False):
             try:
                 response = post(url, headers=headers)
             except ConnectionError:
-                echo_warning('Can not connect, retrying')
+                echo_warning(f'Can not connect, retrying. {url}')
                 # Retry with backoffs of 1,2,4,8 seconds
                 time.sleep(2 ** retry_cnt)
                 retry_cnt += 1

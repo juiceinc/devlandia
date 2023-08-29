@@ -64,7 +64,7 @@ class WatchHandler(FileSystemEventHandler):
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
                 echo_warning(f"{app} is loading...")
-                if not load_app(app):
+                if not load_app(app, custom=self.custom):
                     run(f"/venv/bin/python manage.py loadjuiceboxapp {app}", env=env)
                 echo_success(f"{app} was added successfully.")
                 if self.should_reload:
