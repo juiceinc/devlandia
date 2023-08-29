@@ -561,7 +561,7 @@ def start(
             activate_hstm()
             print("Activating HSTM")
         else:
-            print("Can't activate hstm on selfserve.")
+            print("Can't activate hstm on selfserve, add the --custom flag")
             sys.exit(1)
 
     cleanup_ssh()
