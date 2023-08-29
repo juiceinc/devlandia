@@ -94,7 +94,7 @@ def load_app(app, refresh_token=False, custom=False):
             return True
         elif response.status_code == 401:
             echo_warning('Token is expired')
-            return load_app(app, refresh_token=True)
+            return load_app(app, refresh_token=True, custom=custom)
         else:
             result = response.json()
             echo_warning(f"Loading app status code was {response.status_code}")
