@@ -299,7 +299,7 @@ def get_host_ip():
         return out.splitlines()[0].split()[0].decode("ascii")
 
 
-def activate_ssh(environ):
+def activate_ssh(environ, custom=False):
     """
     Start the SSH tunnels, and manipulate the environment variables so that
     they are pointing at the right ports.
@@ -356,10 +356,11 @@ def activate_ssh(environ):
 
     compose_fn = os.path.join(DEVLANDIA_DIR, "docker-compose-ssh.yml")
     host_addr = get_host_ip()
+    service = 'juicebox_custom' if custom else 'juicebox'
     content = {
         "version": "3.3",
         "services": {
-            "juicebox_custom": {
+            f"{service}": {
                 "extra_hosts": [
                     f"{url.hostname}:{host_addr}" for (url, _, _) in redshifts.values()
                 ],
@@ -566,7 +567,7 @@ def start(
 
     cleanup_ssh()
     if ssh:
-        environ.update(activate_ssh(environ))
+        environ.update(activate_ssh(environ, custom=is_custom))
     dockerutil.up(env=environ, ganesha=ganesha, arch=arch, custom=is_custom, emulate=emulate)
 
 
