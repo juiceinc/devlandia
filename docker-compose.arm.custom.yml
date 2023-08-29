@@ -14,7 +14,7 @@ services:
     volumes:
       - ./apps:/code/apps
       - ~/.config/juicebox:/root/.config/juicebox:ro
-      - ./fruition:/code
+      - ./fruition_custom:/code
       - ./recipe:/code/recipe
     ports:
       - "8001:8000"
