@@ -1,6 +1,8 @@
 version: '3.3'
 services:
-  juicebox:
+  juicebox_custom:
+    networks:
+      - juice_net
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
       ! sha1sum --check /code/requirements_checksum.txt && echo 'Installing requirements' && /venv/bin/pip install -q -U -r requirements-arm.txt;
