@@ -89,13 +89,13 @@ def docker_compose(
     log = toplog.bind(function="docker-compose")
     log.info(f"Running docker-compose with {args}")
     compose_files = []
-    if arch == "x86_64":
+    if arch in ["x86_64", "i386"]:
         compose_files = ["common-services.yml"]
         if custom:
             compose_files.append("docker-compose.custom.yml")
         else:
             compose_files.append("docker-compose.selfserve.yml")
-    elif arch in ["arm", "i386"]:
+    elif arch in ["arm"]:
         compose_files = ["common-services.arm.yml", "docker-compose.arm.yml"]
         if custom:
             compose_files.remove("docker-compose.arm.yml")
