@@ -488,7 +488,7 @@ def start(
             if os.path.exists("fruition_custom"):
                 core_path = "fruition_custom"
                 core_end = "code"
-                workflow = "prod-custom"
+                workflow = "core"
             else:
                 print(
                     "Could not find Local Fruition Custom Checkout, please check that it is symlinked to the top level of "
