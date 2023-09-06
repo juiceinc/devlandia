@@ -1,6 +1,6 @@
 version: '3.3'
 services:
-  juicebox:
+  juicebox_selfserve:
     networks:
       - juice_net
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:${TAG}"
