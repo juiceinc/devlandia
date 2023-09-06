@@ -97,12 +97,10 @@ def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emula
         if custom:
             compose_files.remove("docker-compose.arm.yml")
             compose_files.append("docker-compose.arm.custom.yml")
-        # if emulate and not custom:
-        #     compose_files.remove("docker-compose.arm.yml")
+        if emulate and not custom:
+            compose_files.remove("docker-compose.arm.yml")
+            compose_files.append("docker-compose.selfserve.yml")
 
-        # if emulate:
-        #     compose_files.append("docker-compose.selfserve.yml")
-        # else:
 
     compose_files.extend(glob("docker-compose-*.yml"))
     if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
