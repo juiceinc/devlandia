@@ -11,36 +11,43 @@ from subprocess import check_output
 browser_sync_path = '../../node_modules/.bin/browser-sync'
 
 
-def create_browser_instance():
+def create_browser_instance(custom=False):
     """Create proxy browser instance for hot reloading
     """
-    cmd = [browser_sync_path, 'start', '--proxy=localhost:8000']
+    if custom:
+        cmd = [browser_sync_path, 'start', '--proxy=localhost:8001']
+    else:
+        cmd = [browser_sync_path, 'start', '--proxy=localhost:8000']
     check_output(cmd)
 
 
-def restart_browser():
+def restart_browser(custom=False):
     click.echo('Refreshing browser...')
     cmd = [browser_sync_path, 'reload']
     check_output(cmd)
 
 
-def refresh_browser(timeout=None):
+def refresh_browser(timeout=None, custom=False):
     """Refreshes browser-sync browser instance if
     Django server is ready
 
+    :param custom:
     :param timeout: Optional timeout duration before checking
     server status
     """    
     if timeout is None:
-        restart_browser()
+        restart_browser(custom=custom)
         return
 
     else:
         echo_highlight('Checking server status...')
-        for i in range(5):
+        for _ in range(5):
             time.sleep(timeout)
             try:
-                response = get('http://localhost:8000/health_check')
+                if custom:
+                    response = get('http://localhost:8001/health_check')
+                else:
+                    response = get('http://localhost:8000/health_check')
             except ConnectionError:
                 echo_highlight('Still checking...')
             else:

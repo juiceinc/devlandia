@@ -1,0 +1,32 @@
+version: '3.3'
+services:
+  postgres:
+    environment:
+      - POSTGRES_PASSWORD=juicebox
+      - POSTGRES_MULTIPLE_DATABASES="juicebox","juicebox_custom"
+    networks:
+      - juice_net
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres
+  redis:
+    image: "redis:5.0.6"
+    ports:
+      - "6379:6379"
+    networks:
+      - juice_net
+  snapshot:
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:develop"
+    volumes:
+      - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
+    environment:
+      - JB_DEBUG=true
+    ports:
+      - "8080:8080"
+    networks:
+      - juice_net
+    restart: on-failure:10
+
+networks:
+  juice_net:
+    driver: bridge

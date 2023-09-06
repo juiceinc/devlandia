@@ -2,8 +2,10 @@
 """
 from __future__ import print_function
 
+import platform
 from glob import glob
 import json
+import structlog
 import time
 import types
 from operator import itemgetter
@@ -26,17 +28,23 @@ from .reload import refresh_browser
 from .format import echo_warning, echo_success, human_readable_timediff
 
 client = docker.from_env()
-
+toplog = structlog.get_logger()
 
 class WatchHandler(FileSystemEventHandler):
-    def __init__(self, should_reload=False):
+    def __init__(self, should_reload=False, custom=False):
         self.should_reload = should_reload
+        self.custom = custom
 
-    def on_modified(self, event):
+    def on_modified(self, event, env=None):
         if sys.platform == "win32":
             path = re.split(r"[\\/]", event.src_path)
         else:
             path = event.src_path.split("/")
+
+        if path[0] != 'apps':
+            while path and path[0] != 'devlandia':
+                path.pop(0)
+            path.pop(0)
 
         # Path looks like
         # ['apps', 'privileging', 'stacks', 'overview', 'templates.html']
@@ -52,17 +60,18 @@ class WatchHandler(FileSystemEventHandler):
                 # We don't need to reload the app just refresh
                 # the browser after juicebox service restarts
                 if self.should_reload:
-                    refresh_browser(5)
+                    refresh_browser(5, custom=self.custom)
             else:
                 # Try to load app via api, fall back to calling docker.exec_run
-                if not load_app(app):
-                    run(f"/venv/bin/python manage.py loadjuiceboxapp {app}")
-                echo_success("{} was added successfully.".format(app))
+                echo_warning(f"{app} is loading...")
+                if not load_app(app, custom=self.custom):
+                    run(f"/venv/bin/python manage.py loadjuiceboxapp {app}", env=env)
+                echo_success(f"{app} was added successfully.")
                 if self.should_reload:
-                    refresh_browser()
+                    refresh_browser(custom=self.custom)
 
         else:
-            click.echo("Change to {} ignored".format(event.src_path))
+            click.echo(f"Change to {event.src_path} ignored")
 
         click.echo("Waiting for changes...")
 
@@ -71,23 +80,44 @@ def _intersperse(el, l):
     return [y for x in zip([el] * len(l), l) for y in x]
 
 
-def docker_compose(args, env=None, ganesha=False):
-    # Since our docker-compose.yml file is the first one we pass,
+def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emulate=False):
+    # Since our docker-compose.selfserve.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
-    compose_files = ["docker-compose.yml"]
+    log = toplog.bind(function="docker-compose")
+    log.info(f"Running docker-compose with {args}")
+    compose_files = []
+    if arch == "x86_64":
+        compose_files = ["common-services.yml"]
+        if custom:
+            compose_files.append("docker-compose.custom.yml")
+        else:
+            compose_files.append("docker-compose.selfserve.yml")
+    elif arch in ["arm", "i386"]:
+        compose_files = ["common-services.arm.yml", "docker-compose.arm.yml"]
+        if custom:
+            compose_files.remove("docker-compose.arm.yml")
+            compose_files.append("docker-compose.arm.custom.yml")
+        if emulate and not custom:
+            compose_files.remove("docker-compose.arm.yml")
+            compose_files.append("docker-compose.selfserve.yml")
+
+
     compose_files.extend(glob("docker-compose-*.yml"))
+    if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
+        compose_files.remove("docker-compose-ssh.yml")
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
     file_args = _intersperse("-f", compose_files)
+    log.info(f"Running docker-compose with {file_args} files")
     env_name = os.path.basename(os.path.abspath("."))
     cmd = ["docker-compose", "--project-directory", ".", "--project-name", env_name]
     return check_call(cmd + file_args + args, env=env)
 
 
-def up(env=None, ganesha=False):
+def up(env=None, ganesha=False, arch=None, custom=False, emulate=False):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml"""
-    docker_compose(["up"], env=env, ganesha=ganesha)
+    docker_compose(["up"], env=env, ganesha=ganesha, arch=arch, custom=custom, emulate=emulate)
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -95,26 +125,32 @@ def run_jb(cmd, env=None, service="juicebox"):
     docker_compose(["run", service] + cmd, env=env, ganesha=is_ganesha)
 
 
-def destroy():
-    """Removes all containers and networks defined in docker-compose.yml"""
-    docker_compose(["down"])
+def destroy(arch=None, custom=False):
+    """Removes all containers and networks defined in docker-compose.selfserve.yml"""
+    docker_compose(["down"], arch=arch, custom=custom)
 
 
-def halt():
+def halt(arch=None, custom=False):
     """Halts all containers defined in docker-compose file."""
-    docker_compose(["stop"])
+    docker_compose(["stop"], custom=custom, arch=arch)
 
 
-def is_running(service="juicebox"):
+def is_running():
     """Checks whether or not a Juicebox container is currently running.
 
     :rtype: ``bool``
     """
+    custom, selfserve = False, False
     click.echo("Checking to see if Juicebox is running...")
     containers = client.containers.list()
+    print(containers)
     for container in containers:
-        if service in container.name:
-            return container
+        print(f"Checking images: {container.name}")
+        if "juicebox_custom" in container.name:
+            custom = True
+        if "juicebox_selfserve" in container.name:
+            selfserve = True
+    return [custom, selfserve]
 
 
 def ensure_root():
@@ -125,7 +161,7 @@ def ensure_root():
     if not os.path.isdir("jbcli"):
         # We're not in the devlandia root
         echo_warning(
-            "Please run this command from inside the Devlandia root " "directory."
+            "Please run this command from inside the Devlandia root directory."
         )
         click.get_current_context().abort()
     return True
@@ -158,65 +194,92 @@ def ensure_home():
 
 
 def check_home():
-    if os.path.isfile("docker-compose.yml") and os.path.isdir("apps"):
+    if os.path.isfile("docker-compose.selfserve.yml") and os.path.isdir("apps"):
         return os.path.dirname(os.path.abspath(os.path.curdir))
 
 
-def run(command):
+def run(command, env):
     """Runs a command directly in the docker container."""
     print("running command", command)
-    containers = client.containers.list()
-    for container in containers:
-        # changed here to allow support for hstm environments too, just gets
-        #  any juicebox container
-        if "juicebox" in container.name:
-            juicebox = client.containers.get(container.name)
-            command_run = juicebox.exec_run(command, stream=True)
-            for output in command_run:
-                if isinstance(output, types.GeneratorType):
-                    for o in output:
-                        if o is not None:
-                            print(o)
-                elif output is not None:
-                    print(output)
+    if env is not None:
+        juicebox = client.containers.get(f"devlandia_juicebox_{env}_1")
+        command_run = juicebox.exec_run(command, stream=True)
+        for output in command_run:
+            if isinstance(output, types.GeneratorType):
+                for o in output:
+                    if o is not None:
+                        print(o)
+            elif output is not None:
+                print(output)
 
-
-def parse_dc_file(tag):
-    """Parse the docker-compose.yml file to build a full path for image
+def parse_dc_file(tag, emulate=False, custom=False):
+    """Parse the docker-compose.selfserve.yml file to build a full path for image
     based on current environment and tag.
 
+    :param emulate: boolean to indicate if we want to download an x86 image even if we're on an arm prcocessor
     :param tag: The tag of the image we want to pull down
     :return: Full path to ECR image with tag.
     :rtype: ``string``
     """
-    if not os.path.isfile(f"{os.getcwd()}/docker-compose.yml"):
+    log = toplog.bind(function="parse_dc_file")
+    pull_file = None
+
+    processor = platform.processor()
+    log.info(f"{processor} architecture detected.")
+    if processor == "x86_64":
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
+            return
+        else:
+            pull_file = "docker-compose.selfserve.yml"
+    elif processor == "arm":
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        if emulate:
+            pull_file = "docker-compose.selfserve.yml"
+        if custom:
+            pull_file = "docker-compose.arm.custom.yml"
+        else:
+            pull_file = "docker-compose.arm.yml"
+    elif processor == "i386":
+        check_call(["/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
+        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+            return
+        else:
+            pull_file = "docker-compose.arm.yml"
+    if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
     dc_list = []
-    with open("docker-compose.yml") as dc:
+    log.info(f"{pull_file} selected")
+    with open(pull_file) as dc:
         for line in dc:
             if base_ecr in line:
                 dc_list.append(line.split(":"))
                 for pair in dc_list:
                     pair = [i.strip().strip('"') for i in pair]
+                    if "juicebox-dev" in pair[1]:
+                        if platform.processor() == "x86_64":
+                            full_path = f"{base_ecr}juicebox-devlandia:"
+                        elif platform.processor() == "arm":
+                            if emulate:
+                                full_path = f"{base_ecr}juicebox-devlandia:"
+                            else:
+                                full_path = f"{base_ecr}juicebox-devlandia-arm:"
+                        elif platform.processor() == "i386":
+                            full_path = f"{base_ecr}juicebox-devlandia-arm:"
 
-                    if "controlcenter-dev" in pair[1]:
-                        full_path = f"{base_ecr}controlcenter-dev:"
-                    elif "juicebox-dev" in pair[1]:
-                        full_path = f"{base_ecr}juicebox-devlandia:"
-
-                    full_path = full_path + (tag if tag is not None else pair[2])
-                    return full_path
+                    return full_path + (tag if tag is not None else pair[2])
 
 
-def pull(tag):
+def pull(tag, emulate=False):
     """Pulls down latest image of the tag that's passed
 
+    :param emulate: flag for changing behavior on arm processors
     :param tag: Tag of image to download from the current environment
     """
     if ensure_home() is not True:
         return
-    full_path = parse_dc_file(tag=tag)
+    full_path = parse_dc_file(tag=tag, emulate=emulate)
     abs_path = os.path.abspath(os.getcwd())
     os.chdir("../..")
     docker_login = check_output(
@@ -264,7 +327,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
                 meets_semantic_criteria = (semantic and is_semantic_tag) or not semantic
                 # Use if showall is true, return all tags, otherwise return just last 30 days
                 meets_time_criteria = showall or (
-                    pushed >= now - datetime.timedelta(days=30)
+                        pushed >= now - datetime.timedelta(days=30)
                 )
 
                 if meets_semantic_criteria and meets_time_criteria:
@@ -313,9 +376,9 @@ def set_tag(env, tag):
     """Set an environment to use a tagged image"""
     ensure_root()
 
-    os.chdir("./environments/{}".format(env))
+    os.chdir(f"./environments/{env}")
     changed = False
-    with open("./docker-compose.yml", "rt") as dc:
+    with open("./docker-compose.selfserve.yml", "rt") as dc:
         with open("out.txt", "wt") as out:
             for line in dc:
                 if "juicebox-devlandia:" in line:
@@ -326,11 +389,11 @@ def set_tag(env, tag):
                 else:
                     out.write(line)
     if changed:
-        shutil.move("./out.txt", "./docker-compose.yml")
+        shutil.move("./out.txt", "./docker-compose.selfserve.yml")
     else:
         os.remove("./out.txt")
 
-    echo_success("Environment {} is using {}".format(env, tag))
+    echo_success(f"Environment {env} is using {tag}")
     os.chdir("../..")
 
 
@@ -344,33 +407,44 @@ def get_state(container_name):
     return client.containers.get(container_name).status
 
 
-def jb_watch(app="", should_reload=False):
+def jb_watch(app="", should_reload=False, custom=False):
     """Run the Juicebox project watcher"""
-    if is_running() and ensure_home():
-        click.echo("I'm watching you Wazowski...always watching...always.")
-
-        event_handler = WatchHandler(should_reload)
-        observer = Observer()
-
-        observer.schedule(event_handler, path=f"apps/{app}", recursive=True)
-        observer.start()
-        try:
-            while True:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            observer.stop()
-        observer.join()
+    running = is_running()
+    if custom and running[0] and ensure_home():
+        handle_event(should_reload, custom, app)
+    elif not custom and running[1] and ensure_home():
+        handle_event(should_reload, custom, app)
     else:
         echo_warning("Failed to start project watcher.")
         click.get_current_context().abort()
 
 
-def js_watch():
-    if is_running() and ensure_home():
-        run(
-            "./node_modules/.bin/webpack --mode=development --progress --colors --watch"
-        )
+def handle_event(should_reload, custom, app):
+    click.echo("I'm watching you Wazowski...always watching...always.")
 
+    event_handler = WatchHandler(should_reload, custom=custom)
+    observer_setup(event_handler, app, custom)
+
+
+def observer_setup(event_handler, app, custom=False):
+    observer = Observer()
+    directory = "fruition_custom" if custom else "fruition"
+    observer.schedule(event_handler, path=f"apps/{app}", recursive=True)
+    observer.start()
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+
+def js_watch(custom=False):
+    running = is_running()
+    if running[0] and custom and ensure_home():
+        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch", env='custom')
+    elif running[1] and not custom and ensure_home():
+        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch", env='selfserve')
 
 def list_local():
     return check_output(["docker", "image", "list"])

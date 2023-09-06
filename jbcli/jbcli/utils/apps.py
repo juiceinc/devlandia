@@ -42,7 +42,7 @@ def make_github_repo_link(app):
         app)
 
 
-def clone(name, source, dest, init_vcs=True, track_vcs=True):
+def clone(name, source, dest, init_vcs=True, track_vcs=True, custom=False):
     """Create a Juicebox packaged application
 
     :param name: The packaged application name
@@ -96,7 +96,7 @@ def perform_init_vcs(name, app_dir, track_vcs=True):
         check_call(['git', 'init'])
         check_call(['git', 'add', '.'])
         check_call(['git', 'commit', '-m', 'Initial commit'])
-    except CalledProcessError as exc_info:
+    except CalledProcessError:
         click.echo()
         echo_warning('Failed to initialize Git repository.')
         return
@@ -107,7 +107,7 @@ def perform_init_vcs(name, app_dir, track_vcs=True):
             check_call(['git', 'remote', 'add', 'origin', github_repo_url])
             click.echo('Pushing to origin')
             check_call(['git', 'push', '-u', 'origin', 'master'])
-            click.echo('View in a browser at {}'.format(github_repo_link))
+            click.echo(f'View in a browser at {github_repo_link}')
         except CalledProcessError as exc_info:
             LOG.error(str(exc_info))
             click.echo()
@@ -124,7 +124,7 @@ $ git push -u origin master
 
             echo_warning(errmsg)
         try:
-            check_call(['github', '{}'.format(app_dir)])
+            check_call(['github', f'{app_dir}'])
         except (CalledProcessError, OSError) as exc_info:
             LOG.error(str(exc_info))
             click.echo()
@@ -153,7 +153,7 @@ def replace_in_yaml(file_path, replacements):
             for line in old_file:
                 for key in replacements.keys():
                     if key in line:
-                        line = u'{} {}\n'.format(key, replacements[key])
+                        line = f'{key} {replacements[key]}\n'
                 new_file.write(line)
     os.close(handle)
     # Remove original file

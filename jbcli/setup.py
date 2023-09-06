@@ -16,13 +16,11 @@ requirements = [
 # wrapper scripts.
 entry_points = '''[console_scripts]
 jb=jbcli.cli.jb:cli
-jb-admin=jbcli.cli.jb_admin:cli
-jb-manage=jbcli.cli.jb_manage:cli
 '''
 
 setup(
     name='jbcli',
-    version='0.24.0',
+    version='0.25.0',
     description='Juicebox command line',
     author="Casey Wireman",
     author_email='casey.wireman@juiceanalytics.com',

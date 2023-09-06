@@ -29,7 +29,7 @@ def set_creds():
         print(e)
     if len(profile_details) > 1:
         choices = [
-            {"name": k[0] + " - " + k[1], "value": (k[0], k[1])}
+            {"name": f"{k[0]} - {k[1]}", "value": (k[0], k[1])}
             for k in profile_details
         ]
 
@@ -57,14 +57,12 @@ def set_creds():
 
 
 def query_token():
-    if "JB_BW_TOTP_NAME" in os.environ:
-        # Use bitwarden to get the TOTP token.
-        # radix is probably the only person who uses this.
-        bw_item_name = os.environ["JB_BW_TOTP_NAME"]
-        token = check_output(["bw", "get", "totp", bw_item_name])
-    else:
-        token = input("Please enter MFA Code: ")
-    return token
+    if "JB_BW_TOTP_NAME" not in os.environ:
+        return input("Please enter MFA Code: ")
+    # Use bitwarden to get the TOTP token.
+    # radix is probably the only person who uses this.
+    bw_item_name = os.environ["JB_BW_TOTP_NAME"]
+    return check_output(["bw", "get", "totp", bw_item_name])
 
 
 def check_cred_validity(aws_access_key_id, aws_secret_access_key, aws_session_token):

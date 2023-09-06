@@ -1,16 +1,19 @@
-from requests import post, ConnectionError, ConnectTimeout
 import os
 import time
-from .storageutil import stash
-from .format import *
 
-SERVER = "http://localhost:8000"
+from requests import post, ConnectionError
+
+from .format import *
+from .storageutil import stash
+
+SERVER = None
 JB_ADMIN_USER = os.environ.get("JB_ADMIN_USER", "chris@juice.com")
 JB_ADMIN_PASSWORD = os.environ.get("JB_ADMIN_PASSWORD", "cremacuban0!")
 
 
-def get_admin_token(refresh_token=False):
+def get_admin_token(refresh_token=False, custom=False):
     """Get an admin user token. """
+    SERVER = "http://localhost:8001" if custom else "http://localhost:8000"
     if not refresh_token:
         token = stash.get('token')
         if token:
@@ -20,16 +23,14 @@ def get_admin_token(refresh_token=False):
     url = "{SERVER}/api/v1/jb/api-token-auth/".format(SERVER=SERVER)
     payload = {"email": JB_ADMIN_USER, "password": JB_ADMIN_PASSWORD}
     response = post(url, data=payload)
-    if response.status_code in (200, 201):
+    if response.status_code in {200, 201}:
         token = response.json()["token"]
         echo_success("New admin token acquired.")
         stash.put('token', token)
         return token
 
     else:
-        echo_warning(
-            "Could not fetch admin token, status {}".format(response.status_code)
-        )
+        echo_warning(f"Could not fetch admin token, status {response.status_code}")
         return None
 
 
@@ -51,7 +52,7 @@ def echo_result(result):
     for log in logs:
         level = log.pop('level', 'unknown')
         event = log.pop('event', 'unknown')
-        content = u'{:10s}{}\n\n'.format('[' + level + ']', event)
+        content = u'{:10s}{}\n\n'.format(f'[{level}]', event)
         for k in sorted(log.keys()):
             content += u'{:>20}: {}\n'.format(k, log[k])
         if level in ('error', 'warning'):
@@ -60,13 +61,14 @@ def echo_result(result):
             echo_success(content)
 
 
-def load_app(app, refresh_token=False):
+def load_app(app, refresh_token=False, custom=False):
     """Attempt to load an app using jb API. If successful return True. """
-    admin_token = get_admin_token(refresh_token)
+    SERVER = "http://localhost:8001" if custom else "http://localhost:8000"
+    admin_token = get_admin_token(refresh_token, custom=custom)
     if admin_token:
         url = "{SERVER}/api/v1/app/load/{APP}/".format(SERVER=SERVER, APP=app)
         headers = {
-            "Authorization": "JWT {}".format(admin_token),
+            "Authorization": f"JWT {admin_token}",
             "Content-Type": "application-json",
         }
         retry_cnt = 0
@@ -74,7 +76,7 @@ def load_app(app, refresh_token=False):
             try:
                 response = post(url, headers=headers)
             except ConnectionError:
-                echo_warning('Can not connect, retrying')
+                echo_warning(f'Can not connect, retrying. {url}')
                 # Retry with backoffs of 1,2,4,8 seconds
                 time.sleep(2 ** retry_cnt)
                 retry_cnt += 1
@@ -92,7 +94,7 @@ def load_app(app, refresh_token=False):
             return True
         elif response.status_code == 401:
             echo_warning('Token is expired')
-            return load_app(app, refresh_token=True)
+            return load_app(app, refresh_token=True, custom=custom)
         else:
             result = response.json()
             echo_warning(f"Loading app status code was {response.status_code}")
