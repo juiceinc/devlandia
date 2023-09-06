@@ -20,7 +20,7 @@ jb=jbcli.cli.jb:cli
 
 setup(
     name='jbcli',
-    version='0.24.0',
+    version='0.25.0',
     description='Juicebox command line',
     author="Casey Wireman",
     author_email='casey.wireman@juiceanalytics.com',
