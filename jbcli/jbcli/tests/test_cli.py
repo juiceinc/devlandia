@@ -1226,7 +1226,7 @@ class TestCli(object):
             call().__exit__(None, None, None),
             call('.env', 'w'),
             call().__enter__(),
-            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition_custom\nFILE=code\nWORKFLOW=prod-custom\nRECIPE'
+            call().write('DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition_custom\nFILE=code\nWORKFLOW=core\nRECIPE'
                          '=recipereadme\nRECIPEFILE=unused2\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
@@ -1430,7 +1430,7 @@ class TestCli(object):
             call('.env', 'w'),
             call().__enter__(),
             call().write(
-                'DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition_custom\nFILE=code\nWORKFLOW=prod-custom\nRECIPE=recipe\nRECIPEFILE=code/recipe\n'),
+                'DEVLANDIA_PORT=8000\nTAG=develop-py3\nFRUITION=fruition_custom\nFILE=code\nWORKFLOW=core\nRECIPE=recipe\nRECIPEFILE=code/recipe\n'),
             call().write('LOCAL_SNAPSHOT_DIR=./nothing\n'),
             call().write('CONTAINER_SNAPSHOT_DIR=/nothing\n'),
             call().__exit__(None, None, None)
