@@ -136,7 +136,7 @@ def halt(arch=None, custom=False):
 
 
 def is_running():
-    """Checks whether or not a Juicebox container is currently running.
+    """Checks whether a Juicebox container is currently running.
 
     :rtype: ``bool``
     """
@@ -146,10 +146,9 @@ def is_running():
     print(containers)
     for container in containers:
         print(f"Checking images: {container.name}")
-        if "juicebox_custom" in container.name:
-            custom = True
-        if "juicebox_selfserve" in container.name:
-            selfserve = True
+        custom = custom or "devlandia_juicebox_custom_1" == container.name
+        selfserve = custom or "devlandia_juicebox_1" == container.name
+
     return [custom, selfserve]
 
 
