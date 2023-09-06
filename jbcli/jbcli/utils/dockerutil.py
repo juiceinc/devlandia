@@ -30,6 +30,7 @@ from .format import echo_warning, echo_success, human_readable_timediff
 client = docker.from_env()
 toplog = structlog.get_logger()
 
+
 class WatchHandler(FileSystemEventHandler):
     def __init__(self, should_reload=False, custom=False):
         self.should_reload = should_reload
@@ -41,8 +42,8 @@ class WatchHandler(FileSystemEventHandler):
         else:
             path = event.src_path.split("/")
 
-        if path[0] != 'apps':
-            while path and path[0] != 'devlandia':
+        if path[0] != "apps":
+            while path and path[0] != "devlandia":
                 path.pop(0)
             path.pop(0)
 
@@ -80,7 +81,9 @@ def _intersperse(el, l):
     return [y for x in zip([el] * len(l), l) for y in x]
 
 
-def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emulate=False):
+def docker_compose(
+    args, env=None, ganesha=False, custom=False, arch=None, emulate=False
+):
     # Since our docker-compose.selfserve.yml file is the first one we pass,
     # we need to pass `--project-name` and `--project-directory`.
     log = toplog.bind(function="docker-compose")
@@ -101,9 +104,8 @@ def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emula
             compose_files.remove("docker-compose.arm.yml")
             compose_files.append("docker-compose.selfserve.yml")
 
-
     compose_files.extend(glob("docker-compose-*.yml"))
-    if "docker-compose-ssh.yml" in compose_files and 'stop' in args:
+    if "docker-compose-ssh.yml" in compose_files and "stop" in args:
         compose_files.remove("docker-compose-ssh.yml")
     if ganesha:
         compose_files.append("docker-compose.ganesha.yml")
@@ -117,7 +119,9 @@ def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emula
 def up(env=None, ganesha=False, arch=None, custom=False, emulate=False):
     """Starts and optionally creates a Docker environment based on
     docker-compose.yml"""
-    docker_compose(["up"], env=env, ganesha=ganesha, arch=arch, custom=custom, emulate=emulate)
+    docker_compose(
+        ["up"], env=env, ganesha=ganesha, arch=arch, custom=custom, emulate=emulate
+    )
 
 
 def run_jb(cmd, env=None, service="juicebox"):
@@ -212,6 +216,7 @@ def run(command, env):
             elif output is not None:
                 print(output)
 
+
 def parse_dc_file(tag, emulate=False, custom=False):
     """Parse the docker-compose.selfserve.yml file to build a full path for image
     based on current environment and tag.
@@ -241,11 +246,12 @@ def parse_dc_file(tag, emulate=False, custom=False):
         else:
             pull_file = "docker-compose.arm.yml"
     elif processor == "i386":
-        check_call(["/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
-        if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
-            return
-        else:
-            pull_file = "docker-compose.arm.yml"
+        # check_call(["/usr/bin/arch", "-arm64", "/bin/zsh", "--login"])
+        pull_file = "docker-compose.selfserve.yml"
+        # if not os.path.isfile(f"{os.getcwd()}/docker-compose.arm.yml"):
+        #     return
+        # else:
+        #     pull_file = "docker-compose.arm.yml"
     if not os.path.isfile(f"{os.getcwd()}/docker-compose.selfserve.yml"):
         return
     base_ecr = "423681189101.dkr.ecr.us-east-1.amazonaws.com/"
@@ -327,7 +333,7 @@ def image_list(showall=False, print_flag=True, semantic=False):
                 meets_semantic_criteria = (semantic and is_semantic_tag) or not semantic
                 # Use if showall is true, return all tags, otherwise return just last 30 days
                 meets_time_criteria = showall or (
-                        pushed >= now - datetime.timedelta(days=30)
+                    pushed >= now - datetime.timedelta(days=30)
                 )
 
                 if meets_semantic_criteria and meets_time_criteria:
@@ -442,9 +448,16 @@ def observer_setup(event_handler, app, custom=False):
 def js_watch(custom=False):
     running = is_running()
     if running[0] and custom and ensure_home():
-        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch", env='custom')
+        run(
+            "./node_modules/.bin/webpack --mode=development --progress --colors --watch",
+            env="custom",
+        )
     elif running[1] and not custom and ensure_home():
-        run("./node_modules/.bin/webpack --mode=development --progress --colors --watch", env='selfserve')
+        run(
+            "./node_modules/.bin/webpack --mode=development --progress --colors --watch",
+            env="selfserve",
+        )
+
 
 def list_local():
     return check_output(["docker", "image", "list"])
