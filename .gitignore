@@ -97,6 +97,7 @@ ENV/
 docker-compose-ssh.yml
 # local symlinks or checkouts when running a `core` environment
 fruition
+fruition_custom
 recipe
 juicebox-snapshots-service
 ganesha
