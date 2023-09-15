@@ -1,4 +1,4 @@
-version: '3.3'
+version: "3.3"
 services:
   postgres:
     environment:
@@ -16,7 +16,7 @@ services:
     networks:
       - juice_net
   snapshot:
-    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:develop"
+    image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/snapshot:prod"
     volumes:
       - ${LOCAL_SNAPSHOT_DIR}:${CONTAINER_SNAPSHOT_DIR}
     environment:
