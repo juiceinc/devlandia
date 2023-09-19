@@ -2,14 +2,16 @@
 # Whatever environment you apply this to has to have a symlink to a local ganesha checkout
 version: '3.3'
 services:
-  juicebox:
+  juicebox_custom:
     environment:
       - JB_GANESHA_API=http://ganesha:3000
       - JB_GANESHA_SIGNING_KEY=whatever
       - JB_APPADMIN_SERVICE=http://localhost:3000
   ganesha:
+    networks:
+      - juice_net
     image: "976661725066.dkr.ecr.us-east-1.amazonaws.com/ganesha-dev:latest"
-    command: "npm run start:dev"
+    command: bash -c "npm install && npm run build:css && npm run start:dev"
     volumes:
       - ./ganesha:/ganesha
     ports:

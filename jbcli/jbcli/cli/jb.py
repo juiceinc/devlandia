@@ -450,6 +450,10 @@ def start(
         echo_warning("An instance of Juicebox Selfserve is already running")
         echo_warning("Run `jb stop` to stop this instance.")
         return
+    elif ganesha and not custom:
+        echo_warning("Ganesha should only be run with the custom flag")
+        echo_warning("Run `jb stop` to stop this instance.")
+        return
 
     if stash.get("users") is None:
         _add_users()
@@ -481,7 +485,8 @@ def start(
         dev_snapshot=dev_snapshot,
         is_custom=is_custom,
         env=env,
-        emulate=emulate
+        emulate=emulate,
+        ganesha=ganesha
     )
     if is_core:
         if is_custom:
@@ -802,15 +807,18 @@ def activate_snapshot():
 @click.option(
     "--custom", default=False, help="Select custom docker image to stop", is_flag=True
 )
+@click.option(
+    "--ganesha", default=False, help="Select ganesha docker image to stop", is_flag=True
+)
 @click.pass_context
-def stop(ctx, clean, custom):
+def stop(ctx, clean, custom, ganesha):
     """Stop a running juicebox in this environment"""
     os.chdir(DEVLANDIA_DIR)
     dockerutil.ensure_home()
     running_custom, running_selfserve = dockerutil.is_running()
     arch = platform.processor()
     if clean:
-        dockerutil.destroy(custom=custom, arch=arch)
+        dockerutil.destroy(custom=custom, arch=arch, ganesha=ganesha)
     elif running_custom or running_selfserve:
         # Stop both custom and selfserve if they are running
         # because we're stopping common services

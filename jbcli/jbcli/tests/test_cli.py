@@ -676,7 +676,20 @@ class TestCli(object):
         platform_mock.processor.return_value = 'x86_64'
         result = invoke(["stop", "--clean", "--custom"])
         assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(arch='x86_64', custom=True)]
+        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(arch='x86_64', custom=True, ganesha=False)]
+
+    @patch("jbcli.cli.jb.platform")
+    @patch("jbcli.cli.jb.dockerutil")
+    def test_stop_clean_custom_ganesha(self, dockerutil_mock, platform_mock, monkeypatch):
+        monkeypatch.chdir(DEVLANDIA_DIR)
+        dockerutil_mock.is_running.return_value = [True, False]
+        dockerutil_mock.ensure_home.return_value = True
+        dockerutil_mock.destroy.return_value = None
+        platform_mock.processor.return_value = 'x86_64'
+        result = invoke(["stop", "--clean", "--custom", "--ganesha"])
+        assert result.exit_code == 0
+        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(),
+                                              call.destroy(arch='x86_64', custom=True, ganesha=True)]
 
     @patch("jbcli.cli.jb.platform")
     @patch("jbcli.cli.jb.dockerutil")
@@ -688,7 +701,7 @@ class TestCli(object):
         platform_mock.processor.return_value = 'x86_64'
         result = invoke(["stop", "--clean"])
         assert result.exit_code == 0
-        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(arch='x86_64', custom=False)]
+        assert dockerutil_mock.mock_calls == [call.ensure_home(), call.is_running(), call.destroy(arch='x86_64', custom=False, ganesha=False)]
 
     @patch("jbcli.cli.jb.dockerutil")
     @patch("jbcli.cli.jb.os")
