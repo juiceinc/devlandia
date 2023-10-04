@@ -69,4 +69,6 @@ services:
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
       - JB_SNAPSHOTS_SERVICE=http://snapshot:8080/snapshot/
+      - HSTM_EMAIL_SECRET
+      - HSTM_CLIENT_SECRET
     restart: on-failure:10
