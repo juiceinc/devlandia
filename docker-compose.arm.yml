@@ -68,4 +68,6 @@ services:
       - JB_HSTM
       - JB_DEFAULT_USERS_FILE
       - AWS_PROFILE
+      - HSTM_EMAIL_SECRET
+      - HSTM_CLIENT_SECRET
     restart: on-failure:10
