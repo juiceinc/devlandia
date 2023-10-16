@@ -86,6 +86,8 @@ def docker_compose(args, env=None, ganesha=False, custom=False, arch=None, emula
     log = toplog.bind(function="docker-compose")
     log.info(f"Running docker-compose with {args}")
     compose_files = []
+    if ganesha:
+        compose_files.append("docker-compose.ganesha.yml")
     if arch == "x86_64":
         compose_files = ["common-services.yml"]
         if custom:
@@ -125,9 +127,9 @@ def run_jb(cmd, env=None, service="juicebox"):
     docker_compose(["run", service] + cmd, env=env, ganesha=is_ganesha)
 
 
-def destroy(arch=None, custom=False):
+def destroy(arch=None, custom=False, ganesha=False):
     """Removes all containers and networks defined in docker-compose.selfserve.yml"""
-    docker_compose(["down"], arch=arch, custom=custom)
+    docker_compose(["down"], arch=arch, custom=custom, ganesha=ganesha)
 
 
 def halt(arch=None, custom=False):
@@ -212,7 +214,7 @@ def run(command, env):
             elif output is not None:
                 print(output)
 
-def parse_dc_file(tag, emulate=False, custom=False):
+def parse_dc_file(tag, emulate=False, custom=False, ganesha=False):
     """Parse the docker-compose.selfserve.yml file to build a full path for image
     based on current environment and tag.
 
