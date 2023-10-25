@@ -64,7 +64,7 @@ prompt-toolkit==1.0.14
     # via pyinquirer
 pycparser==2.21
     # via cffi
-pygments==2.7.4
+pygments==2.15.0
     # via pyinquirer
 pyinquirer==1.0.3
     # via -r requirements.in
