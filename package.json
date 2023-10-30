@@ -4,8 +4,7 @@
     "url": "https://github.com/juiceinc/devlandia.git"
   },
   "dependencies": {
-    "browser-sync": "^2.29.3",
-    "generator-juicebox": "github:juiceinc/generator-juicebox"
+    "browser-sync": "^2.29.3"
   },
   "engines": {
     "npm": ">= 5.4"
