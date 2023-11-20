@@ -460,7 +460,7 @@ def start(
     # A dictionary of environment names and tags to use
     tag_replacements = OrderedDict()
     tag_replacements["core"] = "develop-py3"
-    tag_replacements["core-custom"] = "prod-custom"
+    tag_replacements["core-custom"] = "prod-custom-py3"
     tag_replacements["dev"] = "develop-py3"
     tag_replacements["stable"] = "master-py3"
     tag_replacements["hstm-dev"] = "hstm-qa"
