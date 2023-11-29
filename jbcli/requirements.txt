@@ -28,12 +28,14 @@ charset-normalizer==3.2.0
     # via requests
 click==8.1.6
     # via -r requirements.in
-cryptography==41.0.4
+cryptography==41.0.6
     # via paramiko
 defusedxml==0.6.0
     # via odfpy
 docker[ssh]==4.4.4
-    # via docker-compose
+    # via
+    #   docker
+    #   docker-compose
 docker-compose==1.25.5
     # via -r requirements.in
 dockerpty==0.4.1
