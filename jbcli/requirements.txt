@@ -60,7 +60,7 @@ odfpy==1.4.0
     # via tablib
 openpyxl==2.6.3
     # via tablib
-paramiko==3.2.0
+paramiko==3.4.0
     # via docker
 prompt-toolkit==1.0.14
     # via pyinquirer
