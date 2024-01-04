@@ -5,10 +5,10 @@ services:
       - juice_net
     image: "423681189101.dkr.ecr.us-east-1.amazonaws.com/juicebox-devlandia-arm:${TAG}"
     command: bash -c "if [ '${WORKFLOW}' = 'core' ] ; then
-      ! /venv/bin/pip install -U pip;
-      ! /venv/bin/pip install -U -r requirements.txt;
-      ! /venv/bin/pip install -U -r requirements_dev.txt;
-            fi ; /venv/bin/python docker/entrypoint.py"
+      /venv/bin/pip install -U pip;
+      /venv/bin/pip install -U -r requirements.txt;
+      /venv/bin/pip install -U -r requirements_dev.txt;
+      fi ; /venv/bin/python docker/entrypoint.py"
     volumes:
       - ./apps:/code/apps
       - ~/.config/juicebox:/root/.config/juicebox:ro
