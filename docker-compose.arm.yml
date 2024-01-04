@@ -1,7 +1,4 @@
 version: '3.3'
-# For dataservices refactor, we need this
-# ! /venv/bin/pip uninstall recipe -y && /venv/bin/pip uninstall recipe-caching -y;
-# ! /venv/bin/pip install recipe -y;
 services:
   juicebox_selfserve:
     networks:
