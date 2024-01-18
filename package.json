@@ -4,7 +4,7 @@
     "url": "https://github.com/juiceinc/devlandia.git"
   },
   "dependencies": {
-    "browser-sync": "^2.29.3"
+    "browser-sync": "^3.0.2"
   },
   "engines": {
     "npm": ">= 5.4"
