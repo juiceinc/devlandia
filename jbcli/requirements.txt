@@ -28,7 +28,7 @@ charset-normalizer==3.2.0
     # via requests
 click==8.1.6
     # via -r requirements.in
-cryptography==41.0.6
+cryptography==42.0.0
     # via paramiko
 defusedxml==0.6.0
     # via odfpy
