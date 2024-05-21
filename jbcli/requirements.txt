@@ -33,9 +33,7 @@ cryptography==42.0.4
 defusedxml==0.6.0
     # via odfpy
 docker[ssh]==4.4.4
-    # via
-    #   docker
-    #   docker-compose
+    # via docker-compose
 docker-compose==1.25.5
     # via -r requirements.in
 dockerpty==0.4.1
@@ -81,7 +79,7 @@ pyyaml==5.4.1
     #   tablib
 regex==2019.8.19
     # via pyinquirer
-requests==2.31.0
+requests==2.32.0
     # via
     #   docker
     #   docker-compose
