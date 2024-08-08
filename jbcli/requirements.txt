@@ -44,7 +44,7 @@ et-xmlfile==1.0.1
     # via openpyxl
 humanize==4.6.0
     # via -r requirements.in
-idna==3.4
+idna==3.7
     # via requests
 jdcal==1.4.1
     # via openpyxl
