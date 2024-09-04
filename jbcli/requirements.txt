@@ -79,7 +79,7 @@ pyyaml==5.4.1
     #   tablib
 regex==2019.8.19
     # via pyinquirer
-requests==2.31.0
+requests==2.32.2
     # via
     #   docker
     #   docker-compose
