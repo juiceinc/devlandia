@@ -8,7 +8,7 @@ from subprocess import CalledProcessError
 
 from click.testing import CliRunner
 from docker.errors import APIError
-from mock import call, mock_open, patch, ANY
+from mock import call, mock_open, patch, ANY, MagicMock
 import six
 
 from ..cli.jb import DEVLANDIA_DIR, cli
@@ -384,7 +384,15 @@ class TestCli(object):
             self, os_mock, proc_mock, apps_mock, dockerutil_mock, apiutil_mock
     ):
         os_mock.path.isdir.return_value = False
-        dockerutil_mock.run.side_effect = APIError("Fail")
+
+        # Create a mock response object to satisfy the APIError constructor
+        mock_response = MagicMock()
+        mock_response.status_code = 500  # Example status code
+        mock_response.reason = "Internal Server Error"  # Example reason
+
+        # Pass both the error message and the mock response
+        dockerutil_mock.run.side_effect = APIError("Fail", response=mock_response)
+
         dockerutil_mock.is_running.return_value = [True, True]
         apps_mock.make_github_repo_url.return_value = "git cookies"
         apiutil_mock.load_app.return_value = False
@@ -1935,7 +1943,15 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     def test_clear_cache_fail_selfserve(self, dockerutil_mock, click_mock):
         dockerutil_mock.is_running.return_value = [False, True]
-        dockerutil_mock.run.side_effect = APIError("Failure")
+
+        # Create a mock response object for the APIError constructor
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.reason = "Internal Server Error"
+
+        # Pass both the error message and the mock response
+        dockerutil_mock.run.side_effect = APIError("Failure", response=mock_response)
+
         result = invoke(["clear_cache"])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
@@ -1951,7 +1967,15 @@ class TestCli(object):
     @patch("jbcli.cli.jb.dockerutil")
     def test_clear_cache_fail_custom(self, dockerutil_mock, click_mock):
         dockerutil_mock.is_running.return_value = [True, False]
-        dockerutil_mock.run.side_effect = APIError("Failure")
+
+        # Create a mock response object for the APIError constructor
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_response.reason = "Internal Server Error"
+
+        # Pass both the error message and the mock response
+        dockerutil_mock.run.side_effect = APIError("Failure", response=mock_response)
+
         result = invoke(["clear_cache", "--custom"])
         assert dockerutil_mock.mock_calls == [
             call.is_running(),
